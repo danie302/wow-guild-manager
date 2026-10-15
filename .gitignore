@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+.vite/
+
+# Environment variables (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Tests
+coverage/
+
+# Local uploads in development (guild images)
+uploads/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Proposal PDF for sharing, generated outside the repo
+propuesta.pdf
