@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@wgm/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
   }
 }

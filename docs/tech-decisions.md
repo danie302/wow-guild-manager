@@ -50,6 +50,9 @@ Local containers:
 - `api`, `bot`, and `worker` use the same image with different start commands.
 - Database migrations run automatically when the stack starts.
 - Credentials (Discord app, Battle.net client) go in a `.env` file. A `.env.example` lists every variable.
+- Images: `node:24-trixie-slim` for the app containers, `postgres:18-alpine`, and `redis:8-alpine` (with append-only file persistence).
+- A one-shot `deps` service installs dependencies into the `node_modules` volumes on every `docker compose up`, and the other Node.js containers start after it finishes. This keeps dependencies current without rebuilding images and avoids parallel installs into the same volumes.
+- In development, the server processes run with `tsx watch` and restart when any file in `apps/server/src` or `packages/shared/src` changes. Node's built-in TypeScript support was considered, but it can't resolve the `.js` import extensions that `NodeNext` uses for `.ts` files.
 
 ## Language: TypeScript
 
@@ -266,6 +269,7 @@ ESLint checks code quality (with TypeScript and React rules), and Prettier forma
 
 - **Node.js 24 LTS,** pinned in `.nvmrc` and in `engines` (`>=24 <25`). The Docker images use the same major version.
 - **pnpm through corepack:** the `packageManager` field in the root `package.json` pins the exact pnpm version, and corepack (bundled with Node.js 24) installs it, so everyone uses the same one.
+- **Install scripts:** pnpm blocks dependencies' install scripts unless they're listed under `allowBuilds` in `pnpm-workspace.yaml`. Only add a package there after checking what its script does.
 - **TypeScript 6.0:** TypeScript 7 is released, but typescript-eslint doesn't support it yet. Upgrade once it does.
 
 ## Logging: pino

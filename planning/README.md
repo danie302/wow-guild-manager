@@ -36,7 +36,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 | Story | Title | Status | Depends on |
 |---|---|---|---|
 | [001](story-001-monorepo-scaffold.md) | Monorepo scaffold | Done with debt | None |
-| [002](story-002-docker-dev-environment.md) | Docker development environment | Not started | 001 |
+| [002](story-002-docker-dev-environment.md) | Docker development environment | Done | 001 |
 | [003](story-003-testing-setup.md) | Testing setup | Not started | 002 |
 | [004](story-004-api-skeleton.md) | Express API skeleton and health check | Not started | 003 |
 | [005](story-005-sequelize-setup.md) | Database setup with Sequelize | Not started | 004 |

@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev:api": "tsx watch --include src --include ../../packages/shared/src src/entrypoints/api.ts",
+    "dev:bot": "tsx watch --include src --include ../../packages/shared/src src/entrypoints/bot.ts",
+    "dev:worker": "tsx watch --include src --include ../../packages/shared/src src/entrypoints/worker.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@wgm/shared": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^24.19.2"
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15"
   }
 }

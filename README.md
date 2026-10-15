@@ -36,9 +36,36 @@ The reasons behind each choice are in [`docs/tech-decisions.md`](docs/tech-decis
 
 ## Getting started
 
-Instructions for Docker, the Discord application, and the Battle.net API client will be added as their setup stories are completed.
+Instructions for the Discord application and the Battle.net API client will be added as their setup stories are completed.
 
-### Prerequisites
+### Run the stack with Docker
+
+You only need Docker (Docker Desktop on macOS or Windows). Node.js, PostgreSQL, and Redis all run in containers.
+
+```sh
+cp .env.example .env
+docker compose up
+```
+
+The first start builds the images and installs dependencies, which takes a few minutes. Then:
+
+| Service | URL or port | What it is |
+|---|---|---|
+| `web` | http://localhost:5173 | Web app (Vite dev server, reloads when you save a file in `apps/web`) |
+| `api` | http://localhost:3000 | Express API |
+| `postgres` | `localhost:5432` | PostgreSQL, for database tools (user, password, and database are in `.env`) |
+| `redis` | `localhost:6379` | Redis, for Redis tools |
+| `bot`, `worker` | No port | Discord bot and background worker |
+
+`api`, `bot`, and `worker` restart automatically when you save a file in `apps/server` or `packages/shared`. If a port is already in use on your machine, change it in `.env`.
+
+- `docker compose down` stops the stack and keeps the database and Redis data.
+- `docker compose down -v` also deletes the data volumes, including `node_modules`, for a clean start.
+- `docker compose logs -f api` follows one service's logs.
+
+### Local tools (optional)
+
+To run type checks, lint, and formatting on your machine (and for editor support), install:
 
 - Node.js 24 (the version is in `.nvmrc`; with nvm, run `nvm install` and then `nvm use`).
 - pnpm, through corepack: run `corepack enable` once. The pnpm version comes from the `packageManager` field in `package.json`.
