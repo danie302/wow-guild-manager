@@ -1,6 +1,6 @@
 # Story 001: Monorepo scaffold
 
-**Status:** Not started  
+**Status:** Done with debt  
 **Phase:** Foundation  
 **Depends on:** None
 
@@ -24,18 +24,23 @@ Create the pnpm monorepo skeleton so every later story has a place for its code.
 
 ## Acceptance criteria
 
-- [ ] `pnpm install` at the root installs every workspace without errors.
-- [ ] `pnpm -r typecheck` passes.
-- [ ] `apps/web` and `apps/server` both import a placeholder export from the shared package, and the import typechecks.
-- [ ] `packages/shared` declares no dependencies other than `zod`.
-- [ ] Importing `apps/server` code from `apps/web` fails, because pnpm only allows declared dependencies.
-- [ ] `.env` files are ignored by git.
-- [ ] `pnpm lint` and `pnpm format:check` run on every package and pass.
+- [x] `pnpm install` at the root installs every workspace without errors.
+- [x] `pnpm -r typecheck` passes.
+- [x] `apps/web` and `apps/server` both import a placeholder export from the shared package, and the import typechecks.
+- [x] `packages/shared` declares no dependencies other than `zod`.
+- [x] Importing `apps/server` code from `apps/web` fails, because pnpm only allows declared dependencies.
+- [x] `.env` files are ignored by git.
+- [x] `pnpm lint` and `pnpm format:check` run on every package and pass.
 
 ## Notes
 
-- Package names (e.g. `@wgm/shared`) are decided in this story.
+- Package names are `@wgm/web`, `@wgm/server`, and `@wgm/shared`.
+- Node.js 24 LTS is pinned in `.nvmrc` and `engines` (`>=24 <25`). pnpm is pinned with the `packageManager` field and installed through corepack.
+- TypeScript is pinned to 6.0, because typescript-eslint doesn't support TypeScript 7 yet.
+- `@wgm/shared` has no build step. It exports its TypeScript source, which Vite and the server's TypeScript tooling read directly.
+- Prettier formats code and config files, not Markdown.
 
 ## Technical debt
 
-None.
+- Upgrade to TypeScript 7 once typescript-eslint supports it.
+- `@wgm/shared` exports TypeScript source. The production server image (multi-stage build, see `docs/tech-decisions.md`) must either compile it or run with a TypeScript-aware runtime. Decide this when production deployment is planned.

@@ -26,6 +26,7 @@ Each decision has a status:
 | Internationalization | i18next (react-i18next on the web) | Accepted |
 | UI components | Material UI behind our own compound components | Accepted |
 | Linting and formatting | ESLint and Prettier | Accepted |
+| Toolchain versions | Node.js 24 LTS, pnpm through corepack, TypeScript 6.0 | Accepted |
 | Logging | pino | Accepted |
 | File storage | A storage interface, with a local Docker volume in development | Accepted |
 
@@ -121,6 +122,10 @@ web ──→ shared ←── server
 - **Strict dependencies:** a package can only import what its own `package.json` declares, so `web` can't import a server library by accident.
 - **`pnpm deploy`** builds a minimal folder with one package and only its dependencies, used for the production server image.
 - **Per-package commands:** `pnpm --filter server test`, `pnpm --filter web build`.
+
+### Package names and the shared package
+- The packages are `@wgm/web`, `@wgm/server`, and `@wgm/shared`.
+- `@wgm/shared` has no build step: its `exports` point at its TypeScript source, which Vite and the server's TypeScript tooling read directly. How the production server image handles it is decided when deployment is planned.
 
 npm workspaces were considered: they need no extra tool but aren't strict about dependencies. Turborepo and Nx aren't needed at this size and can be added later.
 
@@ -251,6 +256,17 @@ App code never imports MUI directly. It uses our own components in `apps/web/src
 **Status:** Accepted
 
 ESLint checks code quality (with TypeScript and React rules), and Prettier formats it. Both run on every package from the root, and CI fails on lint errors.
+
+- ESLint uses a flat config (`eslint.config.js`) with typescript-eslint's type-checked rules, and `eslint-config-prettier` so the two don't conflict.
+- Prettier formats code and config files but not Markdown, because its table alignment turns small doc edits into large diffs.
+
+## Toolchain versions
+
+**Status:** Accepted
+
+- **Node.js 24 LTS,** pinned in `.nvmrc` and in `engines` (`>=24 <25`). The Docker images use the same major version.
+- **pnpm through corepack:** the `packageManager` field in the root `package.json` pins the exact pnpm version, and corepack (bundled with Node.js 24) installs it, so everyone uses the same one.
+- **TypeScript 6.0:** TypeScript 7 is released, but typescript-eslint doesn't support it yet. Upgrade once it does.
 
 ## Logging: pino
 

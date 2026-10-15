@@ -20,7 +20,7 @@ The app is available in English and Spanish.
 
 ## Status
 
-In planning. No application code exists yet. Work is split into small stories in [`planning/`](planning/README.md), starting with [story 001](planning/story-001-monorepo-scaffold.md).
+Early implementation. The monorepo scaffold is in place, and no application features exist yet. Work is split into small stories in [`planning/`](planning/README.md).
 
 ## Tech stack
 
@@ -36,7 +36,21 @@ The reasons behind each choice are in [`docs/tech-decisions.md`](docs/tech-decis
 
 ## Getting started
 
-Instructions to run the project locally will be added here as the setup stories are completed (Docker environment, Discord application, and Battle.net API client).
+Instructions for Docker, the Discord application, and the Battle.net API client will be added as their setup stories are completed.
+
+### Prerequisites
+
+- Node.js 24 (the version is in `.nvmrc`; with nvm, run `nvm install` and then `nvm use`).
+- pnpm, through corepack: run `corepack enable` once. The pnpm version comes from the `packageManager` field in `package.json`.
+
+### Install and check
+
+```sh
+pnpm install
+pnpm typecheck      # TypeScript in every package
+pnpm lint           # ESLint
+pnpm format:check   # Prettier (pnpm format fixes formatting)
+```
 
 ## Documentation
 

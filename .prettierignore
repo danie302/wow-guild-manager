@@ -1,0 +1,4 @@
+pnpm-lock.yaml
+docs/design/
+# Docs are written by hand; Prettier's table alignment makes noisy diffs.
+*.md

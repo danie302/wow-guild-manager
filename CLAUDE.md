@@ -4,9 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Pre-implementation. `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. No code, build tooling, or tests exist yet; story 001 sets them up. The git repository and `.gitignore` already exist. Work starts with `planning/story-001-monorepo-scaffold.md`. Once code exists, add the build/lint/test commands (including how to run a single test) to this file.
+Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. Check `planning/README.md` for the next story. Add test commands (including how to run a single test) here when story 003 sets up Vitest.
 
 `propuesta.pdf` is a project proposal in Spanish for sharing with others, regenerated from `requirements.md` on 2026-10-14. It's kept out of git (it's in `.gitignore`). It's a summary, not a source of truth: when the requirements change, it goes out of date until it's regenerated.
+
+## Commands
+
+Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.
+
+- `pnpm install`: install every workspace.
+- `pnpm typecheck`: typecheck every package (`pnpm --filter @wgm/web typecheck` for one).
+- `pnpm lint`: ESLint over the whole repo.
+- `pnpm format` / `pnpm format:check`: Prettier (code and config only, not Markdown).
 
 ## Planning workflow
 
@@ -37,7 +46,7 @@ The code is a pnpm monorepo (layout and reasoning in `docs/tech-decisions.md`):
 
 - `apps/web`: the React + Vite client. It only talks to the server over HTTP.
 - `apps/server`: the Express API, Discord bot, and worker, as one codebase with three entry points (`src/entrypoints/api.ts`, `bot.ts`, `worker.ts`) that run as separate containers.
-- `packages/shared`: Zod schemas, API types, and game tables. Only code that can also run in the browser goes here.
+- `packages/shared`: Zod schemas, API types, and game tables, consumed as TypeScript source with no build step. Only code that can also run in the browser goes here.
 
 UI rule: the web client uses Material UI only inside `apps/web/src/components/ui`, behind our own compound components (e.g. `<RoleSection>` with `<RoleSection.Header>`). Pages and features never import `@mui/*` directly (an ESLint rule enforces it), and component props use our own types, so the design library can be swapped.
 
