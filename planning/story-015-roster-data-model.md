@@ -12,6 +12,7 @@ Store members, characters, ranks, and officer notes.
 
 - Tables and typed models: members, characters, rank history, and officer notes.
 - Domain functions to create members and characters, and to change ranks.
+- Characters are validated with `characterSchema` from `packages/shared`, and store its codes (`night_elf`, `first_aid`, …) as-is.
 
 ## Out of scope
 

@@ -230,6 +230,9 @@ The bot uses discord.js and connects to the Discord Gateway, which is an outgoin
 
 Zod schemas in `packages/shared` validate API requests on the server and forms on the web client, from a single definition.
 
+- Game data (factions, races, classes, combat roles, professions) lives in `packages/shared/src/game.ts` as stable snake_case codes (`night_elf`, `first_aid`), with their English display names next to them. The database and the API use the codes.
+- Custom checks (e.g. a class that a race can't be) set the Zod issue message to an error code such as `CLASS_NOT_FOR_RACE`, never to text.
+
 ## Testing: Vitest and Supertest
 
 **Status:** Accepted

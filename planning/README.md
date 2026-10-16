@@ -41,7 +41,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 | [004](story-004-api-skeleton.md) | Express API skeleton and health check | Done | 003 |
 | [005](story-005-sequelize-setup.md) | Database setup with Sequelize | Done | 004 |
 | [006](story-006-web-skeleton.md) | Web client skeleton | Done | 004 |
-| [007](story-007-shared-game-data.md) | Shared game data and schemas | Not started | 003 |
+| [007](story-007-shared-game-data.md) | Shared game data and schemas | Done | 003 |
 | [008](story-008-bot-skeleton.md) | Discord bot skeleton | Not started | 002, 003 |
 | [009](story-009-worker-skeleton.md) | Worker and job queue skeleton | Not started | 002, 003 |
 | [035](story-035-i18n-foundation.md) | Internationalization foundation | Not started | 006, 007, 008 |

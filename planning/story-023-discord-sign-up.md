@@ -12,7 +12,7 @@ Let members sign up for events with buttons on the Discord post.
 
 - Tank, Healer, DPS, and Declined buttons on the post.
 - Choosing a character (only those whose class can fill the chosen role) and a status (Confirmed or Tentative).
-- The sign-up domain function: rank check, class check, slot or waitlist, all in one transaction that locks the event.
+- The sign-up domain function: rank check, class check (`classRoleSchema` / `rolesFor` from `packages/shared`), slot or waitlist, all in one transaction that locks the event.
 
 ## Out of scope
 

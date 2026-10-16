@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. Check `planning/README.md` for the next story.
 
-`propuesta.pdf` is a project proposal in Spanish for sharing with others, regenerated from `requirements.md` on 2026-10-14. It's kept out of git (it's in `.gitignore`). It's a summary, not a source of truth: when the requirements change, it goes out of date until it's regenerated.
-
 ## Commands
 
 Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.

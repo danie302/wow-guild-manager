@@ -15,7 +15,7 @@ Set up English and Spanish support in the web client, the API, and the bot, so e
 - Move the placeholder English text from story 006 (the navigation in `app/Layout.tsx`, the page titles in `app/routes.tsx`, and `pages/StatusPage.tsx`) to the translation files.
 - Typed translation keys.
 - A language switcher in the web app, defaulting to the browser's language.
-- Error codes in API responses, translated by the web client. Zod errors mapped to codes.
+- Error codes in API responses, translated by the web client. Zod errors mapped to codes. The shared schemas already use codes as their custom issue messages (`CHARACTER_ERROR_CODES` in `packages/shared`).
 - A helper in the bot that picks the language for each message: the interaction's locale, the member's last-used language, or the guild's language.
 - Discord slash command name and description localizations.
 

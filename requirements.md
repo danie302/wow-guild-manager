@@ -90,8 +90,10 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 
 ### Characters
 - A character has a name, faction, class, race, level (1–60), and one or more professions.
+- The app doesn't restrict the characters in a name beyond it not being empty. The Battle.net lookup is what confirms a character exists.
 - Character names are unique across the whole game, since there are no realms. No two active characters can have the same name.
 - Professions are the Classic ones: Alchemy, Blacksmithing, Enchanting, Engineering, Herbalism, Leatherworking, Mining, Skinning, Tailoring, Cooking, First Aid, and Fishing.
+- As in Classic, a character has at most 2 primary professions (all of the above except Cooking, First Aid, and Fishing, which are secondary and have no limit). A profession can't be listed twice.
 - Faction limits which races are available, and race limits which classes are available (see below).
 - A character can belong to at most one guild at a time.
 - A member's characters can be in different guilds.
