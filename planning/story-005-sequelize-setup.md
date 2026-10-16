@@ -14,6 +14,7 @@ Connect the server to PostgreSQL with Sequelize, safe transactions, and automati
 - CLS (`Sequelize.useCLS`) so queries join the current transaction automatically.
 - `sequelize-cli` configuration and a migrations folder.
 - Migrations run automatically when the `api` container starts.
+- The test global setup (`apps/server/test/global-setup.ts`, story 003) runs the migrations on the test database after recreating it.
 - A documented pattern for typed models (`InferAttributes`, `InferCreationAttributes`, `declare`).
 
 ## Out of scope

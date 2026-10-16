@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. Check `planning/README.md` for the next story. Add test commands (including how to run a single test) here when story 003 sets up Vitest.
+Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. Check `planning/README.md` for the next story.
 
 `propuesta.pdf` is a project proposal in Spanish for sharing with others, regenerated from `requirements.md` on 2026-10-14. It's kept out of git (it's in `.gitignore`). It's a summary, not a source of truth: when the requirements change, it goes out of date until it's regenerated.
 
@@ -13,10 +13,19 @@ Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` i
 Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.
 
 - `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`.
-- `pnpm install`: install every workspace on the host (containers install their own into Docker volumes).
+- `pnpm install`: install every workspace on the host (containers install their own into Docker volumes). pnpm rejects versions published less than a day ago: pick the previous version, and don't add `minimumReleaseAgeExclude` entries.
 - `pnpm typecheck`: typecheck every package (`pnpm --filter @wgm/web typecheck` for one).
 - `pnpm lint`: ESLint over the whole repo.
 - `pnpm format` / `pnpm format:check`: Prettier (code and config only, not Markdown).
+
+Tests run inside Docker with the stack up (server tests need the test database and fail on the host):
+
+- `docker compose exec api pnpm test`: every package's tests.
+- `docker compose exec api pnpm --filter @wgm/server test`: one package (`@wgm/web`, `@wgm/shared`).
+- `docker compose exec api pnpm --filter @wgm/server test test/test-database.test.ts`: a single file (path relative to the package).
+- `docker compose exec api pnpm --filter @wgm/server test -t "starts every run empty"`: tests whose name matches.
+
+Test files are `*.test.ts` next to the code. Server tests use `wgm_test`, which is recreated on every run.
 
 ## Planning workflow
 

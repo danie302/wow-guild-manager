@@ -63,6 +63,18 @@ The first start builds the images and installs dependencies, which takes a few m
 - `docker compose down -v` also deletes the data volumes, including `node_modules`, for a clean start.
 - `docker compose logs -f api` follows one service's logs.
 
+### Run the tests
+
+With the stack running:
+
+```sh
+docker compose exec api pnpm test                                   # every package
+docker compose exec api pnpm --filter @wgm/web test                 # one package
+docker compose exec api pnpm --filter @wgm/server test <file path>  # one file
+```
+
+Server tests use a separate `wgm_test` database that's recreated on every run, so they never touch your development data.
+
 ### Local tools (optional)
 
 To run type checks, lint, and formatting on your machine (and for editor support), install:

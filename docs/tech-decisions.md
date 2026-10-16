@@ -220,6 +220,11 @@ Zod schemas in `packages/shared` validate API requests on the server and forms o
 
 Vitest runs unit tests in both the web client and the server. Supertest runs HTTP tests against the Express app.
 
+- Each package has its own Vitest config, and the root `pnpm test` runs them all. Test files sit next to the code they test (`*.test.ts`). Server tests that aren't about one file go in `apps/server/test/`.
+- Web tests run in jsdom.
+- **Test database:** server tests use a separate database in the same PostgreSQL container (`<POSTGRES_DB>_test`, from `TEST_DATABASE_URL`). A global setup drops and recreates it at the start of every run, and refuses to touch any database whose name doesn't end in `_test`. During tests, `DATABASE_URL` points at it.
+- Tests run inside the Docker containers (`docker compose exec api pnpm test`), where the database is reachable and the environment variables are set.
+
 ## Internationalization: i18next
 
 **Status:** Accepted
@@ -270,6 +275,7 @@ ESLint checks code quality (with TypeScript and React rules), and Prettier forma
 - **Node.js 24 LTS,** pinned in `.nvmrc` and in `engines` (`>=24 <25`). The Docker images use the same major version.
 - **pnpm through corepack:** the `packageManager` field in the root `package.json` pins the exact pnpm version, and corepack (bundled with Node.js 24) installs it, so everyone uses the same one.
 - **Install scripts:** pnpm blocks dependencies' install scripts unless they're listed under `allowBuilds` in `pnpm-workspace.yaml`. Only add a package there after checking what its script does.
+- **Minimum release age:** pnpm refuses package versions published less than a day ago, to limit exposure to compromised releases. When a new version is rejected, use the previous one instead of adding an exception to `pnpm-workspace.yaml`.
 - **TypeScript 6.0:** TypeScript 7 is released, but typescript-eslint doesn't support it yet. Upgrade once it does.
 
 ## Logging: pino
