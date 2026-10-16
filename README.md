@@ -62,6 +62,8 @@ The first start builds the images and installs dependencies, which takes a few m
 - `docker compose down` stops the stack and keeps the database and Redis data.
 - `docker compose down -v` also deletes the data volumes, including `node_modules`, for a clean start.
 - `docker compose logs -f api` follows one service's logs.
+- http://localhost:3000/api/health shows whether the API can reach PostgreSQL and Redis.
+- After adding or updating a dependency, run `docker compose up -d` (the `deps` service installs it into the containers) and then `docker compose restart api bot worker web`. A process that crashed on a missing package waits for a file change, so it won't recover on its own.
 
 ### Run the tests
 

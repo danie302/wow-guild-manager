@@ -13,7 +13,7 @@ Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` i
 Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.
 
 - `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`.
-- `pnpm install`: install every workspace on the host (containers install their own into Docker volumes). pnpm rejects versions published less than a day ago: pick the previous version, and don't add `minimumReleaseAgeExclude` entries.
+- `pnpm install`: install every workspace on the host (containers install their own into Docker volumes). pnpm rejects versions published less than a day ago: pick the previous version, and don't add `minimumReleaseAgeExclude` entries. After adding a dependency with the stack running, run `docker compose up -d` and then `docker compose restart api bot worker web`.
 - `pnpm typecheck`: typecheck every package (`pnpm --filter @wgm/web typecheck` for one).
 - `pnpm lint`: ESLint over the whole repo.
 - `pnpm format` / `pnpm format:check`: Prettier (code and config only, not Markdown).

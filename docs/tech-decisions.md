@@ -74,6 +74,11 @@ A single-page app built with Vite, React, React Router, and TanStack Query.
 
 Express serves the web client's API and handles the Discord OAuth2 login. Sessions use `express-session` stored in Redis.
 
+- `createApp()` (`apps/server/src/api/app.ts`) builds the app from its dependencies without listening, so tests use it with Supertest. The `api` entry point creates the connections, builds the app, and listens.
+- Configuration comes from environment variables, validated with Zod in `apps/server/src/config.ts` when a process starts. A missing or invalid variable stops the process with a message naming it.
+- Errors are JSON with a code and no text: `{ "error": { "code": "NOT_FOUND" } }`. The codes and response types live in `packages/shared`. Unhandled errors return `INTERNAL_ERROR` with no details, and the stack trace is logged.
+- `GET /api/health` checks PostgreSQL and Redis and returns 503 naming whichever is down.
+
 ## Repository layout: monorepo with pnpm workspaces
 
 **Status:** Accepted
@@ -201,6 +206,12 @@ BullMQ handles:
 A periodic check (one job every minute looking for due events) was considered. It needs no rescheduling, but runs all the time even with no events. Per-event jobs were chosen.
 - **Repeating jobs:** creating instances of recurring events.
 - **Retries:** for failed Battle.net or Discord calls.
+
+### Redis client: node-redis
+
+The server uses the official `redis` package (node-redis) for everything: the health check, sessions, and BullMQ. `connect-redis`, the `express-session` store, only supports node-redis, and BullMQ 6 accepts either client, so one client covers all three. ioredis was considered, but it would mean two Redis clients in one codebase.
+
+Clients are created with `disableOfflineQueue: true`, so commands fail right away while Redis is down instead of waiting for it to come back.
 
 ## Discord bot: discord.js over the Gateway
 
