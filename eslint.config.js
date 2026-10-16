@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -17,6 +18,35 @@ export default tseslint.config(
         },
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    ...reactHooks.configs.flat['recommended-latest'],
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: ['apps/web/src/components/ui/**'],
+    rules: {
+      // Only the UI kit in src/components/ui may use the design library, so it can be swapped.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@mui/*', '@emotion/*'],
+              message: 'Import UI components from src/components/ui instead of the design library.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    rules: {
+      // Browser code: `process` doesn't exist at runtime (its types are only there for vite.config.ts).
+      'no-restricted-globals': ['error', 'process'],
     },
   },
   {

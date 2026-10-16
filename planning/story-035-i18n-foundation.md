@@ -12,6 +12,7 @@ Set up English and Spanish support in the web client, the API, and the bot, so e
 
 - i18next with `react-i18next` in the web client, and i18next in the server (API, bot, and worker).
 - English and Spanish translation files in each app.
+- Move the placeholder English text from story 006 (the navigation in `app/Layout.tsx`, the page titles in `app/routes.tsx`, and `pages/StatusPage.tsx`) to the translation files.
 - Typed translation keys.
 - A language switcher in the web app, defaulting to the browser's language.
 - Error codes in API responses, translated by the web client. Zod errors mapped to codes.

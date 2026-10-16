@@ -51,7 +51,7 @@ The first start builds the images and installs dependencies, which takes a few m
 
 | Service | URL or port | What it is |
 |---|---|---|
-| `web` | http://localhost:5173 | Web app (Vite dev server, reloads when you save a file in `apps/web`) |
+| `web` | http://localhost:5173 | Web app (Vite dev server, reloads when you save a file in `apps/web`). http://localhost:5173/status shows the API, database, and Redis status |
 | `api` | http://localhost:3000 | Express API |
 | `postgres` | `localhost:5432` | PostgreSQL, for database tools (user, password, and database are in `.env`) |
 | `redis` | `localhost:6379` | Redis, for Redis tools |

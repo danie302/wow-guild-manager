@@ -66,6 +66,9 @@ The web client, server, and shared packages are all TypeScript. Shared types and
 
 A single-page app built with Vite, React, React Router, and TanStack Query.
 
+- React Router is used in library mode (`createBrowserRouter`), with the routes in `src/app/routes.tsx`.
+- In development, Vite forwards `/api` to the API (`API_PROXY_TARGET`), so the browser only talks to one origin and the API needs no CORS setup.
+
 **Why not Next.js:** Next.js comes with its own server, API routes, and server-side rendering. With Express as the backend, that would mean two servers with overlapping jobs, and a login cookie shared between them. Next.js is strongest for public sites that need SEO or server rendering. This app is an internal tool behind a login, so it wouldn't use those strengths.
 
 ## Backend: Express 5
@@ -271,6 +274,10 @@ App code never imports MUI directly. It uses our own components in `apps/web/src
 - Only `components/ui` imports `@mui/*`. An ESLint rule (`no-restricted-imports`) blocks MUI imports anywhere else.
 - Component props use our own types, not MUI's, so changing the design library later only changes `components/ui`.
 - The MUI theme lives next to those components and is built from the design tokens.
+- The tokens (`src/components/ui/tokens.ts`) are copied from the prototype for both themes. They're also set as CSS variables under `[data-theme="dark"]` and `[data-theme="light"]`, so our components use the same names as the design (`var(--sf2)`). MUI's `nativeColor` option lets its palette use the `oklch()` colors.
+- Archivo is self-hosted with `@fontsource-variable/archivo`, so the app doesn't load fonts from Google.
+- Icons are the prototype's SVG paths in an `Icon` component, not an icon package.
+- `src/components/ui/index.ts` is the only entry point pages use.
 
 ## Linting and formatting: ESLint and Prettier
 
@@ -279,6 +286,7 @@ App code never imports MUI directly. It uses our own components in `apps/web/src
 ESLint checks code quality (with TypeScript and React rules), and Prettier formats it. Both run on every package from the root, and CI fails on lint errors.
 
 - ESLint uses a flat config (`eslint.config.js`) with typescript-eslint's type-checked rules, and `eslint-config-prettier` so the two don't conflict.
+- The web client adds `eslint-plugin-react-hooks`. `eslint-plugin-react` doesn't support ESLint 10 yet; TypeScript already checks JSX.
 - Prettier formats code and config files but not Markdown, because its table alignment turns small doc edits into large diffs.
 
 ## Toolchain versions

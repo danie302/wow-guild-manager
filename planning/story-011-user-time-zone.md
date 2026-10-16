@@ -13,7 +13,7 @@ Show every date and time in the app user's own time zone, and let them choose th
 - A time zone field on app users (IANA name, e.g. `America/Bogota`).
 - A settings page to change it, next to the language setting from story 010.
 - One date formatting helper used by every page.
-- A theme setting: dark (default) or light, saved on the app user.
+- A theme setting: dark (default) or light, saved on the app user. Both themes already exist (story 006): switch them with MUI's `useColorScheme`, wrapped by a hook in `src/components/ui`.
 - Design reference: screen 13 in `docs/design/`.
 
 ## Acceptance criteria

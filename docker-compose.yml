@@ -46,6 +46,9 @@ services:
     image: wgm-web-dev
     init: true
     command: pnpm --filter @wgm/web dev
+    environment:
+      # Vite forwards /api requests to the api container.
+      API_PROXY_TARGET: http://api:3000
     ports:
       - ${WEB_PORT:-5173}:5173
     volumes: *app-volumes

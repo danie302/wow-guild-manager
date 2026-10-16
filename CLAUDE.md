@@ -63,7 +63,7 @@ The code is a pnpm monorepo (layout and reasoning in `docs/tech-decisions.md`):
 - `apps/server`: the Express API, Discord bot, and worker, as one codebase with three entry points (`src/entrypoints/api.ts`, `bot.ts`, `worker.ts`) that run as separate containers.
 - `packages/shared`: Zod schemas, API types, and game tables, consumed as TypeScript source with no build step. Only code that can also run in the browser goes here.
 
-UI rule: the web client uses Material UI only inside `apps/web/src/components/ui`, behind our own compound components (e.g. `<RoleSection>` with `<RoleSection.Header>`). Pages and features never import `@mui/*` directly (an ESLint rule enforces it), and component props use our own types, so the design library can be swapped.
+UI rule: the web client uses Material UI only inside `apps/web/src/components/ui`, behind our own compound components (e.g. `<AppShell>` with `<AppShell.NavItem>`). Pages and features never import `@mui/*` or `@emotion/*` directly (an ESLint rule enforces it). They import from `src/components/ui/index.ts`, and component props use our own types, so the design library can be swapped. Colors come from the design tokens in `src/components/ui/tokens.ts`, used as CSS variables (`var(--sf2)`).
 
 Dependency rules: `web` and `server` depend on `shared` and never on each other. `shared` imports nothing server-only (no Sequelize). Domain rules live in `apps/server/src/domain` and don't import Express or discord.js.
 

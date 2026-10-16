@@ -37,6 +37,8 @@ To see each kind of user in the prototype, change **Login outcome** (officer, gm
 
 ## Visual language
 
+The tokens below are implemented in `apps/web/src/components/ui/tokens.ts` (story 006). If the design's tokens change, update that file.
+
 - **Typeface:** Archivo (Google Fonts), weights 400–800. Numbers use tabular figures.
 - **Themes:** dark (default) and light, switched with `data-theme` on the root element.
 - **Shape:** square corners, flat surfaces, 2px dividers under headers, 1px lines between rows. No shadows except dialogs and toasts.
