@@ -18,11 +18,11 @@ describe('test database', () => {
     expect(result.rows[0]?.name).toMatch(/_test$/);
   });
 
-  it('starts every run empty', async () => {
-    const result = await client.query<{ count: string }>(
-      "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'",
+  it('starts every run with only the migrated tables', async () => {
+    const result = await client.query<{ name: string }>(
+      "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = 'public'",
     );
 
-    expect(result.rows[0]?.count).toBe('0');
+    expect(result.rows.map((row) => row.name)).toContain('SequelizeMeta');
   });
 });

@@ -1,6 +1,6 @@
 # Story 005: Database setup with Sequelize
 
-**Status:** Not started  
+**Status:** Done  
 **Phase:** Foundation  
 **Depends on:** [Story 004](story-004-api-skeleton.md)
 
@@ -23,12 +23,21 @@ Connect the server to PostgreSQL with Sequelize, safe transactions, and automati
 
 ## Acceptance criteria
 
-- [ ] The server connects to PostgreSQL using environment variables.
-- [ ] A test proves that a query inside `sequelize.transaction(async () => { … })`, without passing `{ transaction }`, is rolled back when the transaction fails.
-- [ ] `db:migrate`, `db:migrate:undo`, and `db:migration:create` scripts work inside the container.
-- [ ] The `api` container runs pending migrations before it starts listening.
-- [ ] The `bot` and `worker` containers don't run migrations, so they can't race with `api`.
-- [ ] The typed model pattern is documented with an example.
+- [x] The server connects to PostgreSQL using environment variables.
+- [x] A test proves that a query inside `sequelize.transaction(async () => { … })`, without passing `{ transaction }`, is rolled back when the transaction fails.
+- [x] `db:migrate`, `db:migrate:undo`, and `db:migration:create` scripts work inside the container.
+- [x] The `api` container runs pending migrations before it starts listening.
+- [x] The `bot` and `worker` containers don't run migrations, so they can't race with `api`.
+- [x] The typed model pattern is documented with an example.
+
+## Notes
+
+- The CLS namespace is a small adapter over Node's `AsyncLocalStorage` (`apps/server/src/db/cls.ts`), not the unmaintained `cls-hooked` package. A test proves that queries without `{ transaction }` roll back with the transaction, and it fails if `useCLS` is removed.
+- Migrations are CommonJS `.js` files, because `sequelize-cli` can't load TypeScript or ES modules. `src/db/migrations/package.json` sets `"type": "commonjs"` for that folder.
+- The `api` container's `dev:api` script runs `db:migrate` before starting the server. Saving a file restarts the server without re-running migrations. Run `db:migrate` after adding one.
+- Models use `underscored: true`, so columns are snake_case.
+- The health check now uses `sequelize.authenticate()` instead of a separate `pg` pool. `pg` stays as the driver Sequelize needs, and the test setup uses it directly.
+- The typed model pattern and the migration commands are documented in `apps/server/src/db/README.md`.
 
 ## Technical debt
 

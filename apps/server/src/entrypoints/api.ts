@@ -1,16 +1,17 @@
-import pg from 'pg';
 import { createClient } from 'redis';
 
 import { createApp } from '../api/app.js';
-import { postgresCheck, redisCheck } from '../api/health.js';
+import { databaseCheck, redisCheck } from '../api/health.js';
 import { loadConfigOrExit } from '../config.js';
+import { createSequelize } from '../db/sequelize.js';
 import { createLogger } from '../logger.js';
+
+// Migrations run before this process starts (see the dev:api script), never from bot or worker.
 
 const config = loadConfigOrExit();
 const logger = createLogger(config);
 
-const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
-pool.on('error', (err) => logger.error({ err }, 'PostgreSQL pool error'));
+const sequelize = createSequelize(config.DATABASE_URL, logger);
 
 // Without the offline queue, commands fail right away while Redis is down instead of waiting.
 const redis = createClient({ url: config.REDIS_URL, disableOfflineQueue: true });
@@ -19,7 +20,7 @@ await redis.connect();
 
 const app = createApp({
   logger,
-  healthChecks: { database: postgresCheck(pool), redis: redisCheck(redis) },
+  healthChecks: { database: databaseCheck(sequelize), redis: redisCheck(redis) },
 });
 
 const server = app.listen(config.PORT, () => {
@@ -29,6 +30,6 @@ const server = app.listen(config.PORT, () => {
 process.on('SIGTERM', () => {
   logger.info('Shutting down');
   server.close(() => {
-    void Promise.allSettled([pool.end(), redis.close()]).then(() => process.exit(0));
+    void Promise.allSettled([sequelize.close(), redis.close()]).then(() => process.exit(0));
   });
 });

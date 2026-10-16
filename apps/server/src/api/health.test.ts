@@ -1,10 +1,10 @@
-import pg from 'pg';
 import { createClient } from 'redis';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createApp } from './app.js';
-import { postgresCheck, redisCheck, type HealthCheck } from './health.js';
+import { createSequelize } from '../db/sequelize.js';
+import { databaseCheck, redisCheck, type HealthCheck } from './health.js';
 import { createTestLogger } from './test-logger.js';
 
 const up: HealthCheck = () => Promise.resolve();
@@ -16,7 +16,7 @@ function appWith(database: HealthCheck, redis: HealthCheck) {
 
 describe('GET /api/health', () => {
   describe('with the real PostgreSQL and Redis', () => {
-    const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+    const sequelize = createSequelize(process.env.DATABASE_URL ?? '');
     const redis = createClient({ url: process.env.REDIS_URL, disableOfflineQueue: true });
 
     beforeAll(async () => {
@@ -24,11 +24,11 @@ describe('GET /api/health', () => {
     });
 
     afterAll(async () => {
-      await Promise.all([pool.end(), redis.close()]);
+      await Promise.all([sequelize.close(), redis.close()]);
     });
 
     it('returns 200 when both are up', async () => {
-      const response = await request(appWith(postgresCheck(pool), redisCheck(redis))).get(
+      const response = await request(appWith(databaseCheck(sequelize), redisCheck(redis))).get(
         '/api/health',
       );
 

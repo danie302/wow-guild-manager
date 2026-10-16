@@ -25,6 +25,11 @@ Tests run inside Docker with the stack up (server tests need the test database a
 - `docker compose exec api pnpm --filter @wgm/server test test/test-database.test.ts`: a single file (path relative to the package).
 - `docker compose exec api pnpm --filter @wgm/server test -t "starts every run empty"`: tests whose name matches.
 
+Database migrations (details and the typed model pattern in `apps/server/src/db/README.md`):
+
+- `docker compose exec api pnpm --filter @wgm/server db:migration:create --name <name>`: new migration (CommonJS `.js`).
+- `docker compose exec api pnpm --filter @wgm/server db:migrate` / `db:migrate:undo`: apply pending migrations or revert the last one. The `api` container also applies them on start.
+
 Test files are `*.test.ts` next to the code. Server tests use `wgm_test`, which is recreated on every run.
 
 ## Planning workflow
@@ -71,8 +76,8 @@ These rules come from `requirements.md` and should be enforced on the server and
 - **A guild always has exactly one Guild Master.**
 - **Permissions don't follow a simple hierarchy.** Some actions are GM-only (e.g. pre-confirming raid participants), and Officers can only change the rank of, or remove, Raiders and Members. Use the permission tables in `requirements.md`. Don't infer permissions from rank order.
 - **Attendance changes are audited.** Corrections record who made them and when.
-- **Sign-up capacity must be safe against concurrent sign-ups.** Discord button clicks arrive in parallel. Filling a role, adding to the waitlist, and promoting from it must run in one Sequelize transaction that first locks the event row (`lock: Transaction.LOCK.UPDATE`). Sequelize uses CLS so queries join the transaction automatically. Don't remove that setup.
-- **Every Sequelize model change needs a migration** in the same change. Migrations are hand-written with `sequelize-cli`.
+- **Sign-up capacity must be safe against concurrent sign-ups.** Discord button clicks arrive in parallel. Filling a role, adding to the waitlist, and promoting from it must run in one Sequelize transaction that first locks the event row (`lock: Transaction.LOCK.UPDATE`). Sequelize uses CLS (`Sequelize.useCLS` in `apps/server/src/db/sequelize.ts`) so queries join the transaction automatically. Don't remove that setup.
+- **Every Sequelize model change needs a migration** in the same change. Migrations are hand-written with `sequelize-cli`, as CommonJS files in `apps/server/src/db/migrations`.
 - **Removing a member is a soft delete.** Their member and character records stay (marked as removed) so past sign-ups and attendance remain intact. The one-guild-at-a-time constraint on characters applies only to active (not removed) records, e.g. with a partial unique index. Adding a removed member back to the same guild restores their old record and history instead of creating a new one.
 - **Releasing a spot** (removal from the roster, withdrawing, or Tentative expiry) promotes the earliest waitlisted character with the same combat role, and the Discord post must update.
 - **Read-only member access is filtered on the server.** Data members can't see (officer notes, rank history, pending registrations, the attendance report, other people's gear check results, past events, "left Discord" flags, settings) must never be included in responses to a member's session, not just hidden in the UI. See "Read-only access for members" in `requirements.md`.

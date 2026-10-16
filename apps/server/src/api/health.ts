@@ -1,7 +1,7 @@
 import type { HealthResponse, HealthStatus } from '@wgm/shared';
 import { Router } from 'express';
-import type pg from 'pg';
 import type { RedisClientType } from 'redis';
+import type { Sequelize } from 'sequelize';
 
 /** Resolves if the dependency is reachable, rejects otherwise. */
 export type HealthCheck = () => Promise<void>;
@@ -10,10 +10,8 @@ export type HealthChecks = Record<keyof HealthResponse['checks'], HealthCheck>;
 
 const DEFAULT_TIMEOUT_MS = 2000;
 
-export function postgresCheck(pool: pg.Pool): HealthCheck {
-  return async () => {
-    await pool.query('SELECT 1');
-  };
+export function databaseCheck(sequelize: Pick<Sequelize, 'authenticate'>): HealthCheck {
+  return () => sequelize.authenticate();
 }
 
 export function redisCheck(client: Pick<RedisClientType, 'isReady' | 'ping'>): HealthCheck {

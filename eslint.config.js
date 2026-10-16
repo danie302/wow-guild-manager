@@ -20,10 +20,21 @@ export default tseslint.config(
     },
   },
   {
-    files: ['*.js'],
+    files: ['**/*.js', '**/*.cjs'],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
       globals: globals.node,
+    },
+  },
+  {
+    // sequelize-cli only loads CommonJS: its config and the migrations.
+    files: ['**/*.cjs', 'apps/server/src/db/migrations/**/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   prettier,

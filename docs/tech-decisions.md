@@ -164,9 +164,11 @@ Sequelize was chosen over Drizzle ORM for its stability and its large community.
 
 ### How we use it
 - **Typed models.** Models extend `Model<InferAttributes<…>, InferCreationAttributes<…>>` and declare their fields with `declare`, so queries return typed objects.
-- **Automatic transaction propagation.** Sequelize is configured with CLS (`Sequelize.useCLS`), so every query inside `sequelize.transaction(async () => { … })` joins that transaction automatically. Without it, a query that forgets `{ transaction: t }` runs outside the transaction with no error, and the slot lock stops protecting sign-ups.
+- **Automatic transaction propagation.** Sequelize is configured with CLS (`Sequelize.useCLS`), so every query inside `sequelize.transaction(async () => { … })` joins that transaction automatically. Without it, a query that forgets `{ transaction: t }` runs outside the transaction with no error, and the slot lock stops protecting sign-ups. The CLS namespace is a small adapter over Node's built-in `AsyncLocalStorage` instead of `cls-hooked`, which Sequelize's docs suggest but which hasn't been maintained since 2017.
 - **Row locks for sign-ups.** The sign-up transaction loads the event with `lock: Transaction.LOCK.UPDATE` before counting slots.
-- **Migrations.** Migrations are written by hand with `sequelize-cli` and run automatically when the stack starts. Every model change needs a matching migration in the same change.
+- **Migrations.** Migrations are written by hand with `sequelize-cli` and run automatically when the `api` container starts, before it listens (`bot` and `worker` never run them, so they can't race). Every model change needs a matching migration in the same change. Migration files are CommonJS JavaScript, because `sequelize-cli` can't load TypeScript or ES modules.
+- **Naming.** Models use `underscored: true`: attributes are camelCase in code and snake_case in the database.
+- **Where to look.** `apps/server/src/db/README.md` documents the typed model pattern, transactions, and the migration commands.
 - **Validation stays in Zod.** Zod schemas in `packages/shared` are the source of truth for input validation. Sequelize model validations are only used for database-level guarantees (e.g. not null).
 - **A test for concurrent sign-ups.** A test sends several sign-ups for the last slot at the same time and checks that only one gets it.
 

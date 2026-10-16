@@ -1,8 +1,14 @@
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
 import pg from 'pg';
 
+const serverDir = fileURLToPath(new URL('..', import.meta.url));
+
 /**
- * Recreates the test database before every test run, so each run starts empty.
- * It refuses to run unless the target is clearly a test database.
+ * Recreates the test database before every test run and runs the migrations, so each run
+ * starts with the current schema and no data. It refuses to run unless the target is clearly
+ * a test database.
  */
 export default async function setup(): Promise<void> {
   const testUrl = new URL(requireEnv('TEST_DATABASE_URL'));
@@ -28,6 +34,12 @@ export default async function setup(): Promise<void> {
   } finally {
     await client.end();
   }
+
+  execFileSync('node_modules/.bin/sequelize-cli', ['db:migrate'], {
+    cwd: serverDir,
+    env: { ...process.env, NODE_ENV: 'test', DATABASE_URL: testUrl.toString() },
+    stdio: 'pipe',
+  });
 }
 
 function requireEnv(name: string): string {

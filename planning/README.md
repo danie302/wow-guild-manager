@@ -39,7 +39,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 | [002](story-002-docker-dev-environment.md) | Docker development environment | Done | 001 |
 | [003](story-003-testing-setup.md) | Testing setup | Done | 002 |
 | [004](story-004-api-skeleton.md) | Express API skeleton and health check | Done | 003 |
-| [005](story-005-sequelize-setup.md) | Database setup with Sequelize | Not started | 004 |
+| [005](story-005-sequelize-setup.md) | Database setup with Sequelize | Done | 004 |
 | [006](story-006-web-skeleton.md) | Web client skeleton | Not started | 004 |
 | [007](story-007-shared-game-data.md) | Shared game data and schemas | Not started | 003 |
 | [008](story-008-bot-skeleton.md) | Discord bot skeleton | Not started | 002, 003 |
