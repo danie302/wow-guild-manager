@@ -1,22 +1,35 @@
 import { z } from 'zod';
 
-const configSchema = z.object({
+/** Variables every process (api, bot, worker) needs. */
+export const baseConfigSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.url(),
   REDIS_URL: z.url(),
 });
 
-export type Config = z.infer<typeof configSchema>;
+export const apiConfigSchema = baseConfigSchema.extend({
+  PORT: z.coerce.number().int().positive().default(3000),
+});
+
+export const botConfigSchema = baseConfigSchema.extend({
+  DISCORD_BOT_TOKEN: z.string().min(1),
+});
+
+export type BaseConfig = z.infer<typeof baseConfigSchema>;
+export type ApiConfig = z.infer<typeof apiConfigSchema>;
+export type BotConfig = z.infer<typeof botConfigSchema>;
 
 export class ConfigError extends Error {
   override name = 'ConfigError';
 }
 
 /** Reads and validates the configuration. Throws a ConfigError naming every invalid variable. */
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const result = configSchema.safeParse(env);
+export function loadConfig<Schema extends z.ZodType>(
+  schema: Schema,
+  env: NodeJS.ProcessEnv = process.env,
+): z.infer<Schema> {
+  const result = schema.safeParse(env);
   if (result.success) {
     return result.data;
   }
@@ -29,9 +42,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 }
 
 /** Like loadConfig, but prints the problem and exits, for use at process startup. */
-export function loadConfigOrExit(): Config {
+export function loadConfigOrExit<Schema extends z.ZodType>(schema: Schema): z.infer<Schema> {
   try {
-    return loadConfig();
+    return loadConfig(schema);
   } catch (error) {
     if (error instanceof ConfigError) {
       console.error(error.message);

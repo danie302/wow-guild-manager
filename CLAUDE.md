@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Early implementation: story 001 (monorepo scaffold) is done. `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. Check `planning/README.md` for the next story.
+Early implementation: the foundation stories are in progress (see `planning/README.md`). `requirements.md` is the product spec and the source of truth for features, ranks, permissions, and event rules. Read it before implementing anything. If it doesn't define a behavior, ask instead of assuming. The stack is decided and documented in `docs/tech-decisions.md`: Docker Compose for local development, TypeScript, React + Vite, Express 5, Sequelize 6 on PostgreSQL, Redis with BullMQ, discord.js, Zod, and Vitest with Supertest, in a pnpm monorepo. Check `planning/README.md` for the next story.
 
 ## Commands
 
 Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.
 
-- `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`.
+- `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`. After editing `.env`, use `docker compose up -d` (not `restart`, which keeps the old environment). The bot needs `DISCORD_BOT_TOKEN`; without it only the `bot` container exits.
 - `pnpm install`: install every workspace on the host (containers install their own into Docker volumes). pnpm rejects versions published less than a day ago: pick the previous version, and don't add `minimumReleaseAgeExclude` entries. After adding a dependency with the stack running, run `docker compose up -d` and then `docker compose restart api bot worker web`.
 - `pnpm typecheck`: typecheck every package (`pnpm --filter @wgm/web typecheck` for one).
 - `pnpm lint`: ESLint over the whole repo.

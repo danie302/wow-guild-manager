@@ -2,13 +2,13 @@ import { createClient } from 'redis';
 
 import { createApp } from '../api/app.js';
 import { databaseCheck, redisCheck } from '../api/health.js';
-import { loadConfigOrExit } from '../config.js';
+import { apiConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { createLogger } from '../logger.js';
 
-// Migrations run before this process starts (see the dev:api script), never from bot or worker.
+// Migrations run before this process starts (see the api command in docker-compose.yml), never from bot or worker.
 
-const config = loadConfigOrExit();
+const config = loadConfigOrExit(apiConfigSchema);
 const logger = createLogger(config);
 
 const sequelize = createSequelize(config.DATABASE_URL, logger);

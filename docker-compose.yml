@@ -58,17 +58,20 @@ services:
 
   api:
     <<: *server
-    command: pnpm --filter @wgm/server dev:api
+    # Runs tsx without pnpm in between: pnpm kills its children with SIGKILL on SIGTERM,
+    # which would skip the graceful shutdown (closing connections, leaving Discord).
+    # Migrations run before the server starts; bot and worker never run them.
+    command: sh -c "cd apps/server && node_modules/.bin/sequelize-cli db:migrate && exec node_modules/.bin/tsx watch --include src --include ../../packages/shared/src src/entrypoints/api.ts"
     ports:
       - ${API_PORT:-3000}:3000
 
   bot:
     <<: *server
-    command: pnpm --filter @wgm/server dev:bot
+    command: sh -c "cd apps/server && exec node_modules/.bin/tsx watch --include src --include ../../packages/shared/src src/entrypoints/bot.ts"
 
   worker:
     <<: *server
-    command: pnpm --filter @wgm/server dev:worker
+    command: sh -c "cd apps/server && exec node_modules/.bin/tsx watch --include src --include ../../packages/shared/src src/entrypoints/worker.ts"
 
   postgres:
     image: postgres:18-alpine

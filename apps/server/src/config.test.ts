@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { ConfigError, loadConfig } from './config.js';
+import { apiConfigSchema, botConfigSchema, ConfigError, loadConfig } from './config.js';
 
-const validEnv = {
+const baseEnv = {
   DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
 };
 
 describe('loadConfig', () => {
   it('applies defaults for optional variables', () => {
-    expect(loadConfig(validEnv)).toEqual({
-      ...validEnv,
+    expect(loadConfig(apiConfigSchema, baseEnv)).toEqual({
+      ...baseEnv,
       NODE_ENV: 'development',
       PORT: 3000,
       LOG_LEVEL: 'info',
@@ -18,15 +18,26 @@ describe('loadConfig', () => {
   });
 
   it('names a missing required variable', () => {
-    expect(() => loadConfig({ REDIS_URL: validEnv.REDIS_URL })).toThrow(ConfigError);
-    expect(() => loadConfig({ REDIS_URL: validEnv.REDIS_URL })).toThrow('DATABASE_URL is required');
+    const env = { REDIS_URL: baseEnv.REDIS_URL };
+
+    expect(() => loadConfig(apiConfigSchema, env)).toThrow(ConfigError);
+    expect(() => loadConfig(apiConfigSchema, env)).toThrow('DATABASE_URL is required');
   });
 
   it('treats an empty variable as missing', () => {
-    expect(() => loadConfig({ ...validEnv, REDIS_URL: '' })).toThrow('REDIS_URL is required');
+    expect(() => loadConfig(apiConfigSchema, { ...baseEnv, REDIS_URL: '' })).toThrow(
+      'REDIS_URL is required',
+    );
   });
 
   it('names an invalid variable', () => {
-    expect(() => loadConfig({ ...validEnv, PORT: 'abc' })).toThrow(/PORT:/);
+    expect(() => loadConfig(apiConfigSchema, { ...baseEnv, PORT: 'abc' })).toThrow(/PORT:/);
+  });
+
+  it('requires the bot token for the bot', () => {
+    expect(() => loadConfig(botConfigSchema, baseEnv)).toThrow('DISCORD_BOT_TOKEN is required');
+    expect(loadConfig(botConfigSchema, { ...baseEnv, DISCORD_BOT_TOKEN: 'token' })).toMatchObject({
+      DISCORD_BOT_TOKEN: 'token',
+    });
   });
 });

@@ -34,7 +34,7 @@ Connect the server to PostgreSQL with Sequelize, safe transactions, and automati
 
 - The CLS namespace is a small adapter over Node's `AsyncLocalStorage` (`apps/server/src/db/cls.ts`), not the unmaintained `cls-hooked` package. A test proves that queries without `{ transaction }` roll back with the transaction, and it fails if `useCLS` is removed.
 - Migrations are CommonJS `.js` files, because `sequelize-cli` can't load TypeScript or ES modules. `src/db/migrations/package.json` sets `"type": "commonjs"` for that folder.
-- The `api` container's `dev:api` script runs `db:migrate` before starting the server. Saving a file restarts the server without re-running migrations. Run `db:migrate` after adding one.
+- The `api` container runs `db:migrate` before starting the server. Saving a file restarts the server without re-running migrations. Run `db:migrate` after adding one.
 - Models use `underscored: true`, so columns are snake_case.
 - The health check now uses `sequelize.authenticate()` instead of a separate `pg` pool. `pg` stays as the driver Sequelize needs, and the test setup uses it directly.
 - The typed model pattern and the migration commands are documented in `apps/server/src/db/README.md`.

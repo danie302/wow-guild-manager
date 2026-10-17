@@ -38,6 +38,20 @@ The reasons behind each choice are in [`docs/tech-decisions.md`](docs/tech-decis
 
 Instructions for the Discord application and the Battle.net API client will be added as their setup stories are completed.
 
+### Set up Discord
+
+The bot needs its own Discord application and a Discord server to test in. Each developer creates their own.
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**. Give it any name.
+2. On the **Bot** page:
+   - Click **Reset Token**, copy the token, and put it in `.env` as `DISCORD_BOT_TOKEN`. Treat it like a password.
+   - Under **Privileged Gateway Intents**, turn on **Server Members Intent** and save. The bot needs it to see role changes and members leaving the server. Without it, the bot can't connect.
+3. Create a test server in Discord: click **+** in the server list, then **Create My Own**.
+4. Invite the bot: on the **OAuth2** page, open **URL Generator**, tick the **bot** and **applications.commands** scopes, and under **Bot Permissions** tick **View Channels**, **Send Messages**, **Embed Links**, and **Read Message History**. Open the generated URL and pick your test server.
+5. Recreate the bot container with `docker compose up -d bot` (`restart` keeps the old environment and doesn't read `.env` again). Its log (`docker compose logs bot`) shows "Bot online" and "Registered slash commands". In the test server, type `/ping`: the bot answers with a message only you can see.
+
+The bot registers its commands on every server it's in when it connects, and on new servers as soon as it's invited, so they appear right away.
+
 ### Run the stack with Docker
 
 You only need Docker (Docker Desktop on macOS or Windows). Node.js, PostgreSQL, and Redis all run in containers.
@@ -55,7 +69,7 @@ The first start builds the images and installs dependencies, which takes a few m
 | `api` | http://localhost:3000 | Express API |
 | `postgres` | `localhost:5432` | PostgreSQL, for database tools (user, password, and database are in `.env`) |
 | `redis` | `localhost:6379` | Redis, for Redis tools |
-| `bot`, `worker` | No port | Discord bot and background worker |
+| `bot`, `worker` | No port | Discord bot and background worker. The bot stops with a message until `DISCORD_BOT_TOKEN` is set (see "Set up Discord") |
 
 `api`, `bot`, and `worker` restart automatically when you save a file in `apps/server` or `packages/shared`. If a port is already in use on your machine, change it in `.env`.
 
@@ -63,6 +77,7 @@ The first start builds the images and installs dependencies, which takes a few m
 - `docker compose down -v` also deletes the data volumes, including `node_modules`, for a clean start.
 - `docker compose logs -f api` follows one service's logs.
 - The `api` container applies pending database migrations when it starts. To run them by hand: `docker compose exec api pnpm --filter @wgm/server db:migrate` (`db:migrate:undo` reverts the last one).
+- After changing `.env`, run `docker compose up -d` to recreate the affected containers. `docker compose restart` keeps the old environment.
 - http://localhost:3000/api/health shows whether the API can reach PostgreSQL and Redis.
 - After adding or updating a dependency, run `docker compose up -d` (the `deps` service installs it into the containers) and then `docker compose restart api bot worker web`. A process that crashed on a missing package waits for a file change, so it won't recover on its own.
 

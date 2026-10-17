@@ -144,12 +144,15 @@ npm workspaces were considered: they need no extra tool but aren't strict about 
 - The Docker build context is the repository root, because every image needs `packages/shared`. A `.dockerignore` keeps the context small.
 - Production images use multi-stage builds. The server image contains only the compiled server and its dependencies, not the web client.
 - In development, the repository is mounted into the containers for hot reload, and `node_modules` lives in Docker volumes so Linux-built dependencies don't clash with the host's.
+- The `api`, `bot`, and `worker` containers start `tsx` directly (`exec` in their `command`), not through `pnpm` scripts. When pnpm receives SIGTERM it kills its children with SIGKILL, which would skip each process's graceful shutdown.
 
 ## Backend processes: one codebase, three processes
 
 **Status:** Accepted
 
 The API server, Discord bot, and worker live in the same codebase and run as three separate processes. They all use the same domain rules (combat roles by class, slots, waitlist, the Tentative deadline, permissions), so the rules are written once. A process can be split into its own service later if it needs to scale on its own.
+
+Each process validates only the environment variables it needs. `src/config.ts` has a base Zod schema (database, Redis, logging) that each process extends: the API adds `PORT`, and the bot adds `DISCORD_BOT_TOKEN`. So the API runs without a Discord token, and the bot exits with a clear message when it's missing.
 
 ## Database: PostgreSQL
 
@@ -223,6 +226,11 @@ Clients are created with `disableOfflineQueue: true`, so commands fail right awa
 **Status:** Accepted
 
 The bot uses discord.js and connects to the Discord Gateway, which is an outgoing WebSocket connection. This means it works on a local machine without exposing a port or using a tunnel. Discord also accepts `http://localhost` as an OAuth2 redirect URL, so the login works locally too.
+
+How the bot is set up:
+- **Intents:** `Guilds` and `GuildMembers`. `GuildMembers` is privileged, so it has to be turned on in the Developer Portal. It's needed to see members leave the server and to keep the Officer role in sync. The bot doesn't read message content.
+- **Slash commands are registered per Discord server,** not globally, because per-server commands appear immediately. The bot registers them for every server when it connects and when it joins a new one. Each command is a `SlashCommand` (definition plus `execute`) in `apps/server/src/bot/commands/`, listed in `commands/index.ts`.
+- **Replies only the user should see** use `MessageFlags.Ephemeral`. If a command throws, the bot logs the error and replies with a generic ephemeral message.
 
 ## Validation: Zod
 
