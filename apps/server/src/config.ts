@@ -10,6 +10,13 @@ export const baseConfigSchema = z.object({
 
 export const apiConfigSchema = baseConfigSchema.extend({
   PORT: z.coerce.number().int().positive().default(3000),
+  /** Signs the session cookie. A long random string; changing it logs everyone out. */
+  SESSION_SECRET: z.string().min(32),
+  /** Where people open the web app. Discord sends them back to `<WEB_ORIGIN>/api/auth/discord/callback`. */
+  WEB_ORIGIN: z.url().default('http://localhost:5173'),
+  /** The Discord application's OAuth2 credentials. Without them the API runs, but login is off. */
+  DISCORD_CLIENT_ID: z.string().min(1).optional(),
+  DISCORD_CLIENT_SECRET: z.string().min(1).optional(),
 });
 
 export const botConfigSchema = baseConfigSchema.extend({
@@ -29,7 +36,9 @@ export function loadConfig<Schema extends z.ZodType>(
   schema: Schema,
   env: NodeJS.ProcessEnv = process.env,
 ): z.infer<Schema> {
-  const result = schema.safeParse(env);
+  // An empty variable (e.g. `DISCORD_CLIENT_ID=` in .env) counts as not set.
+  const setVariables = Object.fromEntries(Object.entries(env).filter(([, value]) => value !== ''));
+  const result = schema.safeParse(setVariables);
   if (result.success) {
     return result.data;
   }

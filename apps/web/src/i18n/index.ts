@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES, type Locale } from '@wgm/shared';
+import { isLocale, SUPPORTED_LOCALES, type Locale } from '@wgm/shared';
 import i18next, { type ParseKeys } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -26,10 +26,6 @@ export function detectLocale(saved: string | null, browserLanguages: readonly st
     if (isLocale(base)) return base;
   }
   return DEFAULT_LOCALE;
-}
-
-export function isLocale(value: unknown): value is Locale {
-  return SUPPORTED_LOCALES.includes(value as Locale);
 }
 
 function savedLocale(): string | null {

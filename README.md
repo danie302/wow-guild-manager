@@ -40,7 +40,7 @@ Instructions for the Discord application and the Battle.net API client will be a
 
 ### Set up Discord
 
-The bot needs its own Discord application and a Discord server to test in. Each developer creates their own.
+The bot and the web app's login share one Discord application, and you need a Discord server to test in. Each developer creates their own.
 
 1. Open the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**. Give it any name.
 2. On the **Bot** page:
@@ -48,7 +48,15 @@ The bot needs its own Discord application and a Discord server to test in. Each 
    - Under **Privileged Gateway Intents**, turn on **Server Members Intent** and save. The bot needs it to see role changes and members leaving the server. Without it, the bot can't connect.
 3. Create a test server in Discord: click **+** in the server list, then **Create My Own**.
 4. Invite the bot: on the **OAuth2** page, open **URL Generator**, tick the **bot** and **applications.commands** scopes, and under **Bot Permissions** tick **View Channels**, **Send Messages**, **Embed Links**, and **Read Message History**. Open the generated URL and pick your test server.
-5. Recreate the bot container with `docker compose up -d bot` (`restart` keeps the old environment and doesn't read `.env` again). Its log (`docker compose logs bot`) shows "Bot online" and "Registered slash commands". In the test server, type `/ping`: the bot answers with a message only you can see.
+5. Set up the web login: on the **OAuth2** page:
+   - Copy the **Client ID** into `.env` as `DISCORD_CLIENT_ID`.
+   - Click **Reset Secret** and put it in `.env` as `DISCORD_CLIENT_SECRET`. Treat it like a password.
+   - Under **Redirects**, add `http://localhost:5173/api/auth/discord/callback` and save. If you changed `WEB_PORT`, use that port instead.
+6. Recreate the containers with `docker compose up -d` (`restart` keeps the old environment and doesn't read `.env` again).
+   - The bot's log (`docker compose logs bot`) shows "Bot online" and "Registered slash commands". In the test server, type `/ping`: the bot answers with a message only you can see.
+   - Open http://localhost:5173 and click **Log in with Discord**.
+
+Without `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`, the API still runs, but the login page says that login isn't set up. `SESSION_SECRET` comes with a value for local development in `.env.example`; an `.env` made before the login existed needs it added.
 
 The bot registers its commands on every server it's in when it connects, and on new servers as soon as it's invited, so they appear right away.
 

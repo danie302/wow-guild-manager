@@ -1,10 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 
-import { AppShell } from '../components/ui';
+import { useLogout, useMe } from '../api/me';
+
+import { AppShell, Button } from '../components/ui';
 
 export function Layout() {
   const { t } = useTranslation();
+  // RequireAuth renders this layout only once the user is loaded.
+  const me = useMe().data;
+  const logout = useLogout();
 
   return (
     <AppShell>
@@ -37,6 +42,13 @@ export function Layout() {
             {t('nav.status')}
           </AppShell.NavItem>
         </AppShell.Nav>
+        {me && (
+          <AppShell.Account name={me.name} avatarUrl={me.avatarUrl}>
+            <Button onClick={() => logout.mutate()} disabled={logout.isPending}>
+              {t('auth.signOut')}
+            </Button>
+          </AppShell.Account>
+        )}
       </AppShell.Sidebar>
       <AppShell.Main>
         <Outlet />

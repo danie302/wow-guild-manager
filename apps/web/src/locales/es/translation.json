@@ -5,9 +5,9 @@
   },
   "nav": {
     "label": "Principal",
-    "dashboard": "Inicio",
+    "dashboard": "Panel",
     "events": "Eventos",
-    "roster": "Roster",
+    "roster": "Plantilla",
     "registrations": "Registros pendientes",
     "attendance": "Informe de asistencia",
     "guildSettings": "Ajustes de la hermandad",
@@ -39,7 +39,8 @@
     "INVALID_JSON": "No se pudo leer la solicitud. Inténtalo de nuevo.",
     "INTERNAL_ERROR": "Algo salió mal en el servidor. Inténtalo de nuevo más tarde.",
     "VALIDATION_ERROR": "Hay campos que corregir.",
-    "API_UNAVAILABLE": "No se puede conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
+    "API_UNAVAILABLE": "No se puede conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "UNAUTHENTICATED": "Tu sesión ha terminado. Vuelve a iniciar sesión."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",
@@ -62,5 +63,20 @@
     "TOO_MANY_PRIMARY_PROFESSIONS_one": "Un personaje puede tener como máximo {{count}} profesión principal.",
     "TOO_MANY_PRIMARY_PROFESSIONS_other": "Un personaje puede tener como máximo {{count}} profesiones principales.",
     "CLASS_CANNOT_FILL_ROLE": "Esta clase no puede cubrir ese rol de combate."
+  },
+  "auth": {
+    "checking": "Comprobando tu sesión",
+    "unavailableTitle": "No se puede conectar con el servidor",
+    "signOut": "Cerrar sesión"
+  },
+  "login": {
+    "lead": "Gestiona la plantilla, los eventos y la asistencia de tu hermandad. Los Raiders y Members pueden iniciar sesión para ver los eventos y la plantilla.",
+    "button": "Iniciar sesión con Discord",
+    "note": "Tienes que estar en la plantilla de tu hermandad o tener el rol de Officer en su servidor de Discord. ¿Vas a configurar una hermandad nueva? Inicia sesión y te guiaremos.",
+    "errors": {
+      "cancelled": "Cancelaste el inicio de sesión en Discord. Inténtalo de nuevo cuando quieras.",
+      "failed": "No se pudo iniciar sesión con Discord. Inténtalo de nuevo.",
+      "not_configured": "El inicio de sesión con Discord todavía no está configurado en este servidor."
+    }
   }
 }

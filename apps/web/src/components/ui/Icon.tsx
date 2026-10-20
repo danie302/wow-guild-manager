@@ -13,6 +13,7 @@ const paths = {
   guildSettings: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
   user: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
   status: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  arrowRight: 'M5 12h14M13 6l6 6-6 6',
 } as const;
 
 export type IconName = keyof typeof paths;

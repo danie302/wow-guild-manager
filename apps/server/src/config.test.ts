@@ -8,12 +8,16 @@ const baseEnv = {
 };
 
 describe('loadConfig', () => {
-  it('applies defaults for optional variables', () => {
-    expect(loadConfig(apiConfigSchema, baseEnv)).toEqual({
+  it('applies defaults for optional variables, and ignores empty ones', () => {
+    const env = { ...baseEnv, SESSION_SECRET: 'x'.repeat(32), DISCORD_CLIENT_ID: '' };
+
+    expect(loadConfig(apiConfigSchema, env)).toEqual({
       ...baseEnv,
+      SESSION_SECRET: 'x'.repeat(32),
       NODE_ENV: 'development',
       PORT: 3000,
       LOG_LEVEL: 'info',
+      WEB_ORIGIN: 'http://localhost:5173',
     });
   });
 

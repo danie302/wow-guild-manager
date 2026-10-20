@@ -1,14 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { HealthResponse } from '@wgm/shared';
 
-/** The API couldn't be reached, or didn't answer with a health report. */
-export class ApiUnavailableError extends Error {
-  override name = 'ApiUnavailableError';
-
-  constructor(readonly status?: number) {
-    super(status ? `API answered with status ${status}` : 'API unreachable');
-  }
-}
+import { ApiUnavailableError } from './client';
 
 export async function fetchHealth(): Promise<HealthResponse> {
   let response: Response;

@@ -82,6 +82,13 @@ Express serves the web client's API and handles the Discord OAuth2 login. Sessio
 - Errors are JSON with a code and no text: `{ "error": { "code": "NOT_FOUND" } }`. The codes and response types live in `packages/shared`. Unhandled errors return `INTERNAL_ERROR` with no details, and the stack trace is logged.
 - `GET /api/health` checks PostgreSQL and Redis and returns 503 naming whichever is down.
 
+### Login and sessions
+
+- **Discord OAuth2** (authorization code flow) with only the `identify` scope. The code is exchanged on the server, the profile is read, and the access token is dropped. Guild data comes from the bot, so user tokens are never stored or sent to the browser. The OAuth2 calls sit behind a `DiscordOAuth` interface (`src/auth/discord-oauth.ts`) so tests use a fake Discord.
+- **`state`** is 32 random bytes kept in the session, compared in constant time, and deleted after one use. The session is regenerated on login.
+- **Sessions:** `express-session` with `connect-redis` on the node-redis client (keys `session:<id>`). Cookie `wgm.sid`: `httpOnly`, `SameSite=Lax`, `Secure` in production (with `trust proxy` for an HTTPS reverse proxy), 30 days, renewed on every request. Sessions store only the user ID.
+- **Users** are created on first login (`users` table: Discord ID as text, name, avatar hash, language). `GET /api/me` returns the user or 401 `UNAUTHENTICATED`; `requireUser` guards routes.
+
 ## Repository layout: monorepo with pnpm workspaces
 
 **Status:** Accepted

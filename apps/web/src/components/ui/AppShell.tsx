@@ -209,6 +209,48 @@ function Main({ children }: { children: ReactNode }) {
   );
 }
 
+export interface AppShellAccountProps {
+  name: string;
+  avatarUrl: string;
+  /** Actions for the account, e.g. a sign-out button. */
+  children?: ReactNode;
+}
+
+/** The logged-in user at the bottom of the sidebar (or the end of the top bar). */
+function Account({ name, avatarUrl, children }: AppShellAccountProps) {
+  const { compact } = useAppShell('Account');
+  return (
+    <Box
+      sx={{
+        mt: compact ? 0 : 'auto',
+        ml: compact ? 'auto' : 0,
+        display: 'flex',
+        flexDirection: compact ? 'row' : 'column',
+        alignItems: compact ? 'center' : 'stretch',
+        gap: '10px',
+        p: '14px 16px',
+        borderTop: compact ? 0 : `2px solid ${token('dv')}`,
+        flex: 'none',
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        <Box
+          component="img"
+          src={avatarUrl}
+          alt=""
+          sx={{ width: 30, height: 30, flex: 'none', bgcolor: token('sf2') }}
+        />
+        {!compact && (
+          <Box sx={{ fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {name}
+          </Box>
+        )}
+      </Box>
+      {children && <Box sx={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>{children}</Box>}
+    </Box>
+  );
+}
+
 export const AppShell = Object.assign(AppShellRoot, {
   Sidebar,
   Brand,
@@ -216,4 +258,5 @@ export const AppShell = Object.assign(AppShellRoot, {
   NavItem,
   NavSeparator,
   Main,
+  Account,
 });

@@ -50,7 +50,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 
 | Story | Title | Status | Depends on |
 |---|---|---|---|
-| [010](story-010-discord-login.md) | Login with Discord | Not started | 005, 006, 035 |
+| [010](story-010-discord-login.md) | Login with Discord | Done | 005, 006, 035 |
 | [011](story-011-user-time-zone.md) | Time zone and theme settings | Not started | 010 |
 | [012](story-012-guild-creation.md) | Guild creation and Discord server connection | Not started | 007, 008, 010 |
 | [013](story-013-guild-profile.md) | Guild settings page and profile | Not started | 012 |

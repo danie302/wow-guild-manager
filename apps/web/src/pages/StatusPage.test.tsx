@@ -3,14 +3,15 @@ import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '../i18n';
+import { mockApi, testUser } from '../test/api';
 import { renderRoute } from '../test/render';
 
-function mockFetch(implementation: () => Promise<Response>) {
-  vi.stubGlobal('fetch', vi.fn(implementation));
+function mockHealth(handler: () => Response | Promise<Response>, me = testUser) {
+  mockApi({ '/api/health': handler, '/api/me': () => Response.json(me) });
 }
 
 function healthResponse(body: HealthResponse, status: number) {
-  return () => Promise.resolve(Response.json(body, { status }));
+  return () => Response.json(body, { status });
 }
 
 function statusOf(service: string) {
@@ -26,7 +27,7 @@ describe('StatusPage', () => {
   });
 
   it('shows the API, database, and Redis as up', async () => {
-    mockFetch(healthResponse({ status: 'ok', checks: { database: 'up', redis: 'up' } }, 200));
+    mockHealth(healthResponse({ status: 'ok', checks: { database: 'up', redis: 'up' } }, 200));
 
     renderRoute('/status');
 
@@ -37,7 +38,7 @@ describe('StatusPage', () => {
   });
 
   it('shows which service is down when the API answers 503', async () => {
-    mockFetch(healthResponse({ status: 'error', checks: { database: 'down', redis: 'up' } }, 503));
+    mockHealth(healthResponse({ status: 'error', checks: { database: 'down', redis: 'up' } }, 503));
 
     renderRoute('/status');
 
@@ -49,7 +50,7 @@ describe('StatusPage', () => {
   });
 
   it('shows an error state when the API is unreachable', async () => {
-    mockFetch(() => Promise.reject(new TypeError('Failed to fetch')));
+    mockHealth(() => Promise.reject(new TypeError('Failed to fetch')));
 
     renderRoute('/status');
 
@@ -58,7 +59,7 @@ describe('StatusPage', () => {
   });
 
   it('shows an error state when the proxy answers without a health report', async () => {
-    mockFetch(() => Promise.resolve(new Response('Bad gateway', { status: 502 })));
+    mockHealth(() => new Response('Bad gateway', { status: 502 }));
 
     renderRoute('/status');
 
@@ -69,7 +70,10 @@ describe('StatusPage', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date(2026, 9, 20, 21, 5, 9));
     await i18n.changeLanguage('es');
-    mockFetch(healthResponse({ status: 'ok', checks: { database: 'up', redis: 'down' } }, 503));
+    mockHealth(healthResponse({ status: 'ok', checks: { database: 'up', redis: 'down' } }, 503), {
+      ...testUser,
+      locale: 'es',
+    });
 
     renderRoute('/status');
 

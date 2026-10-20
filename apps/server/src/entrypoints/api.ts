@@ -1,7 +1,9 @@
+import { RedisStore } from 'connect-redis';
 import { createClient } from 'redis';
 
 import { createApp } from '../api/app.js';
 import { databaseCheck, redisCheck } from '../api/health.js';
+import { createDiscordOAuth } from '../auth/discord-oauth.js';
 import { apiConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { JobQueue, redisConnection } from '../jobs/index.js';
@@ -22,9 +24,31 @@ await redis.connect();
 // Routes add background jobs through this queue; the worker container runs them.
 const jobs = new JobQueue({ connection: redisConnection(config.REDIS_URL) });
 
+const oauth =
+  config.DISCORD_CLIENT_ID && config.DISCORD_CLIENT_SECRET
+    ? createDiscordOAuth({
+        clientId: config.DISCORD_CLIENT_ID,
+        clientSecret: config.DISCORD_CLIENT_SECRET,
+        redirectUri: new URL('/api/auth/discord/callback', config.WEB_ORIGIN).toString(),
+      })
+    : null;
+if (!oauth) {
+  logger.warn(
+    'DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET is not set, so login is off (see README)',
+  );
+}
+
+const production = config.NODE_ENV === 'production';
 const app = createApp({
   logger,
   healthChecks: { database: databaseCheck(sequelize), redis: redisCheck(redis) },
+  auth: {
+    store: new RedisStore({ client: redis, prefix: 'session:' }),
+    secret: config.SESSION_SECRET,
+    secure: production,
+    oauth,
+  },
+  trustProxy: production,
 });
 
 const server = app.listen(config.PORT, () => {

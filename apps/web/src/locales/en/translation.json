@@ -39,7 +39,8 @@
     "INVALID_JSON": "The request couldn't be read. Please try again.",
     "INTERNAL_ERROR": "Something went wrong on our side. Please try again later.",
     "VALIDATION_ERROR": "Some fields need fixing.",
-    "API_UNAVAILABLE": "Can't reach the server. Check your connection and try again."
+    "API_UNAVAILABLE": "Can't reach the server. Check your connection and try again.",
+    "UNAUTHENTICATED": "Your session has ended. Please log in again."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -62,5 +63,20 @@
     "TOO_MANY_PRIMARY_PROFESSIONS_one": "A character can have at most {{count}} primary profession.",
     "TOO_MANY_PRIMARY_PROFESSIONS_other": "A character can have at most {{count}} primary professions.",
     "CLASS_CANNOT_FILL_ROLE": "This class can't fill that combat role."
+  },
+  "auth": {
+    "checking": "Checking your session",
+    "unavailableTitle": "Can't reach the server",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "lead": "Run your guild's roster, events and attendance. Raiders and Members can log in to see events and the roster.",
+    "button": "Log in with Discord",
+    "note": "You need to be on your guild's roster, or have the Officer role in its Discord server. Setting up a new guild? Log in and you'll be guided through it.",
+    "errors": {
+      "cancelled": "Login cancelled on Discord. Try again when you're ready.",
+      "failed": "The login with Discord didn't work. Please try again.",
+      "not_configured": "Login with Discord isn't set up on this server yet."
+    }
   }
 }

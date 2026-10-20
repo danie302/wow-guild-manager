@@ -1,3 +1,6 @@
+import { z } from 'zod';
+
+import { SUPPORTED_LOCALES, type Locale } from './locales.js';
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
 
 /** Codes for one invalid field. The generic ones come from Zod checks, the rest from game rules. */
@@ -30,7 +33,7 @@ export interface ValidationIssue {
  * text. Codes with extra details carry them next to the code.
  */
 export type ApiError =
-  | { code: 'NOT_FOUND' | 'INVALID_JSON' | 'INTERNAL_ERROR' }
+  | { code: 'NOT_FOUND' | 'INVALID_JSON' | 'INTERNAL_ERROR' | 'UNAUTHENTICATED' }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
 export type ApiErrorCode = ApiError['code'];
@@ -47,4 +50,30 @@ export interface HealthResponse {
     database: HealthStatus;
     redis: HealthStatus;
   };
+}
+
+/** The logged-in app user, from `GET /api/me`. */
+export interface MeResponse {
+  id: number;
+  discordId: string;
+  name: string;
+  avatarUrl: string;
+  locale: Locale;
+}
+
+/** Body of `PATCH /api/me`. */
+export const updateMeSchema = z.object({ locale: z.enum(SUPPORTED_LOCALES) }).strict();
+
+export type UpdateMeInput = z.infer<typeof updateMeSchema>;
+
+/**
+ * Why a login didn't finish, sent back to the login page as `?error=`. `cancelled`: the user
+ * declined on Discord. `not_configured`: the server has no Discord application credentials.
+ */
+export const LOGIN_ERRORS = ['cancelled', 'failed', 'not_configured'] as const;
+
+export type LoginError = (typeof LOGIN_ERRORS)[number];
+
+export function isLoginError(value: unknown): value is LoginError {
+  return LOGIN_ERRORS.includes(value as LoginError);
 }

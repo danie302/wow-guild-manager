@@ -1,0 +1,32 @@
+import type { Locale, MeResponse } from '@wgm/shared';
+
+import { User } from '../db/models/index.js';
+import { discordAvatarUrl, type DiscordProfile } from './discord-oauth.js';
+
+/**
+ * Finds or creates the app user for a Discord account and refreshes their name and avatar.
+ * `locale` is only used for a new user: an existing user keeps the language they chose.
+ */
+export async function upsertUserFromDiscord(
+  profile: DiscordProfile,
+  locale: Locale,
+): Promise<User> {
+  const [user, created] = await User.findOrCreate({
+    where: { discordId: profile.id },
+    defaults: { discordId: profile.id, name: profile.name, avatar: profile.avatar, locale },
+  });
+  if (!created) {
+    await user.update({ name: profile.name, avatar: profile.avatar });
+  }
+  return user;
+}
+
+export function toMeResponse(user: User): MeResponse {
+  return {
+    id: user.id,
+    discordId: user.discordId,
+    name: user.name,
+    avatarUrl: discordAvatarUrl(user.discordId, user.avatar),
+    locale: user.locale,
+  };
+}
