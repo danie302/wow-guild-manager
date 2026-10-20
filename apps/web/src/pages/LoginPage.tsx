@@ -5,6 +5,7 @@ import { Navigate, useSearchParams } from 'react-router';
 import { discordLoginUrl, useMe } from '../api/me';
 import { Button, Notice, Splash } from '../components/ui';
 import { currentLocale } from '../i18n';
+import { browserTimeZone } from '../i18n/format';
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -25,7 +26,7 @@ export function LoginPage() {
         <Button
           variant="primary"
           size="large"
-          href={discordLoginUrl(currentLocale())}
+          href={discordLoginUrl(currentLocale(), browserTimeZone())}
           endIcon="arrowRight"
         >
           {t('login.button')}

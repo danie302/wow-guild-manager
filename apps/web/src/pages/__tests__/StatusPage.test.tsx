@@ -68,11 +68,12 @@ describe('StatusPage', () => {
 
   it('shows the page in Spanish, with the check time formatted for Spanish', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(2026, 9, 20, 21, 5, 9));
+    vi.setSystemTime(new Date(Date.UTC(2026, 9, 20, 21, 5, 9)));
     await i18n.changeLanguage('es');
     mockHealth(healthResponse({ status: 'ok', checks: { database: 'up', redis: 'down' } }, 503), {
       ...testUser,
       locale: 'es',
+      timeZone: 'America/Bogota',
     });
 
     renderRoute('/status');
@@ -80,8 +81,8 @@ describe('StatusPage', () => {
     expect(await screen.findByText('Base de datos')).toBeInTheDocument();
     expect(statusOf('Base de datos')).toHaveTextContent('Funciona');
     expect(statusOf('Redis')).toHaveTextContent('Caído');
-    // Spanish uses a 24-hour clock: 21:05:09, not 9:05:09 PM.
-    expect(screen.getByText('Última comprobación: 21:05:09')).toBeInTheDocument();
+    // 21:05:09 UTC is 16:05:09 in Bogotá, on Spanish's 24-hour clock (not 4:05:09 PM).
+    expect(screen.getByText('Última comprobación: 16:05:09')).toBeInTheDocument();
     vi.useRealTimers();
   });
 });

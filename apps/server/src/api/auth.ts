@@ -1,6 +1,12 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 
-import { isLocale, type LoginError } from '@wgm/shared';
+import {
+  DEFAULT_TIME_ZONE,
+  isLocale,
+  isValidTimeZone,
+  normalizeTimeZone,
+  type LoginError,
+} from '@wgm/shared';
 import express, { type Request, type Response } from 'express';
 
 import type { DiscordOAuth } from '../auth/discord-oauth.js';
@@ -24,6 +30,11 @@ export function authRouter(oauth: DiscordOAuth | null) {
     req.session.oauthState = state;
     const locale = req.query.locale;
     req.session.loginLocale = isLocale(locale) ? locale : 'en';
+    const timeZone = req.query.timeZone;
+    req.session.loginTimeZone =
+      typeof timeZone === 'string' && isValidTimeZone(timeZone)
+        ? normalizeTimeZone(timeZone)
+        : DEFAULT_TIME_ZONE;
     req.session.save((err) => {
       if (err) {
         next(err);
@@ -58,7 +69,10 @@ export function authRouter(oauth: DiscordOAuth | null) {
 
     try {
       const profile = await oauth.fetchProfile(code);
-      const user = await upsertUserFromDiscord(profile, req.session.loginLocale ?? 'en');
+      const user = await upsertUserFromDiscord(profile, {
+        locale: req.session.loginLocale ?? 'en',
+        timeZone: req.session.loginTimeZone ?? DEFAULT_TIME_ZONE,
+      });
       await logIn(req, user.id);
       req.log.info({ userId: user.id }, 'User logged in');
       res.redirect('/');

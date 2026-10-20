@@ -55,4 +55,34 @@ function Section({ title, children }: PageSectionProps) {
   );
 }
 
-export const Page = Object.assign(PageRoot, { Header, Title, Section });
+export interface PageSettingProps {
+  title: string;
+  description?: string;
+  /** The control that changes the setting. */
+  children: ReactNode;
+}
+
+/** One row of a settings page: the setting's name and description, then its control. */
+function Setting({ title, description, children }: PageSettingProps) {
+  return (
+    <Box
+      component="section"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+        gap: '12px 32px',
+        '& + &': { pt: 3, borderTop: `2px solid ${token('dv')}` },
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <Typography variant="h2" sx={{ fontSize: 15, fontWeight: 800 }}>
+          {title}
+        </Typography>
+        {description && <Box sx={{ fontSize: 13, color: token('mt') }}>{description}</Box>}
+      </Box>
+      <Box sx={{ minWidth: 0, justifySelf: 'start', width: '100%' }}>{children}</Box>
+    </Box>
+  );
+}
+
+export const Page = Object.assign(PageRoot, { Header, Title, Section, Setting });

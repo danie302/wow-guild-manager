@@ -284,7 +284,7 @@ The app supports English and Spanish (see the Languages section of `requirements
 - **Typed keys:** translation keys are typed, so a missing or misspelled key is a TypeScript error.
 - **Same keys in both languages:** a test fails if English and Spanish don't have exactly the same keys.
 - **The API returns error codes, not text.** Validation and domain errors come back as codes (e.g. `SLOT_FULL`, `CLASS_CANNOT_FILL_ROLE`) with their parameters, and the client translates them. Zod errors are mapped to codes the same way.
-- **Dates and numbers** are formatted with the built-in `Intl` APIs for the user's language and time zone.
+- **Dates and numbers** are formatted with the built-in `Intl` APIs for the user's language and time zone. In the web client, `useFormat()` is the only formatter: it reads the user's IANA time zone from `/api/me`. Time zones are validated with `Intl.DateTimeFormat` on both sides, so no time zone database is bundled.
 - **Discord:** the bot picks the language per message as described in `requirements.md`, using the interaction's locale for replies one member sees. Slash commands are registered with Discord's name and description localizations.
 
 How it's set up:

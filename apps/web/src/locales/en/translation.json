@@ -30,10 +30,6 @@
     "down": "Down",
     "lastChecked": "Last checked {{time}}"
   },
-  "userSettings": {
-    "title": "User settings",
-    "language": "Language"
-  },
   "errors": {
     "NOT_FOUND": "We couldn't find what you were looking for.",
     "INVALID_JSON": "The request couldn't be read. Please try again.",
@@ -62,7 +58,8 @@
     "DUPLICATE_PROFESSION": "Each profession can only be listed once.",
     "TOO_MANY_PRIMARY_PROFESSIONS_one": "A character can have at most {{count}} primary profession.",
     "TOO_MANY_PRIMARY_PROFESSIONS_other": "A character can have at most {{count}} primary professions.",
-    "CLASS_CANNOT_FILL_ROLE": "This class can't fill that combat role."
+    "CLASS_CANNOT_FILL_ROLE": "This class can't fill that combat role.",
+    "INVALID_TIME_ZONE": "Not a valid time zone."
   },
   "auth": {
     "checking": "Checking your session",
@@ -78,5 +75,18 @@
       "failed": "The login with Discord didn't work. Please try again.",
       "not_configured": "Login with Discord isn't set up on this server yet."
     }
+  },
+  "settings": {
+    "title": "User settings",
+    "timeZone": "Time zone",
+    "timeZoneHelp": "Every date and time in the app is shown in this time zone.",
+    "timeZonePreview": "Right now it's {{time}} there.",
+    "language": "Language",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "switchToLight": "Light theme",
+    "switchToDark": "Dark theme",
+    "saved": "Settings saved"
   }
 }

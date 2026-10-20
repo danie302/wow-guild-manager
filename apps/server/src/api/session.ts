@@ -9,6 +9,8 @@ declare module 'express-session' {
     oauthState?: string;
     /** The web app's language when the login started, for a user created by this login. */
     loginLocale?: Locale;
+    /** The browser's time zone when the login started, for a user created by this login. */
+    loginTimeZone?: string;
   }
 }
 

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { SUPPORTED_LOCALES, type Locale } from './locales.js';
+import { isValidTimeZone, normalizeTimeZone, THEMES, type Theme } from './preferences.js';
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
 
 /** Codes for one invalid field. The generic ones come from Zod checks, the rest from game rules. */
@@ -15,6 +16,7 @@ export const VALIDATION_ISSUE_CODES = [
   'TOO_BIG',
   'TOO_FEW',
   'TOO_MANY',
+  'INVALID_TIME_ZONE',
   ...Object.values(CHARACTER_ERROR_CODES),
 ] as const;
 
@@ -59,10 +61,26 @@ export interface MeResponse {
   name: string;
   avatarUrl: string;
   locale: Locale;
+  /** IANA time zone name. Every date in the web app is shown in it. */
+  timeZone: string;
+  theme: Theme;
 }
 
-/** Body of `PATCH /api/me`. */
-export const updateMeSchema = z.object({ locale: z.enum(SUPPORTED_LOCALES) }).strict();
+/** An IANA time zone name, normalized to the runtime's spelling. */
+export const timeZoneSchema = z
+  .string()
+  .refine(isValidTimeZone, { message: 'INVALID_TIME_ZONE' })
+  .transform(normalizeTimeZone);
+
+/** Body of `PATCH /api/me`: any of the user's own settings. */
+export const updateMeSchema = z
+  .object({
+    locale: z.enum(SUPPORTED_LOCALES),
+    timeZone: timeZoneSchema,
+    theme: z.enum(THEMES),
+  })
+  .partial()
+  .strict();
 
 export type UpdateMeInput = z.infer<typeof updateMeSchema>;
 

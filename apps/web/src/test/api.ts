@@ -7,6 +7,8 @@ export const testUser: MeResponse = {
   name: 'Thrall',
   avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png',
   locale: 'en',
+  timeZone: 'UTC',
+  theme: 'dark',
 };
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>;

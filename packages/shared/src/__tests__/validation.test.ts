@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { characterSchema } from '../schemas/character.js';
+import { updateMeSchema } from '../api.js';
+import { isValidTimeZone } from '../preferences.js';
 import { toValidationIssues } from '../validation.js';
 
 function issuesFor(schema: z.ZodType, input: unknown) {
@@ -63,5 +65,19 @@ describe('toValidationIssues', () => {
       { field: 'race', code: 'RACE_NOT_IN_FACTION' },
       { field: 'professions', code: 'TOO_MANY_PRIMARY_PROFESSIONS', params: { count: 2 } },
     ]);
+  });
+});
+
+describe('time zones', () => {
+  it('accepts IANA names and rejects anything else with INVALID_TIME_ZONE', () => {
+    expect(updateMeSchema.parse({ timeZone: 'America/Bogota' })).toEqual({
+      timeZone: 'America/Bogota',
+    });
+    expect(updateMeSchema.parse({ timeZone: 'utc' })).toEqual({ timeZone: 'UTC' });
+    expect(issuesFor(updateMeSchema, { timeZone: 'Mars/Olympus_Mons' })).toEqual([
+      { field: 'timeZone', code: 'INVALID_TIME_ZONE' },
+    ]);
+    expect(isValidTimeZone('Europe/Madrid')).toBe(true);
+    expect(isValidTimeZone('GMT+25')).toBe(false);
   });
 });

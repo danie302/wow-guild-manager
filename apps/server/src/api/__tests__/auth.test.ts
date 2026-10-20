@@ -39,8 +39,13 @@ function testApp(options: { oauth?: DiscordOAuth | null; secure?: boolean } = {}
 }
 
 /** Starts the login and returns the state that was sent to Discord. */
-async function startLogin(agent: ReturnType<typeof request.agent>, locale = 'en') {
-  const response = await agent.get(`/api/auth/discord/login?locale=${locale}`);
+async function startLogin(
+  agent: ReturnType<typeof request.agent>,
+  locale = 'en',
+  timeZone = 'America/Bogota',
+) {
+  const query = new URLSearchParams({ locale, timeZone }).toString();
+  const response = await agent.get(`/api/auth/discord/login?${query}`);
   expect(response.status).toBe(302);
   const state = new URL(response.headers.location as string).searchParams.get('state');
   expect(state).toBeTruthy();
@@ -83,6 +88,8 @@ describe('Discord login', () => {
       name: 'Thrall',
       avatarUrl: `https://cdn.discordapp.com/avatars/${thrall.id}/a1b2c3.png?size=64`,
       locale: 'en',
+      timeZone: 'America/Bogota',
+      theme: 'dark',
     });
   });
 
@@ -151,24 +158,54 @@ describe('Discord login', () => {
 });
 
 describe('the app user', () => {
-  it('takes the web app language on first login, then keeps their own', async () => {
+  it('takes the browser language and time zone on first login, then keeps their own', async () => {
     const first = testApp().agent;
-    let state = await startLogin(first, 'es');
+    let state = await startLogin(first, 'es', 'Europe/Madrid');
     await first.get(`/api/auth/discord/callback?code=good-code&state=${state}`);
-    expect((await first.get('/api/me')).body).toMatchObject({ locale: 'es' });
+    expect((await first.get('/api/me')).body).toMatchObject({
+      locale: 'es',
+      timeZone: 'Europe/Madrid',
+    });
 
     const otherDevice = testApp({
       oauth: fakeDiscord({ ...thrall, name: 'Go’el', avatar: null }),
     }).agent;
-    state = await startLogin(otherDevice, 'en');
+    state = await startLogin(otherDevice, 'en', 'Asia/Tokyo');
     await otherDevice.get(`/api/auth/discord/callback?code=good-code&state=${state}`);
 
     const me = await otherDevice.get('/api/me');
-    expect(me.body).toMatchObject({ locale: 'es', name: 'Go’el' });
+    expect(me.body).toMatchObject({ locale: 'es', timeZone: 'Europe/Madrid', name: 'Go’el' });
     expect((me.body as { avatarUrl: string }).avatarUrl).toMatch(
       /^https:\/\/cdn\.discordapp\.com\/embed\/avatars\/\d\.png$/,
     );
     expect(await User.count()).toBe(1);
+  });
+
+  it('falls back to UTC when the browser sends no valid time zone', async () => {
+    const { agent } = testApp();
+    const state = await startLogin(agent, 'en', 'Not/A_Zone');
+    await agent.get(`/api/auth/discord/callback?code=good-code&state=${state}`);
+
+    expect((await agent.get('/api/me')).body).toMatchObject({ timeZone: 'UTC' });
+  });
+
+  it('saves the time zone and theme with PATCH /api/me, and rejects an invalid time zone', async () => {
+    const { agent } = testApp();
+    const state = await startLogin(agent);
+    await agent.get(`/api/auth/discord/callback?code=good-code&state=${state}`);
+
+    const updated = await agent.patch('/api/me').send({ timeZone: 'Asia/Tokyo', theme: 'light' });
+    const invalid = await agent.patch('/api/me').send({ timeZone: 'Mars/Olympus_Mons' });
+
+    expect(updated.body).toMatchObject({ timeZone: 'Asia/Tokyo', theme: 'light', locale: 'en' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body).toEqual({
+      error: {
+        code: 'VALIDATION_ERROR',
+        issues: [{ field: 'timeZone', code: 'INVALID_TIME_ZONE' }],
+      },
+    });
+    expect(await User.findOne()).toMatchObject({ timeZone: 'Asia/Tokyo', theme: 'light' });
   });
 
   it('saves a new language with PATCH /api/me', async () => {

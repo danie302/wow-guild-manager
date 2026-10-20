@@ -30,10 +30,6 @@
     "down": "Caído",
     "lastChecked": "Última comprobación: {{time}}"
   },
-  "userSettings": {
-    "title": "Ajustes de usuario",
-    "language": "Idioma"
-  },
   "errors": {
     "NOT_FOUND": "No encontramos lo que buscabas.",
     "INVALID_JSON": "No se pudo leer la solicitud. Inténtalo de nuevo.",
@@ -62,7 +58,8 @@
     "DUPLICATE_PROFESSION": "Cada profesión solo se puede indicar una vez.",
     "TOO_MANY_PRIMARY_PROFESSIONS_one": "Un personaje puede tener como máximo {{count}} profesión principal.",
     "TOO_MANY_PRIMARY_PROFESSIONS_other": "Un personaje puede tener como máximo {{count}} profesiones principales.",
-    "CLASS_CANNOT_FILL_ROLE": "Esta clase no puede cubrir ese rol de combate."
+    "CLASS_CANNOT_FILL_ROLE": "Esta clase no puede cubrir ese rol de combate.",
+    "INVALID_TIME_ZONE": "No es una zona horaria válida."
   },
   "auth": {
     "checking": "Comprobando tu sesión",
@@ -78,5 +75,18 @@
       "failed": "No se pudo iniciar sesión con Discord. Inténtalo de nuevo.",
       "not_configured": "El inicio de sesión con Discord todavía no está configurado en este servidor."
     }
+  },
+  "settings": {
+    "title": "Ajustes de usuario",
+    "timeZone": "Zona horaria",
+    "timeZoneHelp": "Todas las fechas y horas de la app se muestran en esta zona horaria.",
+    "timeZonePreview": "Ahora mismo allí son las {{time}}.",
+    "language": "Idioma",
+    "theme": "Tema",
+    "dark": "Oscuro",
+    "light": "Claro",
+    "switchToLight": "Tema claro",
+    "switchToDark": "Tema oscuro",
+    "saved": "Ajustes guardados"
   }
 }

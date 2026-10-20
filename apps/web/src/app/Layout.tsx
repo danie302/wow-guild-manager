@@ -1,15 +1,18 @@
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 
-import { useLogout, useMe } from '../api/me';
+import { useLogout, useMe, useSaveSettings } from '../api/me';
 
-import { AppShell, Button } from '../components/ui';
+import { AppShell, Button, useThemeMode } from '../components/ui';
 
 export function Layout() {
   const { t } = useTranslation();
   // RequireAuth renders this layout only once the user is loaded.
   const me = useMe().data;
   const logout = useLogout();
+  const saveSettings = useSaveSettings();
+  const { theme, setTheme } = useThemeMode();
+  const otherTheme = theme === 'dark' ? 'light' : 'dark';
 
   return (
     <AppShell>
@@ -44,6 +47,14 @@ export function Layout() {
         </AppShell.Nav>
         {me && (
           <AppShell.Account name={me.name} avatarUrl={me.avatarUrl}>
+            <Button
+              onClick={() => {
+                setTheme(otherTheme);
+                saveSettings.mutate({ theme: otherTheme });
+              }}
+            >
+              {t(otherTheme === 'light' ? 'settings.switchToLight' : 'settings.switchToDark')}
+            </Button>
             <Button onClick={() => logout.mutate()} disabled={logout.isPending}>
               {t('auth.signOut')}
             </Button>

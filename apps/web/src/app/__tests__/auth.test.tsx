@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -13,7 +13,9 @@ describe('login and route guard', () => {
     renderRoute('/events');
 
     const button = await screen.findByRole('link', { name: 'Log in with Discord' });
-    expect(button).toHaveAttribute('href', '/api/auth/discord/login?locale=en');
+    expect(button.getAttribute('href')).toMatch(
+      /^\/api\/auth\/discord\/login\?locale=en&timeZone=[\w%/+-]+$/,
+    );
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
 
@@ -23,10 +25,8 @@ describe('login and route guard', () => {
 
     renderRoute('/login');
 
-    expect(await screen.findByRole('link', { name: 'Iniciar sesión con Discord' })).toHaveAttribute(
-      'href',
-      '/api/auth/discord/login?locale=es',
-    );
+    const button = await screen.findByRole('link', { name: 'Iniciar sesión con Discord' });
+    expect(button.getAttribute('href')).toContain('locale=es');
   });
 
   it.each([
@@ -79,5 +79,19 @@ describe('login and route guard', () => {
       '/api/auth/logout',
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+
+  it('opens in the dark theme, and switches to the theme saved on the user', async () => {
+    mockApi({ '/api/me': notLoggedIn });
+    const { unmount } = renderRoute('/login');
+    await screen.findByRole('link', { name: 'Log in with Discord' });
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    unmount();
+
+    mockApi({ '/api/me': () => Response.json({ ...testUser, theme: 'light' }) });
+    renderRoute('/');
+
+    await screen.findByText('Thrall');
+    await waitFor(() => expect(document.documentElement).toHaveAttribute('data-theme', 'light'));
   });
 });

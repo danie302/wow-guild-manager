@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Locale, MeResponse } from '@wgm/shared';
+import type { Locale, MeResponse, UpdateMeInput } from '@wgm/shared';
 
 import { ApiRequestError, apiRequest } from './client';
 
@@ -21,12 +21,12 @@ export function useMe() {
   return useQuery({ queryKey: meKey, queryFn: fetchMe, staleTime: 5 * 60 * 1000, retry: false });
 }
 
-/** Saves the user's language, so it follows them to other devices. */
-export function useSaveLocale() {
+/** Saves some of the user's settings, so they follow them to other devices. */
+export function useSaveSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (locale: Locale) =>
-      apiRequest<MeResponse>('/me', { method: 'PATCH', body: { locale } }),
+    mutationFn: (settings: UpdateMeInput) =>
+      apiRequest<MeResponse>('/me', { method: 'PATCH', body: settings }),
     onSuccess: (me) => queryClient.setQueryData(meKey, me),
   });
 }
@@ -44,7 +44,10 @@ export function useLogout() {
   });
 }
 
-/** Where the login button sends the browser. The API redirects on to Discord. */
-export function discordLoginUrl(locale: Locale): string {
-  return `/api/auth/discord/login?locale=${locale}`;
+/**
+ * Where the login button sends the browser. The API redirects on to Discord. The language and
+ * time zone become the settings of a user created by this login.
+ */
+export function discordLoginUrl(locale: Locale, timeZone: string): string {
+  return `/api/auth/discord/login?${new URLSearchParams({ locale, timeZone }).toString()}`;
 }

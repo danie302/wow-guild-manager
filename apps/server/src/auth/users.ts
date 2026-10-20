@@ -3,17 +3,23 @@ import type { Locale, MeResponse } from '@wgm/shared';
 import { User } from '../db/models/index.js';
 import { discordAvatarUrl, type DiscordProfile } from './discord-oauth.js';
 
+/** Settings a new user starts with, taken from the browser they first log in from. */
+export interface InitialSettings {
+  locale: Locale;
+  timeZone: string;
+}
+
 /**
  * Finds or creates the app user for a Discord account and refreshes their name and avatar.
- * `locale` is only used for a new user: an existing user keeps the language they chose.
+ * `initial` is only used for a new user: an existing user keeps the settings they chose.
  */
 export async function upsertUserFromDiscord(
   profile: DiscordProfile,
-  locale: Locale,
+  initial: InitialSettings,
 ): Promise<User> {
   const [user, created] = await User.findOrCreate({
     where: { discordId: profile.id },
-    defaults: { discordId: profile.id, name: profile.name, avatar: profile.avatar, locale },
+    defaults: { discordId: profile.id, name: profile.name, avatar: profile.avatar, ...initial },
   });
   if (!created) {
     await user.update({ name: profile.name, avatar: profile.avatar });
@@ -28,5 +34,7 @@ export function toMeResponse(user: User): MeResponse {
     name: user.name,
     avatarUrl: discordAvatarUrl(user.discordId, user.avatar),
     locale: user.locale,
+    timeZone: user.timeZone,
+    theme: user.theme,
   };
 }
