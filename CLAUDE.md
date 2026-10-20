@@ -10,7 +10,7 @@ Early implementation: the foundation stories are done (see `planning/README.md`)
 
 Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.
 
-- `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`. After editing `.env`, use `docker compose up -d` (not `restart`, which keeps the old environment). The bot needs `DISCORD_BOT_TOKEN`; without it only the `bot` container exits.
+- `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`. After editing `.env`, use `docker compose up -d` (not `restart`, which keeps the old environment). The bot needs `DISCORD_BOT_TOKEN` and the API needs `SESSION_SECRET`; without one, only that container's process exits. Without `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` the API runs with login turned off.
 - `pnpm install`: install every workspace on the host (containers install their own into Docker volumes). pnpm rejects versions published less than a day ago: pick the previous version, and don't add `minimumReleaseAgeExclude` entries. After adding a dependency with the stack running, run `docker compose up -d` and then `docker compose restart api bot worker web`.
 - `pnpm typecheck`: typecheck every package (`pnpm --filter @wgm/web typecheck` for one).
 - `pnpm lint`: ESLint over the whole repo.
@@ -26,7 +26,7 @@ Tests run inside Docker with the stack up (server tests need the test database a
 Database migrations (details and the typed model pattern in `apps/server/src/db/README.md`):
 
 - `docker compose exec api pnpm --filter @wgm/server db:migration:create --name <name>`: new migration (CommonJS `.js`).
-- `docker compose exec api pnpm --filter @wgm/server db:migrate` / `db:migrate:undo`: apply pending migrations or revert the last one. The `api` container also applies them on start.
+- `docker compose exec api pnpm --filter @wgm/server db:migrate` / `db:migrate:undo`: apply pending migrations or revert the last one. The `api` container applies them when the container starts, not when tsx restarts it after a file change, so run `db:migrate` after adding a migration.
 
 Test files are `*.test.ts(x)` in a `__tests__` folder next to the code they test (e.g. `src/pages/__tests__/StatusPage.test.tsx` for `src/pages/StatusPage.tsx`). Tests that aren't about one file, and the test setup, go in `apps/server/test/` or `apps/web/src/test/`. If a component grows into several files, give it its own folder (`AppShell/AppShell.tsx`, `index.ts`, `__tests__/`). Server tests use `wgm_test` and Redis database 1, which are reset on every run.
 

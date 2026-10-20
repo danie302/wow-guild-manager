@@ -48,7 +48,7 @@ Local containers:
 | `redis` | Sessions, cache, and job queues |
 
 - `api`, `bot`, and `worker` use the same image with different start commands.
-- Database migrations run automatically when the stack starts.
+- Database migrations run automatically when the `api` container starts (not when it restarts after a file change).
 - Credentials (Discord app, Battle.net client) go in a `.env` file. A `.env.example` lists every variable.
 - Images: `node:24-trixie-slim` for the app containers, `postgres:18-alpine`, and `redis:8-alpine` (with append-only file persistence).
 - A one-shot `deps` service installs dependencies into the `node_modules` volumes on every `docker compose up`, and the other Node.js containers start after it finishes. This keeps dependencies current without rebuilding images and avoids parallel installs into the same volumes.
@@ -87,7 +87,8 @@ Express serves the web client's API and handles the Discord OAuth2 login. Sessio
 - **Discord OAuth2** (authorization code flow) with only the `identify` scope. The code is exchanged on the server, the profile is read, and the access token is dropped. Guild data comes from the bot, so user tokens are never stored or sent to the browser. The OAuth2 calls sit behind a `DiscordOAuth` interface (`src/auth/discord-oauth.ts`) so tests use a fake Discord.
 - **`state`** is 32 random bytes kept in the session, compared in constant time, and deleted after one use. The session is regenerated on login.
 - **Sessions:** `express-session` with `connect-redis` on the node-redis client (keys `session:<id>`). Cookie `wgm.sid`: `httpOnly`, `SameSite=Lax`, `Secure` in production (with `trust proxy` for an HTTPS reverse proxy), 30 days, renewed on every request. Sessions store only the user ID.
-- **Users** are created on first login (`users` table: Discord ID as text, name, avatar hash, language). `GET /api/me` returns the user or 401 `UNAUTHENTICATED`; `requireUser` guards routes.
+- **Users** are created on first login (`users` table: Discord ID as text, name, avatar hash, language, time zone, theme). A new user's language and time zone come from the browser they log in from. `GET /api/me` returns the user or 401 `UNAUTHENTICATED`; `PATCH /api/me` changes their own settings; `requireUser` guards routes.
+- **Configuration:** `SESSION_SECRET` is required. `WEB_ORIGIN` (where the browser opens the web app) builds the OAuth2 redirect URI. Without `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` the API still runs and the login page says login isn't set up. Empty variables count as not set.
 
 ## Repository layout: monorepo with pnpm workspaces
 
@@ -100,19 +101,26 @@ wowGuildManager/
 ├─ apps/
 │  ├─ web/                    React + Vite
 │  │  ├─ src/
-│  │  │  ├─ pages/            Roster, events, attendance, gear checks, dashboard
-│  │  │  ├─ components/
-│  │  │  └─ api/              Calls to the server (TanStack Query)
+│  │  │  ├─ app/              App root, routes, layout, and the login guard
+│  │  │  ├─ pages/            Roster, events, attendance, gear checks, dashboard, settings
+│  │  │  ├─ components/ui/    Our UI kit (the only place that imports MUI)
+│  │  │  ├─ api/              Calls to the server (TanStack Query)
+│  │  │  ├─ i18n/             i18next setup and date formatting
+│  │  │  ├─ locales/          English and Spanish translations
+│  │  │  └─ test/             Test setup and helpers
 │  │  └─ Dockerfile
 │  └─ server/                 Express + discord.js + BullMQ
 │     ├─ src/
-│     │  ├─ domain/           Rules: sign-ups, waitlist, Tentative deadline, permissions, attendance
+│     │  ├─ domain/           Rules: sign-ups, waitlist, Tentative deadline, permissions, attendance (from story 012)
 │     │  ├─ db/               Sequelize models and migrations
-│     │  ├─ api/              Express routes and Discord login
+│     │  ├─ api/              Express routes, sessions, and errors
+│     │  ├─ auth/             Discord OAuth2 and app users
 │     │  ├─ bot/              Discord commands and buttons
-│     │  ├─ worker/           Scheduled jobs
-│     │  ├─ integrations/     Battle.net and Discord API clients
+│     │  ├─ jobs/             BullMQ queue, worker, and job handlers
+│     │  ├─ integrations/     Battle.net and Discord API clients (from story 017)
+│     │  ├─ i18n/, locales/   Server translations (bot replies, DMs, Discord posts)
 │     │  └─ entrypoints/      api.ts, bot.ts, worker.ts
+│     ├─ test/                Test setup (test database and Redis)
 │     └─ Dockerfile
 ├─ packages/
 │  └─ shared/                 Zod schemas, API types, and game data
@@ -159,7 +167,7 @@ npm workspaces were considered: they need no extra tool but aren't strict about 
 
 The API server, Discord bot, and worker live in the same codebase and run as three separate processes. They all use the same domain rules (combat roles by class, slots, waitlist, the Tentative deadline, permissions), so the rules are written once. A process can be split into its own service later if it needs to scale on its own.
 
-Each process validates only the environment variables it needs. `src/config.ts` has a base Zod schema (database, Redis, logging) that each process extends: the API adds `PORT`, and the bot adds `DISCORD_BOT_TOKEN`. So the API runs without a Discord token, and the bot exits with a clear message when it's missing.
+Each process validates only the environment variables it needs. `src/config.ts` has a base Zod schema (database, Redis, logging) that each process extends: the API adds `PORT`, the session secret, and the login settings, and the bot adds `DISCORD_BOT_TOKEN`. So the API runs without a bot token, and the bot exits with a clear message when it's missing. The worker uses the base schema.
 
 ## Database: PostgreSQL
 
@@ -318,12 +326,14 @@ App code never imports MUI directly. It uses our own components in `apps/web/src
 - Archivo is self-hosted with `@fontsource-variable/archivo`, so the app doesn't load fonts from Google.
 - Icons are the prototype's SVG paths in an `Icon` component, not an icon package.
 - `src/components/ui/index.ts` is the only entry point pages use.
+- **Theme switching:** `useThemeMode()` wraps MUI's `useColorScheme`, which sets `data-theme` on `<html>` and remembers the choice in the browser. The user's saved theme is applied after login.
+- **Searchable lists** use `ComboBox` (MUI `Autocomplete` inside). It adds about 160 kB to the bundle (see story 035's technical debt); if that becomes a problem, it can move to MUI's headless `useAutocomplete` without changing its props.
 
 ## Linting and formatting: ESLint and Prettier
 
 **Status:** Accepted
 
-ESLint checks code quality (with TypeScript and React rules), and Prettier formats it. Both run on every package from the root, and CI fails on lint errors.
+ESLint checks code quality (with TypeScript and React rules), and Prettier formats it. Both run on every package from the root. There's no CI yet; when it's added, it should fail on lint, type, format, and test errors.
 
 - ESLint uses a flat config (`eslint.config.js`) with typescript-eslint's type-checked rules, and `eslint-config-prettier` so the two don't conflict.
 - The web client adds `eslint-plugin-react-hooks`. `eslint-plugin-react` doesn't support ESLint 10 yet; TypeScript already checks JSX.

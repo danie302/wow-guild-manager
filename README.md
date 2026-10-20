@@ -20,7 +20,7 @@ The app is available in English and Spanish.
 
 ## Status
 
-Early implementation. The monorepo scaffold is in place, and no application features exist yet. Work is split into small stories in [`planning/`](planning/README.md).
+Early implementation. The foundation is in place (Docker stack, API, database, Discord bot, background jobs, English and Spanish), along with Discord login and each user's language, time zone, and theme settings. Guild, roster, and event features come next. Work is split into small stories in [`planning/`](planning/README.md), with their status in the index.
 
 ## Tech stack
 
@@ -36,7 +36,7 @@ The reasons behind each choice are in [`docs/tech-decisions.md`](docs/tech-decis
 
 ## Getting started
 
-Instructions for the Discord application and the Battle.net API client will be added as their setup stories are completed.
+Instructions for the Battle.net API client will be added with its story (017).
 
 ### Set up Discord
 
@@ -73,7 +73,7 @@ The first start builds the images and installs dependencies, which takes a few m
 
 | Service | URL or port | What it is |
 |---|---|---|
-| `web` | http://localhost:5173 | Web app (Vite dev server, reloads when you save a file in `apps/web`). http://localhost:5173/status shows the API, database, and Redis status |
+| `web` | http://localhost:5173 | Web app (Vite dev server, reloads when you save a file in `apps/web`). Every page needs a Discord login (see "Set up Discord"). Once logged in, http://localhost:5173/status shows the API, database, and Redis status |
 | `api` | http://localhost:3000 | Express API |
 | `postgres` | `localhost:5432` | PostgreSQL, for database tools (user, password, and database are in `.env`) |
 | `redis` | `localhost:6379` | Redis, for Redis tools |
@@ -84,7 +84,7 @@ The first start builds the images and installs dependencies, which takes a few m
 - `docker compose down` stops the stack and keeps the database and Redis data.
 - `docker compose down -v` also deletes the data volumes, including `node_modules`, for a clean start.
 - `docker compose logs -f api` follows one service's logs.
-- The `api` container applies pending database migrations when it starts. To run them by hand: `docker compose exec api pnpm --filter @wgm/server db:migrate` (`db:migrate:undo` reverts the last one).
+- The `api` container applies pending database migrations when it starts, but not when it restarts after a file change. After pulling or writing a new migration, run `docker compose exec api pnpm --filter @wgm/server db:migrate` (`db:migrate:undo` reverts the last one).
 - After changing `.env`, run `docker compose up -d` to recreate the affected containers. `docker compose restart` keeps the old environment.
 - http://localhost:3000/api/health shows whether the API can reach PostgreSQL and Redis.
 - After adding or updating a dependency, run `docker compose up -d` (the `deps` service installs it into the containers) and then `docker compose restart api bot worker web`. A process that crashed on a missing package waits for a file change, so it won't recover on its own.
