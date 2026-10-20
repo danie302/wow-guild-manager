@@ -207,7 +207,7 @@ BullMQ handles:
 - **Delayed jobs:** the Tentative reminder and deadline, and the gear check 12 hours before a raid. Each is one job per event, scheduled for its exact time.
 
 **How per-event jobs are kept correct.** The Tentative deadline and reminder time are configurable per guild and per event, so their jobs move often:
-- Every job has a fixed ID built from its type and event (e.g. `tentative-deadline:<eventId>`). Rescheduling means removing the job with that ID and adding it again, so there are never duplicates.
+- Every job has a fixed ID built from its type and event (e.g. `tentative-deadline-<eventId>`; BullMQ doesn't allow `:` in job IDs). Rescheduling means removing the job with that ID and adding it again, so there are never duplicates.
 - Jobs are rescheduled when an event's time or deadline changes, removed when the event is cancelled, and rescheduled for every upcoming event without its own deadline when the guild's settings change (skipping events whose new deadline would already have passed).
 - Every job checks the current data when it runs: if the event was cancelled or its deadline moved, it does nothing. A job left behind by a missed reschedule can't replace anyone at the wrong time.
 
@@ -215,9 +215,22 @@ A periodic check (one job every minute looking for due events) was considered. I
 - **Repeating jobs:** creating instances of recurring events.
 - **Retries:** for failed Battle.net or Discord calls.
 
-### Redis client: node-redis
+### How the job queue is set up
 
-The server uses the official `redis` package (node-redis) for everything: the health check, sessions, and BullMQ. `connect-redis`, the `express-session` store, only supports node-redis, and BullMQ 6 accepts either client, so one client covers all three. ioredis was considered, but it would mean two Redis clients in one codebase.
+The code is in `apps/server/src/jobs/`:
+- **One queue** (`jobs`) for every job; the job name picks the handler. Separate queues can be added later if one kind of job needs its own concurrency or rate limit.
+- **Typed jobs:** `definitions.ts` maps each job name to its payload type, and `JobQueue` only accepts those names and payloads, so a wrong payload is a TypeScript error. The worker needs a handler for every name. Payloads are plain JSON with IDs, not whole records, because jobs re-read the current data when they run.
+- **`JobQueue`** is the only way to add jobs, from any process: `enqueue` (run now), `schedule` (run at a time, under a fixed ID that replaces any existing job), `unschedule`, `repeat` (a BullMQ job scheduler with a fixed ID, on an interval or cron pattern in UTC), and `stopRepeating`.
+- **Retries:** 5 attempts with exponential backoff starting at 30 seconds. A handler throws `UnrecoverableError` to fail without retrying. Every failed attempt is logged as a warning, and the final failure as an error.
+- **Cleanup:** completed jobs are deleted right away, so their fixed IDs can be used again. Failed jobs are kept for 7 days.
+- **A running job can't be replaced.** `schedule` and `unschedule` throw `JobRunningError` if the job with that ID is running at that moment.
+- **Durability:** Redis runs with `--appendonly yes`, so pending jobs survive a restart of Redis. A job cut off when the worker is killed goes back to the queue. On SIGTERM the worker waits for running jobs to finish.
+
+### Redis clients: node-redis, and ioredis inside BullMQ
+
+Our code uses the official `redis` package (node-redis): the health check and sessions. `connect-redis`, the `express-session` store, only supports node-redis.
+
+BullMQ uses ioredis (5.x), its default client. BullMQ 6 also has a node-redis adapter, which would mean one client for everything, but it was new (released mid-2026) while ioredis is what BullMQ's documentation and test suite use, and the time-based jobs depend on it. Only `src/jobs/` touches BullMQ, and it passes BullMQ a connection URL, so our code never imports ioredis directly. Switching to the adapter later only changes `redisConnection()` in `src/jobs/queue.ts`.
 
 Clients are created with `disableOfflineQueue: true`, so commands fail right away while Redis is down instead of waiting for it to come back.
 
@@ -250,6 +263,7 @@ Vitest runs unit tests in both the web client and the server. Supertest runs HTT
 - Each package has its own Vitest config, and the root `pnpm test` runs them all. Test files sit next to the code they test (`*.test.ts`). Server tests that aren't about one file go in `apps/server/test/`.
 - Web tests run in jsdom.
 - **Test database:** server tests use a separate database in the same PostgreSQL container (`<POSTGRES_DB>_test`, from `TEST_DATABASE_URL`). A global setup drops and recreates it at the start of every run, and refuses to touch any database whose name doesn't end in `_test`. During tests, `DATABASE_URL` points at it.
+- **Test Redis:** server tests use Redis database 1 (`TEST_REDIS_URL`), which the global setup empties on every run and refuses to do for database 0, the one the app uses. During tests, `REDIS_URL` points at it. Job tests also give every test its own queue name.
 - Tests run inside the Docker containers (`docker compose exec api pnpm test`), where the database is reachable and the environment variables are set.
 
 ## Internationalization: i18next

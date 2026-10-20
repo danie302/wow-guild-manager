@@ -91,7 +91,7 @@ docker compose exec api pnpm --filter @wgm/web test                 # one packag
 docker compose exec api pnpm --filter @wgm/server test <file path>  # one file
 ```
 
-Server tests use a separate `wgm_test` database that's recreated on every run, so they never touch your development data.
+Server tests use a separate `wgm_test` database and Redis database 1, both reset on every run, so they never touch your development data or queued jobs.
 
 ### Local tools (optional)
 

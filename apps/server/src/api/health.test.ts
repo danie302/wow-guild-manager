@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from './app.js';
 import { createSequelize } from '../db/sequelize.js';
 import { databaseCheck, redisCheck, type HealthCheck } from './health.js';
-import { createTestLogger } from './test-logger.js';
+import { createTestLogger } from '../test-logger.js';
 
 const up: HealthCheck = () => Promise.resolve();
 const down: HealthCheck = () => Promise.reject(new Error('connection refused'));

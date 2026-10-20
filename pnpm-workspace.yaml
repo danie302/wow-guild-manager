@@ -5,3 +5,5 @@ packages:
 # Dependencies allowed to run install scripts. pnpm blocks all others.
 allowBuilds:
   esbuild: true
+  # Optional native speed-up for msgpackr (used by BullMQ); it works without it.
+  msgpackr-extract: false

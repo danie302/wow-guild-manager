@@ -2,15 +2,21 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import pg from 'pg';
+import { createClient } from 'redis';
 
 const serverDir = fileURLToPath(new URL('..', import.meta.url));
 
 /**
- * Recreates the test database before every test run and runs the migrations, so each run
- * starts with the current schema and no data. It refuses to run unless the target is clearly
- * a test database.
+ * Recreates the test database before every test run and runs the migrations, and empties the
+ * test Redis database, so each run starts with the current schema and no data. It refuses to
+ * run unless the targets are clearly test databases.
  */
 export default async function setup(): Promise<void> {
+  await resetDatabase();
+  await resetRedis();
+}
+
+async function resetDatabase(): Promise<void> {
   const testUrl = new URL(requireEnv('TEST_DATABASE_URL'));
   const testDatabase = testUrl.pathname.slice(1);
   const devDatabase = process.env.POSTGRES_DB;
@@ -40,6 +46,26 @@ export default async function setup(): Promise<void> {
     env: { ...process.env, NODE_ENV: 'test', DATABASE_URL: testUrl.toString() },
     stdio: 'pipe',
   });
+}
+
+async function resetRedis(): Promise<void> {
+  const url = new URL(requireEnv('TEST_REDIS_URL'));
+  const database = Number(url.pathname.slice(1) || '0');
+
+  // The app uses Redis database 0, so the tests must use another one.
+  if (!(database > 0)) {
+    throw new Error(
+      `Refusing to empty Redis database ${database}: the tests must use a database other than 0.`,
+    );
+  }
+
+  const client = createClient({ url: url.toString() });
+  await client.connect();
+  try {
+    await client.flushDb();
+  } finally {
+    await client.close();
+  }
 }
 
 function requireEnv(name: string): string {

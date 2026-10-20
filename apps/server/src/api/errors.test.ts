@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createApp } from './app.js';
 import { errorHandler } from './errors.js';
-import { createTestLogger } from './test-logger.js';
+import { createTestLogger } from '../test-logger.js';
 
 const up = () => Promise.resolve();
 

@@ -4,6 +4,7 @@ import { createApp } from '../api/app.js';
 import { databaseCheck, redisCheck } from '../api/health.js';
 import { apiConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
+import { JobQueue, redisConnection } from '../jobs/index.js';
 import { createLogger } from '../logger.js';
 
 // Migrations run before this process starts (see the api command in docker-compose.yml), never from bot or worker.
@@ -18,6 +19,9 @@ const redis = createClient({ url: config.REDIS_URL, disableOfflineQueue: true })
 redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis client error'));
 await redis.connect();
 
+// Routes add background jobs through this queue; the worker container runs them.
+const jobs = new JobQueue({ connection: redisConnection(config.REDIS_URL) });
+
 const app = createApp({
   logger,
   healthChecks: { database: databaseCheck(sequelize), redis: redisCheck(redis) },
@@ -30,6 +34,8 @@ const server = app.listen(config.PORT, () => {
 process.on('SIGTERM', () => {
   logger.info('Shutting down');
   server.close(() => {
-    void Promise.allSettled([sequelize.close(), redis.close()]).then(() => process.exit(0));
+    void Promise.allSettled([sequelize.close(), redis.close(), jobs.close()]).then(() =>
+      process.exit(0),
+    );
   });
 });

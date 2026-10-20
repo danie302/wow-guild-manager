@@ -1,7 +1,7 @@
 import { MessageFlags, type Interaction } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createTestLogger } from '../api/test-logger.js';
+import { createTestLogger } from '../test-logger.js';
 import { describeLoginError, handleInteraction, registerCommands } from './client.js';
 import { ping } from './commands/ping.js';
 import type { SlashCommand } from './commands/types.js';
