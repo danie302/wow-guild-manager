@@ -10,8 +10,8 @@ import {
 } from '@wgm/shared';
 import { describe, expect, it } from 'vitest';
 
-import { apiErrorMessage, validationIssueMessage } from './api-errors';
-import { detectLocale, i18n, resources } from './index';
+import { apiErrorMessage, validationIssueMessage } from '../api-errors';
+import { detectLocale, i18n, resources } from '../index';
 
 function keysOf(value: unknown, prefix = ''): string[] {
   if (typeof value !== 'object' || value === null) return [prefix];

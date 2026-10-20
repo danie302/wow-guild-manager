@@ -267,7 +267,7 @@ Zod schemas in `packages/shared` validate API requests on the server and forms o
 
 Vitest runs unit tests in both the web client and the server. Supertest runs HTTP tests against the Express app.
 
-- Each package has its own Vitest config, and the root `pnpm test` runs them all. Test files sit next to the code they test (`*.test.ts`). Server tests that aren't about one file go in `apps/server/test/`.
+- Each package has its own Vitest config, and the root `pnpm test` runs them all. Test files (`*.test.ts`, `*.test.tsx`) go in a `__tests__` folder inside the folder of the code they test, so folders list only code while tests stay one step away. Server tests that aren't about one file go in `apps/server/test/`. A component that grows into several files gets its own folder (`AppShell/AppShell.tsx` plus an `index.ts` that re-exports it, and its own `__tests__/`), instead of a folder per file from the start.
 - Web tests run in jsdom.
 - **Test database:** server tests use a separate database in the same PostgreSQL container (`<POSTGRES_DB>_test`, from `TEST_DATABASE_URL`). A global setup drops and recreates it at the start of every run, and refuses to touch any database whose name doesn't end in `_test`. During tests, `DATABASE_URL` points at it.
 - **Test Redis:** server tests use Redis database 1 (`TEST_REDIS_URL`), which the global setup empties on every run and refuses to do for database 0, the one the app uses. During tests, `REDIS_URL` points at it. Job tests also give every test its own queue name.

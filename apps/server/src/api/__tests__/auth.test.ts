@@ -3,11 +3,11 @@ import type { Sequelize } from 'sequelize';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import type { DiscordOAuth, DiscordProfile } from '../auth/discord-oauth.js';
-import { User } from '../db/models/index.js';
-import { createSequelize } from '../db/sequelize.js';
-import { createTestLogger } from '../test-logger.js';
-import { createApp } from './app.js';
+import type { DiscordOAuth, DiscordProfile } from '../../auth/discord-oauth.js';
+import { User } from '../../db/models/index.js';
+import { createSequelize } from '../../db/sequelize.js';
+import { createTestLogger } from '../../test-logger.js';
+import { createApp } from '../app.js';
 
 const up = () => Promise.resolve();
 

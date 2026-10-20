@@ -28,7 +28,7 @@ Database migrations (details and the typed model pattern in `apps/server/src/db/
 - `docker compose exec api pnpm --filter @wgm/server db:migration:create --name <name>`: new migration (CommonJS `.js`).
 - `docker compose exec api pnpm --filter @wgm/server db:migrate` / `db:migrate:undo`: apply pending migrations or revert the last one. The `api` container also applies them on start.
 
-Test files are `*.test.ts` next to the code. Server tests use `wgm_test` and Redis database 1, which are reset on every run.
+Test files are `*.test.ts(x)` in a `__tests__` folder next to the code they test (e.g. `src/pages/__tests__/StatusPage.test.tsx` for `src/pages/StatusPage.tsx`). Tests that aren't about one file, and the test setup, go in `apps/server/test/` or `apps/web/src/test/`. If a component grows into several files, give it its own folder (`AppShell/AppShell.tsx`, `index.ts`, `__tests__/`). Server tests use `wgm_test` and Redis database 1, which are reset on every run.
 
 ## Planning workflow
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { theme } from './theme';
-import { tokens } from './tokens';
+import { theme } from '../theme';
+import { tokens } from '../tokens';
 
 describe('theme', () => {
   it('uses the design font and square corners', () => {

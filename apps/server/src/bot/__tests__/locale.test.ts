@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { ping } from './commands/ping.js';
-import { directMessageLocale, fromDiscordLocale, replyLocale } from './locale.js';
+import { ping } from '../commands/ping.js';
+import { directMessageLocale, fromDiscordLocale, replyLocale } from '../locale.js';
 
 describe('fromDiscordLocale', () => {
   it('maps every regional variant of a supported language', () => {

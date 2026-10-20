@@ -2,8 +2,8 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { mockApi, testUser } from '../test/api';
-import { renderRoute } from '../test/render';
+import { mockApi, testUser } from '../../test/api';
+import { renderRoute } from '../../test/render';
 
 describe('UserSettingsPage', () => {
   it('switches the whole app to Spanish and back without reloading', async () => {

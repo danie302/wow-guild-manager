@@ -3,10 +3,10 @@ import { randomUUID } from 'node:crypto';
 import type { Worker } from 'bullmq';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createTestLogger } from '../test-logger.js';
-import type { JobPayloads } from './definitions.js';
-import { JobQueue, redisConnection } from './queue.js';
-import { createJobWorker, type JobHandlers } from './worker.js';
+import { createTestLogger } from '../../test-logger.js';
+import type { JobPayloads } from '../definitions.js';
+import { JobQueue, redisConnection } from '../queue.js';
+import { createJobWorker, type JobHandlers } from '../worker.js';
 
 const connection = redisConnection(process.env.REDIS_URL!);
 

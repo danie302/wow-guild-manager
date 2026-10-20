@@ -8,7 +8,7 @@ import {
 } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { createSequelize } from './sequelize.js';
+import { createSequelize } from '../sequelize.js';
 
 // A table that only exists in this test, written with the typed model pattern.
 class Probe extends Model<InferAttributes<Probe>, InferCreationAttributes<Probe>> {

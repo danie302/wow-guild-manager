@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { AppShell } from './AppShell';
-import { UiProvider } from './UiProvider';
+import { AppShell } from '../AppShell';
+import { UiProvider } from '../UiProvider';
 
 function renderShell(path: string) {
   const router = createMemoryRouter(

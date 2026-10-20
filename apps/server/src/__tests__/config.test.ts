@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { apiConfigSchema, botConfigSchema, ConfigError, loadConfig } from './config.js';
+import { apiConfigSchema, botConfigSchema, ConfigError, loadConfig } from '../config.js';
 
 const baseEnv = {
   DATABASE_URL: 'postgres://user:pass@localhost:5432/db',

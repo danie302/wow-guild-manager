@@ -10,7 +10,7 @@ import {
 } from '@wgm/shared';
 import { describe, expect, it } from 'vitest';
 
-import { resources, translator, type TranslationKey } from './index.js';
+import { resources, translator, type TranslationKey } from '../index.js';
 
 function keysOf(value: unknown, prefix = ''): string[] {
   if (typeof value !== 'object' || value === null) return [prefix];

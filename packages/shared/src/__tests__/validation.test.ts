@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { characterSchema } from './schemas/character.js';
-import { toValidationIssues } from './validation.js';
+import { characterSchema } from '../schemas/character.js';
+import { toValidationIssues } from '../validation.js';
 
 function issuesFor(schema: z.ZodType, input: unknown) {
   const result = schema.safeParse(input);

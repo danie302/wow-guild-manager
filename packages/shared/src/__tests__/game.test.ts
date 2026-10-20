@@ -12,7 +12,7 @@ import {
   RACE_NAMES,
   racesFor,
   rolesFor,
-} from './game.js';
+} from '../game.js';
 
 // Copied from requirements.md, "Races and classes by faction". Keep the two in sync.
 const RACES_AND_CLASSES = `

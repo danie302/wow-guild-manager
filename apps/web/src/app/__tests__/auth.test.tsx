@@ -2,9 +2,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { i18n } from '../i18n';
-import { mockApi, notLoggedIn, testUser } from '../test/api';
-import { renderRoute } from '../test/render';
+import { i18n } from '../../i18n';
+import { mockApi, notLoggedIn, testUser } from '../../test/api';
+import { renderRoute } from '../../test/render';
 
 describe('login and route guard', () => {
   it('sends a visitor who is not logged in to the login page', async () => {

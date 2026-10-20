@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CHARACTER_ERROR_CODES, characterSchema, classRoleSchema } from './character.js';
+import { CHARACTER_ERROR_CODES, characterSchema, classRoleSchema } from '../character.js';
 
 const valid = {
   name: 'Thrall',

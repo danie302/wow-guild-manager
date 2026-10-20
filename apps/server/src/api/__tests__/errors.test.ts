@@ -3,11 +3,11 @@ import { pinoHttp } from 'pino-http';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { createApp } from './app.js';
+import { createApp } from '../app.js';
 import { characterSchema } from '@wgm/shared';
 
-import { errorHandler, sendValidationError } from './errors.js';
-import { createTestLogger } from '../test-logger.js';
+import { errorHandler, sendValidationError } from '../errors.js';
+import { createTestLogger } from '../../test-logger.js';
 
 const up = () => Promise.resolve();
 

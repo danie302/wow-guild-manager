@@ -2,9 +2,9 @@ import type { HealthResponse } from '@wgm/shared';
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { i18n } from '../i18n';
-import { mockApi, testUser } from '../test/api';
-import { renderRoute } from '../test/render';
+import { i18n } from '../../i18n';
+import { mockApi, testUser } from '../../test/api';
+import { renderRoute } from '../../test/render';
 
 function mockHealth(handler: () => Response | Promise<Response>, me = testUser) {
   mockApi({ '/api/health': handler, '/api/me': () => Response.json(me) });
