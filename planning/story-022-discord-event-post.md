@@ -30,6 +30,10 @@ Publish each event in Discord and keep the post up to date.
 - [ ] If the post was deleted in Discord, the next update posts it again.
 - [ ] The event page's Discord post tab shows a preview that matches the real post.
 
+## Notes
+
+- Story 035's `replyLocale` and `directMessageLocale` (`apps/server/src/bot/locale.ts`) already take an optional `guildLocale`; pass the guild's setting once it exists. Until then they fall back to English.
+
 ## Technical debt
 
 None.

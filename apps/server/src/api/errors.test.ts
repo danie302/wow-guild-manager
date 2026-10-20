@@ -4,7 +4,9 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
 import { createApp } from './app.js';
-import { errorHandler } from './errors.js';
+import { characterSchema } from '@wgm/shared';
+
+import { errorHandler, sendValidationError } from './errors.js';
 import { createTestLogger } from '../test-logger.js';
 
 const up = () => Promise.resolve();
@@ -56,6 +58,34 @@ describe('error responses', () => {
     expect(logged?.err).toMatchObject({
       message: 'Something broke',
       stack: expect.stringContaining('Error: Something broke') as unknown,
+    });
+  });
+
+  it('returns validation errors as codes per field, without text', async () => {
+    const app = express();
+    app.use(express.json());
+    app.post('/characters', (req, res) => {
+      const result = characterSchema.safeParse(req.body);
+      if (!result.success) {
+        sendValidationError(res, result.error, req.body);
+        return;
+      }
+      res.status(201).end();
+    });
+
+    const response = await request(app)
+      .post('/characters')
+      .send({ faction: 'horde', race: 'orc', class: 'warrior', level: 60, professions: [] });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: {
+        code: 'VALIDATION_ERROR',
+        issues: [
+          { field: 'name', code: 'REQUIRED' },
+          { field: 'professions', code: 'TOO_FEW', params: { count: 1 } },
+        ],
+      },
     });
   });
 });

@@ -30,6 +30,10 @@ Let the Guild Master and Officers log in to the web app with their Discord accou
 - [ ] Discord access tokens are never sent to the browser.
 - [ ] The session cookie is `httpOnly`, `sameSite=lax`, and `secure` outside development.
 
+## Notes
+
+- Story 035 keeps the chosen language in the browser (`localStorage` key `wgm.locale`, see `apps/web/src/i18n/index.ts`) and shows the picker on the placeholder User settings page. On first login, save that language on the new app user instead of detecting it again.
+
 ## Technical debt
 
 None.

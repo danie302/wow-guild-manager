@@ -6,6 +6,8 @@ export type {
   AppShellNavProps,
   AppShellProps,
 } from './AppShell';
+export { ChoiceGroup } from './ChoiceGroup';
+export type { ChoiceGroupOptionProps, ChoiceGroupProps } from './ChoiceGroup';
 export { Icon } from './Icon';
 export type { IconName, IconProps } from './Icon';
 export { Loading, Notice } from './Notice';

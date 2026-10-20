@@ -1,10 +1,18 @@
+import type { Locale } from '@wgm/shared';
 import type {
   ChatInputCommandInteraction,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from 'discord.js';
 
+import type { Translate } from '../../i18n/index.js';
+
+/** What a command needs to answer in the member's language. */
+export interface CommandContext {
+  locale: Locale;
+  t: Translate;
+}
+
 export interface SlashCommand {
-  /** The definition registered with Discord. Its name routes interactions to `execute`. */
   definition: RESTPostAPIChatInputApplicationCommandsJSONBody;
-  execute(interaction: ChatInputCommandInteraction): Promise<void>;
+  execute(interaction: ChatInputCommandInteraction, context: CommandContext): Promise<void>;
 }

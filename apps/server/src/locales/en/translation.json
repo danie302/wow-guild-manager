@@ -1,0 +1,11 @@
+{
+  "commands": {
+    "ping": {
+      "description": "Check that the bot is online",
+      "reply": "Pong! The bot is online."
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again later."
+  }
+}

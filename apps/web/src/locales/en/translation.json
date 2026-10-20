@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Guild Manager",
+    "game": "World of Warcraft"
+  },
+  "nav": {
+    "label": "Main",
+    "dashboard": "Dashboard",
+    "events": "Events",
+    "roster": "Roster",
+    "registrations": "Pending registrations",
+    "attendance": "Attendance report",
+    "guildSettings": "Guild settings",
+    "userSettings": "User settings",
+    "status": "System status"
+  },
+  "pages": {
+    "notFound": "Page not found"
+  },
+  "status": {
+    "title": "System status",
+    "services": "Services",
+    "checking": "Checking the services",
+    "apiUnreachableTitle": "Can't reach the API",
+    "apiUnreachableBody": "The API isn't responding, so the database and Redis can't be checked.",
+    "api": "API",
+    "database": "Database",
+    "redis": "Redis",
+    "up": "Up",
+    "down": "Down",
+    "lastChecked": "Last checked {{time}}"
+  },
+  "userSettings": {
+    "title": "User settings",
+    "language": "Language"
+  },
+  "errors": {
+    "NOT_FOUND": "We couldn't find what you were looking for.",
+    "INVALID_JSON": "The request couldn't be read. Please try again.",
+    "INTERNAL_ERROR": "Something went wrong on our side. Please try again later.",
+    "VALIDATION_ERROR": "Some fields need fixing.",
+    "API_UNAVAILABLE": "Can't reach the server. Check your connection and try again."
+  },
+  "validation": {
+    "REQUIRED": "Required.",
+    "INVALID_TYPE": "Not a valid value.",
+    "INVALID_VALUE": "Not a valid option.",
+    "INVALID_FORMAT": "Wrong format.",
+    "TOO_SHORT_one": "Must be at least {{count}} character.",
+    "TOO_SHORT_other": "Must be at least {{count}} characters.",
+    "TOO_LONG_one": "Must be at most {{count}} character.",
+    "TOO_LONG_other": "Must be at most {{count}} characters.",
+    "TOO_SMALL": "Must be {{count}} or more.",
+    "TOO_BIG": "Must be {{count}} or less.",
+    "TOO_FEW_one": "Choose at least {{count}}.",
+    "TOO_FEW_other": "Choose at least {{count}}.",
+    "TOO_MANY_one": "Choose at most {{count}}.",
+    "TOO_MANY_other": "Choose at most {{count}}.",
+    "RACE_NOT_IN_FACTION": "This race isn't available for the chosen faction.",
+    "CLASS_NOT_FOR_RACE": "This class isn't available for the chosen race.",
+    "DUPLICATE_PROFESSION": "Each profession can only be listed once.",
+    "TOO_MANY_PRIMARY_PROFESSIONS_one": "A character can have at most {{count}} primary profession.",
+    "TOO_MANY_PRIMARY_PROFESSIONS_other": "A character can have at most {{count}} primary professions.",
+    "CLASS_CANNOT_FILL_ROLE": "This class can't fill that combat role."
+  }
+}

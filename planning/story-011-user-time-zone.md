@@ -25,6 +25,10 @@ Show every date and time in the app user's own time zone, and let them choose th
 - [ ] The app opens in the dark theme by default. Switching to light applies immediately, and the choice is saved on the app user and used on their next login, on any device.
 - [ ] Both themes use the color tokens from the design in `docs/design/`.
 
+## Notes
+
+- The language picker from story 035 is already on `/settings/user` (`UserSettingsPage`), built with the `ChoiceGroup` UI component. Build the full page around it.
+
 ## Technical debt
 
 None.

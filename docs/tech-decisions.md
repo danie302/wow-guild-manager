@@ -280,6 +280,14 @@ The app supports English and Spanish (see the Languages section of `requirements
 - **Dates and numbers** are formatted with the built-in `Intl` APIs for the user's language and time zone.
 - **Discord:** the bot picks the language per message as described in `requirements.md`, using the interaction's locale for replies one member sees. Slash commands are registered with Discord's name and description localizations.
 
+How it's set up:
+- **One namespace per app** (`translation`), in `apps/web/src/locales/<lang>/translation.json` and `apps/server/src/locales/<lang>/translation.json`. Keys are grouped by screen or feature (`status.title`, `commands.ping.reply`). Plurals use i18next's `_one`/`_other` suffixes with a `count` parameter.
+- **Typed keys** come from the English file, declared in `i18n/i18next.d.ts` in each app. `TranslationKey` is the type to use for props or parameters that take a key.
+- **Web client:** a dedicated i18next instance with `react-i18next`. The language comes from the saved choice, then the browser's languages, then English; switching it re-renders without a reload and updates `<html lang>`. `useFormat()` formats dates and numbers with `Intl`.
+- **Server:** one i18next instance; code gets a function fixed to one locale with `translator(locale)`. The bot passes `{ locale, t }` to every command.
+- **API error shape:** `{ error: { code } }`, plus `issues` for `VALIDATION_ERROR` (one `{ field, code, params? }` per invalid field). `toValidationIssues` in `packages/shared` maps Zod issues to these codes, keeping the shared schemas' rule codes.
+- **Language names** in the picker are shown in their own language ("English", "Español"), so they aren't translation keys.
+
 ## UI components: Material UI behind compound components
 
 **Status:** Accepted

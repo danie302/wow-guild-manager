@@ -64,6 +64,7 @@ export const characterSchema = z
         code: 'custom',
         path: ['professions'],
         message: CHARACTER_ERROR_CODES.tooManyPrimaryProfessions,
+        params: { count: MAX_PRIMARY_PROFESSIONS },
       });
     }
   });

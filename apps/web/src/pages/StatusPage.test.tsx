@@ -2,6 +2,7 @@ import type { HealthResponse } from '@wgm/shared';
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { i18n } from '../i18n';
 import { renderRoute } from '../test/render';
 
 function mockFetch(implementation: () => Promise<Response>) {
@@ -62,5 +63,21 @@ describe('StatusPage', () => {
     renderRoute('/status');
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('shows the page in Spanish, with the check time formatted for Spanish', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 20, 21, 5, 9));
+    await i18n.changeLanguage('es');
+    mockFetch(healthResponse({ status: 'ok', checks: { database: 'up', redis: 'down' } }, 503));
+
+    renderRoute('/status');
+
+    expect(await screen.findByText('Base de datos')).toBeInTheDocument();
+    expect(statusOf('Base de datos')).toHaveTextContent('Funciona');
+    expect(statusOf('Redis')).toHaveTextContent('Caído');
+    // Spanish uses a 24-hour clock: 21:05:09, not 9:05:09 PM.
+    expect(screen.getByText('Última comprobación: 21:05:09')).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });

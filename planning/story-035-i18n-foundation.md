@@ -1,6 +1,6 @@
 # Story 035: Internationalization foundation
 
-**Status:** Not started  
+**Status:** Done with debt  
 **Phase:** Foundation  
 **Depends on:** [Story 006](story-006-web-skeleton.md), [Story 007](story-007-shared-game-data.md), [Story 008](story-008-bot-skeleton.md)
 
@@ -26,20 +26,28 @@ Set up English and Spanish support in the web client, the API, and the bot, so e
 
 ## Acceptance criteria
 
-- [ ] The web app shows every existing text in English or Spanish, and the user can switch between them without reloading.
-- [ ] On first visit, the web app uses the browser's language if it's English or Spanish, and English otherwise.
-- [ ] Dates and numbers are formatted for the selected language with the `Intl` APIs.
-- [ ] Using a translation key that doesn't exist is a TypeScript error.
-- [ ] A test fails if the English and Spanish files don't have exactly the same keys, in every app.
-- [ ] API errors are returned as codes with parameters (e.g. `{ "code": "VALIDATION_ERROR", "field": "name" }`), never as translated text, and the web client shows them translated.
-- [ ] `/ping` replies in Spanish to a Discord user whose client is in Spanish, and in English to one whose client is in English.
-- [ ] Slash command names and descriptions appear in Spanish for Discord users whose client is in Spanish.
-- [ ] Class, race, profession, combat role, and rank names appear in English in both languages, taken from `packages/shared` by both the web client and the bot.
+- [x] The web app shows every existing text in English or Spanish, and the user can switch between them without reloading.
+- [x] On first visit, the web app uses the browser's language if it's English or Spanish, and English otherwise.
+- [x] Dates and numbers are formatted for the selected language with the `Intl` APIs.
+- [x] Using a translation key that doesn't exist is a TypeScript error.
+- [x] A test fails if the English and Spanish files don't have exactly the same keys, in every app.
+- [x] API errors are returned as codes with parameters (e.g. `{ "code": "VALIDATION_ERROR", "field": "name" }`), never as translated text, and the web client shows them translated.
+- [x] `/ping` replies in Spanish to a Discord user whose client is in Spanish, and in English to one whose client is in English.
+- [x] Slash command names and descriptions appear in Spanish for Discord users whose client is in Spanish.
+- [x] Class, race, profession, combat role, and rank names appear in English in both languages, taken from `packages/shared` by both the web client and the bot.
 
 ## Notes
 
 - Game terms stay in English in both languages (decided). Sign-up and attendance statuses are translated.
+- The language picker is on the placeholder User settings page (decided), as a radio group (`ChoiceGroup` in the UI kit). The language names are shown in their own language ("English", "Español") in both languages. The choice is kept in `localStorage` (`wgm.locale`) until story 010 saves it on the app user.
+- Translation files: `apps/web/src/locales/{en,es}/translation.json` and `apps/server/src/locales/{en,es}/translation.json`, one namespace each. Keys are typed from the English file (`i18n/i18next.d.ts` in each app).
+- API errors are `{ "error": { "code": … } }`. Validation errors are `{ "error": { "code": "VALIDATION_ERROR", "issues": [{ "field": "name", "code": "TOO_SHORT", "params": { "count": 2 } }] } }`, built by `toValidationIssues` in `packages/shared` (so the web client can reuse it for its own forms) and sent with `sendValidationError`. The shared schemas' rule codes pass through, with their params (the primary-profession check now sends `count`). The web client translates them with `apiErrorMessage` and `validationIssueMessage`. No route validates input yet, so the web client only shows them in tests until a form uses them.
+- The bot picks the locale per interaction (`replyLocale`): the member's Discord language if it's English or Spanish, else the guild's language, else English. There's no guild language until story 022 and no stored member language until members exist, so for now unsupported Discord languages get English. `directMessageLocale` is ready for DMs.
+- `/ping`'s description is localized for both Discord Spanish locales (`es-ES` and `es-419`). Its name stays `ping`.
+- Dates and numbers: `useFormat()` in the web client wraps `Intl.DateTimeFormat` and `Intl.NumberFormat` for the current language. The System status page shows the last check time with it. Times use the browser's time zone until story 011.
+- Game terms: nothing shows them yet. Both apps have a test that fails if a translation file has a key named after a class, race, profession, or combat role code, or a value containing one of their English names, so they can only come from `packages/shared`. Ranks aren't in `packages/shared` yet; the story that adds them should add them to these tests.
+- Bot log messages (e.g. login errors) are for developers and stay in English.
 
 ## Technical debt
 
-None.
+- **Web bundle over Vite's 500 kB warning:** 630 kB minified (198 kB gzip), up from 459 kB (147 kB gzip). About 50 kB is i18next; most of the rest is Zod, because the web client now imports a value (`SUPPORTED_LOCALES`) from `@wgm/shared`, which loads the whole package and its schemas. Zod will be needed anyway once forms validate with the shared schemas (stories 012, 015). Fix: route-based code splitting with React Router lazy routes once real pages exist, and possibly a separate vendor chunk (`manualChunks`) for longer caching. Not worth it while most pages are placeholders.

@@ -44,7 +44,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 | [007](story-007-shared-game-data.md) | Shared game data and schemas | Done | 003 |
 | [008](story-008-bot-skeleton.md) | Discord bot skeleton | Done | 002, 003 |
 | [009](story-009-worker-skeleton.md) | Worker and job queue skeleton | Done with debt | 002, 003 |
-| [035](story-035-i18n-foundation.md) | Internationalization foundation | Not started | 006, 007, 008 |
+| [035](story-035-i18n-foundation.md) | Internationalization foundation | Done with debt | 006, 007, 008 |
 
 ### Access and guild
 

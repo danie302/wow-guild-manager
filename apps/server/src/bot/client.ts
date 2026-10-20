@@ -7,8 +7,10 @@ import {
   type Interaction,
 } from 'discord.js';
 
+import { translator } from '../i18n/index.js';
 import type { Logger } from '../logger.js';
 import type { SlashCommand } from './commands/index.js';
+import { replyLocale } from './locale.js';
 
 export interface BotDependencies {
   logger: Logger;
@@ -74,14 +76,17 @@ export async function handleInteraction(
     return;
   }
 
+  // No guild language until story 022, so unsupported Discord languages get English.
+  const locale = replyLocale({ interactionLocale: interaction.locale });
+  const t = translator(locale);
+
   try {
-    await command.execute(interaction);
+    await command.execute(interaction, { locale, t });
   } catch (err) {
     logger.error({ err, command: interaction.commandName }, 'Slash command failed');
     if (!interaction.replied && !interaction.deferred) {
-      // Placeholder English text. Story 035 translates it.
       await interaction
-        .reply({ content: 'Something went wrong.', flags: MessageFlags.Ephemeral })
+        .reply({ content: t('errors.generic'), flags: MessageFlags.Ephemeral })
         .catch(() => undefined);
     }
   }

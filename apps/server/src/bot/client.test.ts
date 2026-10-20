@@ -6,9 +6,10 @@ import { describeLoginError, handleInteraction, registerCommands } from './clien
 import { ping } from './commands/ping.js';
 import type { SlashCommand } from './commands/types.js';
 
-function fakeCommandInteraction(commandName: string) {
+function fakeCommandInteraction(commandName: string, locale = 'en-US') {
   return {
     commandName,
+    locale,
     replied: false,
     deferred: false,
     isChatInputCommand: () => true,
@@ -25,9 +26,24 @@ describe('handleInteraction', () => {
     await handleInteraction(asInteraction(interaction), [ping], createTestLogger().logger);
 
     expect(interaction.reply).toHaveBeenCalledWith({
-      content: 'Pong!',
+      content: 'Pong! The bot is online.',
       flags: MessageFlags.Ephemeral,
     });
+  });
+
+  it("replies in the language of the member's Discord client", async () => {
+    const spanish = fakeCommandInteraction('ping', 'es-419');
+    const french = fakeCommandInteraction('ping', 'fr');
+
+    await handleInteraction(asInteraction(spanish), [ping], createTestLogger().logger);
+    await handleInteraction(asInteraction(french), [ping], createTestLogger().logger);
+
+    expect(spanish.reply).toHaveBeenCalledWith(
+      expect.objectContaining({ content: '¡Pong! El bot está en línea.' }),
+    );
+    expect(french.reply).toHaveBeenCalledWith(
+      expect.objectContaining({ content: 'Pong! The bot is online.' }),
+    );
   });
 
   it('ignores interactions that are not slash commands', async () => {
@@ -49,13 +65,14 @@ describe('handleInteraction', () => {
       definition: ping.definition,
       execute: () => Promise.reject(new Error('boom')),
     };
-    const interaction = fakeCommandInteraction('ping');
+    const interaction = fakeCommandInteraction('ping', 'es-ES');
 
     await handleInteraction(asInteraction(interaction), [failing], logger);
 
-    expect(interaction.reply).toHaveBeenCalledWith(
-      expect.objectContaining({ flags: MessageFlags.Ephemeral }),
-    );
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: 'Algo salió mal. Inténtalo de nuevo más tarde.',
+      flags: MessageFlags.Ephemeral,
+    });
     expect(lines().find((line) => line.msg === 'Slash command failed')?.err).toMatchObject({
       message: 'boom',
     });
