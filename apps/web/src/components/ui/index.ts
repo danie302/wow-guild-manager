@@ -10,6 +10,8 @@ export type {
 export { Button } from './Button';
 export type { ButtonProps } from './Button';
 export { ChoiceGroup } from './ChoiceGroup';
+export { ComboBox } from './ComboBox';
+export type { ComboBoxOption, ComboBoxProps } from './ComboBox';
 export type { ChoiceGroupOptionProps, ChoiceGroupProps } from './ChoiceGroup';
 export { Icon } from './Icon';
 export type { IconName, IconProps } from './Icon';
@@ -17,8 +19,6 @@ export { Loading, Notice } from './Notice';
 export type { LoadingProps, NoticeProps } from './Notice';
 export { Page } from './Page';
 export type { PageSectionProps, PageSettingProps } from './Page';
-export { Select } from './Select';
-export type { SelectOption, SelectProps } from './Select';
 export { Splash } from './Splash';
 export type { SplashProps } from './Splash';
 export { StatusList } from './StatusList';

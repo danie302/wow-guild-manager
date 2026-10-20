@@ -87,6 +87,8 @@
     "light": "Light",
     "switchToLight": "Light theme",
     "switchToDark": "Dark theme",
-    "saved": "Settings saved"
+    "saved": "Settings saved",
+    "noTimeZone": "No time zone matches.",
+    "useDetectedTimeZone": "Use this device's time zone ({{timeZone}})"
   }
 }

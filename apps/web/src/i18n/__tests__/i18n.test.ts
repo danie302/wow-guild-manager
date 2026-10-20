@@ -11,6 +11,7 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import { apiErrorMessage, validationIssueMessage } from '../api-errors';
+import { timeZoneOptions } from '../format';
 import { detectLocale, i18n, resources } from '../index';
 
 function keysOf(value: unknown, prefix = ''): string[] {
@@ -107,5 +108,33 @@ describe('API error messages', () => {
     for (const code of ['NOT_FOUND', 'INVALID_JSON', 'INTERNAL_ERROR'] as const) {
       expect(apiErrorMessage(en, { code })).not.toMatch(/^errors\./);
     }
+  });
+});
+
+describe('timeZoneOptions', () => {
+  it('groups zones by region with readable place names and the UTC offset', () => {
+    // The saved zone is always listed, even an alias the runtime's list leaves out.
+    const options = timeZoneOptions(
+      'America/Argentina/Buenos_Aires',
+      new Date(Date.UTC(2026, 0, 15)),
+    );
+
+    expect(options).toContainEqual({
+      value: 'America/Argentina/Buenos_Aires',
+      label: 'Argentina / Buenos Aires',
+      group: 'America',
+      detail: 'UTC-03:00',
+    });
+    expect(options).toContainEqual({
+      value: 'Europe/Madrid',
+      label: 'Madrid',
+      group: 'Europe',
+      detail: 'UTC+01:00',
+    });
+    expect(timeZoneOptions('UTC')).toContainEqual(
+      expect.objectContaining({ value: 'UTC', label: 'UTC', group: undefined }),
+    );
+    const groups = options.map((option) => option.group ?? '');
+    expect(groups).toEqual([...groups].sort((a, b) => a.localeCompare(b)));
   });
 });

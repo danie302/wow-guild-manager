@@ -43,20 +43,50 @@ describe('UserSettingsPage', () => {
     expect(await screen.findByRole('heading', { name: 'User settings' })).toBeInTheDocument();
   });
 
-  it('changes the time zone, shows the time there, and saves it', async () => {
+  it('finds a time zone by typing a city, and saves it', async () => {
     const fetchMock = mockSettingsApi();
     const user = userEvent.setup();
     renderRoute('/settings/user');
 
-    const select = await screen.findByRole('combobox', { name: 'Time zone' });
-    expect(select).toHaveValue('UTC');
+    const field = await screen.findByRole('combobox', { name: 'Time zone' });
+    expect(field).toHaveValue('UTC');
 
-    await user.selectOptions(select, 'Asia/Tokyo');
+    await user.clear(field);
+    await user.type(field, 'sao paulo');
+    await user.click(await screen.findByRole('option', { name: /^Sao Paulo/ }));
 
-    expect(fetchMock).toHaveBeenCalledWith(...patchedWith({ timeZone: 'Asia/Tokyo' }));
-    expect(await screen.findByRole('combobox', { name: 'Time zone' })).toHaveValue('Asia/Tokyo');
-    expect(screen.getByRole('option', { name: 'Asia/Tokyo (UTC+09:00)' })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(...patchedWith({ timeZone: 'America/Sao_Paulo' }));
     expect(await screen.findByText('Settings saved')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Time zone' })).toHaveValue('Sao Paulo · America');
+  });
+
+  it('says so when no time zone matches', async () => {
+    mockSettingsApi();
+    const user = userEvent.setup();
+    renderRoute('/settings/user');
+
+    const field = await screen.findByRole('combobox', { name: 'Time zone' });
+    await user.clear(field);
+    await user.type(field, 'atlantis');
+
+    expect(await screen.findByText('No time zone matches.')).toBeInTheDocument();
+  });
+
+  it("offers this device's time zone when the saved one differs", async () => {
+    const fetchMock = mockApi({
+      '/api/me': () => Response.json({ ...testUser, timeZone: 'Pacific/Fiji' }),
+      'PATCH /api/me': (init) =>
+        Response.json({ ...testUser, ...(JSON.parse(init?.body as string) as object) }),
+    });
+    const user = userEvent.setup();
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    renderRoute('/settings/user');
+
+    await user.click(
+      await screen.findByRole('button', { name: `Use this device's time zone (${detected})` }),
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(...patchedWith({ timeZone: detected }));
   });
 
   it('switches the theme right away and saves it', async () => {

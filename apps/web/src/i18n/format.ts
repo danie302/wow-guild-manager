@@ -34,14 +34,25 @@ export function formatters(locale: string, timeZone: string) {
   };
 }
 
-/** Every time zone the browser knows, with its current UTC offset, sorted by name. */
+/**
+ * Every time zone the browser knows, for a picker: grouped by region ("America"), labelled by
+ * place ("Argentina / Buenos Aires"), with the current UTC offset. Sorted by region, then place.
+ */
 export function timeZoneOptions(current: string, now = new Date()) {
   const names = new Set(Intl.supportedValuesOf('timeZone'));
   // A saved zone may be an alias the list leaves out (e.g. "UTC").
   names.add(current);
   return [...names]
-    .sort()
-    .map((name) => ({ value: name, label: `${name} (${utcOffset(name, now)})` }));
+    .map((name) => {
+      const [region, ...place] = name.split('/');
+      return {
+        value: name,
+        label: (place.length ? place.join(' / ') : name).replaceAll('_', ' '),
+        group: place.length ? region : undefined,
+        detail: utcOffset(name, now),
+      };
+    })
+    .sort((a, b) => (a.group ?? '').localeCompare(b.group ?? '') || a.label.localeCompare(b.label));
 }
 
 function utcOffset(timeZone: string, now: Date): string {

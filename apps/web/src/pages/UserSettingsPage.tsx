@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useMe, useSaveSettings } from '../api/me';
-import { ChoiceGroup, Page, Select, useThemeMode } from '../components/ui';
+import { Button, ChoiceGroup, ComboBox, Page, useThemeMode } from '../components/ui';
 import { changeLocale, currentLocale, LOCALE_NAMES } from '../i18n';
 import { browserTimeZone, timeZoneOptions, useFormat } from '../i18n/format';
 
@@ -22,6 +22,7 @@ export function UserSettingsPage() {
   const { theme, setTheme } = useThemeMode();
   const timeZone = me?.timeZone ?? browserTimeZone();
   const zones = useMemo(() => timeZoneOptions(timeZone), [timeZone]);
+  const detectedTimeZone = browserTimeZone();
 
   const saveSetting = (settings: UpdateMeInput) => save.mutate(settings);
 
@@ -32,14 +33,20 @@ export function UserSettingsPage() {
         <span role="status">{save.isSuccess && t('settings.saved')}</span>
       </Page.Header>
       <Page.Setting title={t('settings.timeZone')} description={t('settings.timeZoneHelp')}>
-        <Select
+        <ComboBox
           label={t('settings.timeZone')}
           hideLabel
           value={timeZone}
           options={zones}
           onChange={(value) => saveSetting({ timeZone: value })}
+          noOptionsText={t('settings.noTimeZone')}
           hint={t('settings.timeZonePreview', { time: format.dateTime(new Date()) })}
         />
+        {detectedTimeZone !== timeZone && (
+          <Button onClick={() => saveSetting({ timeZone: detectedTimeZone })}>
+            {t('settings.useDetectedTimeZone', { timeZone: detectedTimeZone })}
+          </Button>
+        )}
       </Page.Setting>
       <Page.Setting title={t('settings.language')}>
         <ChoiceGroup

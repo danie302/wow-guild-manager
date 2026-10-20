@@ -87,6 +87,8 @@
     "light": "Claro",
     "switchToLight": "Tema claro",
     "switchToDark": "Tema oscuro",
-    "saved": "Ajustes guardados"
+    "saved": "Ajustes guardados",
+    "noTimeZone": "Ninguna zona horaria coincide.",
+    "useDetectedTimeZone": "Usar la zona horaria de este dispositivo ({{timeZone}})"
   }
 }
