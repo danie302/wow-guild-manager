@@ -15,6 +15,11 @@ export interface DiscordDirectory {
    * specific moments (a guild is created or its Officer role changes), never per request.
    */
   membersWithRole(serverId: string, roleId: string): Promise<string[]>;
+  /**
+   * Server members whose name starts with `query`, at most `limit`. One REST call per search,
+   * so it's only for the add-member form, never per request.
+   */
+  searchMembers(serverId: string, query: string, limit: number): Promise<DiscordMemberProfile[]>;
 }
 
 export interface DiscordServerSummary {
@@ -42,7 +47,15 @@ export interface DiscordRole {
   managed: boolean;
 }
 
-export interface DiscordMember {
+export interface DiscordMemberProfile {
+  id: string;
+  /** Their name in the server: nickname, then display name, then username. */
+  name: string;
+  /** The avatar hash; null for the default avatar. */
+  avatar: string | null;
+}
+
+export interface DiscordMember extends DiscordMemberProfile {
   roleIds: string[];
 }
 
@@ -59,7 +72,11 @@ const MANAGE_GUILD = 1n << 5n;
  * anything, and otherwise the permissions of `@everyone` (whose ID is the server's) and of
  * the member's roles add up. Administrator includes Manage Server.
  */
-export function canManageServer(server: DiscordServer, userId: string, member: DiscordMember) {
+export function canManageServer(
+  server: DiscordServer,
+  userId: string,
+  member: Pick<DiscordMember, 'roleIds'>,
+): boolean {
   if (server.ownerId === userId) return true;
   const roleIds = new Set([server.id, ...member.roleIds]);
   const permissions = server.roles

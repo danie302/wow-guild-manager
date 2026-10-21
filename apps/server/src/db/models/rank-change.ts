@@ -7,6 +7,7 @@ import {
   type ForeignKey,
   type InferAttributes,
   type InferCreationAttributes,
+  type NonAttribute,
   type Sequelize,
 } from 'sequelize';
 
@@ -28,6 +29,8 @@ export class RankChange extends Model<
   declare toRank: Rank;
   declare changedByUserId: ForeignKey<User['id']> | null;
   declare source: 'app' | 'discord';
+
+  declare changedBy?: NonAttribute<User>;
 
   declare createdAt: CreationOptional<Date>;
 

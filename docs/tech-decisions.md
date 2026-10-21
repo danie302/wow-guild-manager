@@ -268,7 +268,7 @@ How the bot is set up:
 
 **Status:** Accepted
 
-The login only has the `identify` scope, so the API can't ask Discord about a user's servers with the user's token. When it needs Discord data (the servers the bot is in, a user's permissions and roles in a server, a server's roles), it calls Discord's REST API with the bot token. These calls only happen at specific moments (guild setup, changing the Discord connection), never on every request, so Discord API usage doesn't grow with the number of users.
+The login only has the `identify` scope, so the API can't ask Discord about a user's servers with the user's token. When it needs Discord data (the servers the bot is in, a user's permissions and roles in a server, a server's roles), it calls Discord's REST API with the bot token. These calls only happen at specific moments (guild setup, changing the Discord connection, searching the server's members in the add-member form), never on every request, so Discord API usage doesn't grow with the number of users.
 
 - The calls sit behind a `DiscordDirectory` interface in `src/integrations/discord/`, so tests use a fake.
 - Responses are cached in Redis for a short time, to stay within Discord's rate limits.

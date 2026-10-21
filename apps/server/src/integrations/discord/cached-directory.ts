@@ -1,6 +1,11 @@
 import type { RedisClientType } from 'redis';
 
-import type { DiscordDirectory, DiscordMember, DiscordServer } from './directory.js';
+import type {
+  DiscordDirectory,
+  DiscordMember,
+  DiscordMemberProfile,
+  DiscordServer,
+} from './directory.js';
 
 export interface DiscordCacheOptions {
   redis: Pick<RedisClientType, 'get' | 'set'>;
@@ -35,6 +40,15 @@ export function cachedDiscordDirectory(
   return {
     botServers: () => directory.botServers(),
     membersWithRole: (serverId, roleId) => directory.membersWithRole(serverId, roleId),
+
+    // A short cache, so typing a name and deleting a letter doesn't search again.
+    searchMembers: (serverId, query, limit) =>
+      cached(
+        `search:${serverId}:${limit}:${query.toLowerCase()}`,
+        () => directory.searchMembers(serverId, query, limit),
+        (members) => members,
+        (json: DiscordMemberProfile[]) => json,
+      ),
 
     server: (serverId) =>
       cached(

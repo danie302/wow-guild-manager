@@ -71,7 +71,7 @@ describe('cachedDiscordDirectory', () => {
 
     await invalidator.forgetMember('300000000000000001', '200000000000000001');
 
-    expect(await cached.member('300000000000000001', '200000000000000001')).toEqual({
+    expect(await cached.member('300000000000000001', '200000000000000001')).toMatchObject({
       roleIds: ['400000000000000001'],
     });
   });

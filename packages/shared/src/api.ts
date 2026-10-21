@@ -2,9 +2,10 @@ import { z } from 'zod';
 
 import { SUPPORTED_LOCALES, type Locale } from './locales.js';
 import { isValidTimeZone, normalizeTimeZone, THEMES, type Theme } from './preferences.js';
-import type { Faction } from './game.js';
+import type { BaseRank, CharacterClass, Faction, Profession, Race, Rank } from './game.js';
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
 import { GUILD_ERROR_CODES } from './schemas/guild.js';
+import { ROSTER_ERROR_CODES } from './schemas/roster.js';
 
 /** Codes for one invalid field. The generic ones come from Zod checks, the rest from game rules. */
 export const VALIDATION_ISSUE_CODES = [
@@ -21,6 +22,7 @@ export const VALIDATION_ISSUE_CODES = [
   'INVALID_TIME_ZONE',
   ...Object.values(CHARACTER_ERROR_CODES),
   ...Object.values(GUILD_ERROR_CODES),
+  ...Object.values(ROSTER_ERROR_CODES),
 ] as const;
 
 export type ValidationIssueCode = (typeof VALIDATION_ISSUE_CODES)[number];
@@ -188,4 +190,72 @@ export type LoginError = (typeof LOGIN_ERRORS)[number];
 
 export function isLoginError(value: unknown): value is LoginError {
   return LOGIN_ERRORS.includes(value as LoginError);
+}
+
+/** A character as the roster shows it. */
+export interface RosterCharacter {
+  id: string;
+  name: string;
+  faction: Faction;
+  race: Race;
+  class: CharacterClass;
+  level: number;
+  professions: Profession[];
+  isMain: boolean;
+}
+
+/** A member on `GET /api/guilds/:guildId/members`. Characters come main first. */
+export interface RosterMember {
+  id: string;
+  discordUserId: string;
+  discordName: string;
+  avatarUrl: string;
+  /** Guild Master and Officer come from the guild and Discord; `baseRank` is set in the app. */
+  rank: Rank;
+  baseRank: BaseRank;
+  characters: RosterCharacter[];
+}
+
+export interface RankHistoryEntry {
+  id: string;
+  /** Null for the first entry, when the member joined the roster. */
+  fromRank: Rank | null;
+  toRank: Rank;
+  /** "discord": the Officer role was given or removed in Discord. */
+  source: 'app' | 'discord';
+  /** Who made the change in the app; null for Discord or a deleted account. */
+  changedBy: string | null;
+  at: string;
+}
+
+export interface OfficerNoteResponse {
+  id: string;
+  text: string;
+  /** Null when the author's account no longer exists. */
+  author: string | null;
+  at: string;
+}
+
+/** `GET /api/guilds/:guildId/members/:memberId`: only the Guild Master and Officers. */
+export interface MemberDetailResponse extends RosterMember {
+  rankHistory: RankHistoryEntry[];
+  officerNotes: OfficerNoteResponse[];
+}
+
+/** `POST /api/guilds/:guildId/members`. */
+export interface AddMemberResponse {
+  member: MemberDetailResponse;
+  /** True when a removed member was added back with their old record. */
+  restored: boolean;
+  /** Names of a restored member's characters that stay removed (their name is taken now). */
+  unrestoredCharacters: string[];
+}
+
+/** A Discord server member found by `GET /api/guilds/:guildId/discord-members?query=`. */
+export interface DiscordMemberOption {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  /** Already on this guild's roster, so they can't be added again. */
+  onRoster: boolean;
 }

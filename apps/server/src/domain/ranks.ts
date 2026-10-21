@@ -14,3 +14,16 @@ export async function memberRank(member: Member, guild: Guild): Promise<Rank> {
   });
   return officer ? 'officer' : member.rank;
 }
+
+/** Works out ranks for many members of one guild with two queries, e.g. for the roster. */
+export async function rankResolver(guild: Guild): Promise<(member: Member) => Rank> {
+  const guildMaster = await User.findByPk(guild.guildMasterUserId, { attributes: ['discordId'] });
+  const officers = await GuildOfficer.findAll({ where: { guildId: guild.id } });
+  const officerIds = new Set(officers.map((officer) => officer.discordUserId));
+  return (member) =>
+    member.discordUserId === guildMaster?.discordId
+      ? 'guild_master'
+      : officerIds.has(member.discordUserId)
+        ? 'officer'
+        : member.rank;
+}

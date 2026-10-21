@@ -6,6 +6,7 @@ import {
   type ForeignKey,
   type InferAttributes,
   type InferCreationAttributes,
+  type NonAttribute,
   type Sequelize,
 } from 'sequelize';
 
@@ -22,6 +23,8 @@ export class OfficerNote extends Model<
   /** Null when the author's account no longer exists. */
   declare authorUserId: ForeignKey<User['id']> | null;
   declare text: string;
+
+  declare author?: NonAttribute<User>;
 
   declare createdAt: CreationOptional<Date>;
 

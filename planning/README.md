@@ -61,7 +61,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 | Story | Title | Status | Depends on |
 |---|---|---|---|
 | [015](story-015-roster-data-model.md) | Roster data model | Done | 007, 012 |
-| [016](story-016-roster-management.md) | Roster page and management | Not started | 014, 015 |
+| [016](story-016-roster-management.md) | Roster page and management | In progress | 014, 015 |
 | [017](story-017-battlenet-client.md) | Battle.net API client | Not started | 009 |
 | [018](story-018-register-command.md) | Character registration with /register | Not started | 008, 016, 017 |
 | [019](story-019-member-left-discord.md) | Members who leave the Discord server | Not started | 008, 016 |

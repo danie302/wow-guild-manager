@@ -1,6 +1,6 @@
 # Story 016: Roster page and management
 
-**Status:** Not started  
+**Status:** In progress  
 **Phase:** Roster  
 **Depends on:** [Story 014](story-014-officer-access.md), [Story 015](story-015-roster-data-model.md)
 
@@ -28,6 +28,15 @@ Let the Guild Master and Officers see and manage the roster in the web app.
 - [ ] Removed members disappear from the roster, but past events still show them, marked as no longer on the roster.
 - [ ] The roster shows each member's main character with a count of their alts.
 - [ ] The Guild Master and Officers can change a member's main character.
+
+## Notes
+
+- Built in two parts. **Part 1 (done): the API.** `GET/POST /api/guilds/:guildId/members`, `GET/PATCH/DELETE …/members/:memberId`, `POST …/characters`, `PUT …/main`, `POST …/notes`, and `GET /api/guilds/:guildId/discord-members?query=`. **Part 2: the web pages** (screens 04 and 05).
+- Choosing the Discord user searches the server with Discord's member search, one REST call per query (2+ letters, cached briefly), only in the add-member form. Adding checks the user is on the server and takes their current name.
+- Each row of the App permissions table that touches the roster is an action in `domain/permissions.ts`. `canChangeRankOf` and `canRemove` add the rule that Officers can only change the rank of, or remove, Raiders and Members.
+- Search and filters run in the browser, since a roster is a few hundred members at most.
+- The design's add-member form says "Professions (up to 2)". The requirements allow 2 primary professions plus any secondary ones, and they win.
+- Officer notes can be read and added, not edited or deleted.
 
 ## Technical debt
 

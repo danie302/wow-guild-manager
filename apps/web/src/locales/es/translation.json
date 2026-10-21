@@ -76,7 +76,8 @@
     "DISCORD_SERVER_NOT_MANAGEABLE": "El bot debe estar en este servidor y necesitas el permiso Gestionar servidor en él.",
     "OFFICER_ROLE_NOT_FOUND": "Este rol no está en el servidor o no se puede usar como rol de Officer.",
     "CHARACTER_NAME_TAKEN": "Ya hay otro personaje con este nombre.",
-    "CHARACTER_WRONG_FACTION": "La facción del personaje debe ser la de la hermandad."
+    "CHARACTER_WRONG_FACTION": "La facción del personaje debe ser la de la hermandad.",
+    "DISCORD_USER_NOT_IN_SERVER": "Este usuario de Discord no está en el servidor de Discord de la hermandad."
   },
   "auth": {
     "checking": "Comprobando tu sesión",

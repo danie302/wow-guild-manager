@@ -10,6 +10,7 @@ import { errorHandler, notFoundHandler } from './errors.js';
 import { guildsRouter } from './guilds.js';
 import { healthRouter, type HealthChecks } from './health.js';
 import { meRouter } from './me.js';
+import { membersRouter } from './members.js';
 import { sessionMiddleware, type SessionOptions } from './session.js';
 
 export interface AppDependencies {
@@ -51,6 +52,7 @@ export function createApp({
     api.use(meRouter());
     api.use(discordRouter(discord));
     api.use(guildsRouter(discord, storage));
+    api.use(membersRouter(discord));
   }
   app.use('/api', api);
 

@@ -11,6 +11,7 @@ import {
   DiscordUnavailableError,
   type DiscordDirectory,
   type DiscordMember,
+  type DiscordMemberProfile,
   type DiscordServer,
   type DiscordServerSummary,
 } from './directory.js';
@@ -48,7 +49,16 @@ export function createRestDiscordDirectory(botToken: string): DiscordDirectory {
       const member = (await callOrNull(() =>
         rest.get(Routes.guildMember(serverId, userId)),
       )) as APIGuildMember | null;
-      return member && ({ roleIds: member.roles } satisfies DiscordMember);
+      return member && ({ ...toProfile(member), roleIds: member.roles } satisfies DiscordMember);
+    },
+
+    async searchMembers(serverId, query, limit) {
+      const members = (await call(() =>
+        rest.get(Routes.guildMembersSearch(serverId), {
+          query: new URLSearchParams({ query, limit: String(limit) }),
+        }),
+      )) as APIGuildMember[];
+      return members.map(toProfile);
     },
 
     async membersWithRole(serverId, roleId) {
@@ -64,6 +74,14 @@ export function createRestDiscordDirectory(botToken: string): DiscordDirectory {
         after = memberId(page.at(-1)!);
       }
     },
+  };
+}
+
+function toProfile(member: APIGuildMember): DiscordMemberProfile {
+  return {
+    id: member.user.id,
+    name: member.nick ?? member.user.global_name ?? member.user.username,
+    avatar: member.user.avatar,
   };
 }
 

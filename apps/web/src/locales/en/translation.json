@@ -76,7 +76,8 @@
     "DISCORD_SERVER_NOT_MANAGEABLE": "The bot must be in this server, and you need the Manage Server permission in it.",
     "OFFICER_ROLE_NOT_FOUND": "This role isn't in the server, or can't be used as the Officer role.",
     "CHARACTER_NAME_TAKEN": "Another character already has this name.",
-    "CHARACTER_WRONG_FACTION": "The character's faction must match the guild's."
+    "CHARACTER_WRONG_FACTION": "The character's faction must match the guild's.",
+    "DISCORD_USER_NOT_IN_SERVER": "This Discord user isn't on the guild's Discord server."
   },
   "auth": {
     "checking": "Checking your session",

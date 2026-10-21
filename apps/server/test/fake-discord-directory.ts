@@ -39,8 +39,14 @@ export class FakeDiscordDirectory implements DiscordDirectory {
     return this;
   }
 
-  addMember(serverId: string, userId: string, roleIds: string[] = []): this {
-    this.members.set(`${serverId}/${userId}`, { roleIds });
+  addMember(serverId: string, userId: string, roleIds: string[] = [], name?: string): this {
+    const known = this.members.get(`${serverId}/${userId}`);
+    this.members.set(`${serverId}/${userId}`, {
+      id: userId,
+      name: name ?? known?.name ?? `User ${userId.slice(-4)}`,
+      avatar: null,
+      roleIds,
+    });
     return this;
   }
 
@@ -65,6 +71,16 @@ export class FakeDiscordDirectory implements DiscordDirectory {
           ([key, member]) => key.startsWith(`${serverId}/`) && member.roleIds.includes(roleId),
         )
         .map(([key]) => key.slice(serverId.length + 1)),
+    );
+  }
+
+  searchMembers(serverId: string, query: string, limit: number) {
+    return this.answer(() =>
+      [...this.members.entries()]
+        .filter(([key]) => key.startsWith(`${serverId}/`))
+        .map(([, { id, name, avatar }]) => ({ id, name, avatar }))
+        .filter((member) => member.name.toLowerCase().startsWith(query.toLowerCase()))
+        .slice(0, limit),
     );
   }
 
