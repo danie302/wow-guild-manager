@@ -11,6 +11,10 @@ export interface ButtonProps {
   size?: 'small' | 'large';
   /** Renders a link that looks like a button, for actions that leave the page. */
   href?: string;
+  /** With `href`, opens the link in a new tab. */
+  newTab?: boolean;
+  /** `submit` makes the button send its form. */
+  type?: 'button' | 'submit';
   onClick?: () => void;
   disabled?: boolean;
   endIcon?: IconName;
@@ -21,6 +25,8 @@ export function Button({
   variant = 'secondary',
   size = 'small',
   href,
+  newTab,
+  type = 'button',
   onClick,
   disabled,
   endIcon,
@@ -30,7 +36,9 @@ export function Button({
   return (
     <Box
       component={href ? 'a' : 'button'}
-      {...(href ? { href } : { type: 'button', onClick, disabled })}
+      {...(href
+        ? { href, ...(newTab && { target: '_blank', rel: 'noopener noreferrer' }) }
+        : { type, onClick, disabled })}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',

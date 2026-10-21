@@ -98,5 +98,47 @@
     "saved": "Ajustes guardados",
     "noTimeZone": "Ninguna zona horaria coincide.",
     "useDetectedTimeZone": "Usar la zona horaria de este dispositivo ({{timeZone}})"
+  },
+  "factions": {
+    "alliance": "Alianza",
+    "horde": "Horda"
+  },
+  "setup": {
+    "title": "Configura tu hermandad",
+    "lead": "Tres pasos. Todo menos la facción se puede cambiar más tarde en Ajustes de la hermandad.",
+    "progress": "Paso {{current}} de {{total}}",
+    "stepGuild": "Crear la hermandad",
+    "stepBot": "Añadir el bot de Discord",
+    "stepRole": "Elegir el rol de Officer",
+    "name": "Nombre de la hermandad",
+    "faction": "Facción",
+    "factionHelp": "Solo los personajes de esta facción pueden estar en la plantilla. No se puede cambiar más tarde.",
+    "continue": "Continuar",
+    "back": "Volver",
+    "finish": "Terminar la configuración",
+    "botHelp": "El bot publica los eventos y recoge las inscripciones. Añádelo al servidor de Discord de tu hermandad y luego elige el servidor aquí.",
+    "addBot": "Añadir el bot a un servidor de Discord",
+    "reload": "Recargar",
+    "server": "Servidor de Discord",
+    "serversHelp": "Solo aparecen los servidores donde está el bot y tienes el permiso Gestionar servidor.",
+    "noServers": "Aún no hay servidores. Añade el bot a un servidor donde tengas el permiso Gestionar servidor y vuelve a esta página.",
+    "serverTaken": "Ya está conectado a otra hermandad",
+    "loadingServers": "Cargando tus servidores de Discord",
+    "loadingRoles": "Cargando los roles del servidor",
+    "officerRole": "Rol de Discord que otorga el rango de Officer",
+    "noRoleMatch": "Ningún rol coincide",
+    "noRoles": "Este servidor no tiene roles que puedan otorgar Officer. Crea uno en Discord (Ajustes del servidor → Roles) y recarga.",
+    "officerHelp": "Los miembros con este rol son Officers y pueden gestionar la hermandad en esta aplicación. Eres el Guild Master de esta hermandad. Puedes transferir el liderazgo más tarde en Ajustes de la hermandad.",
+    "discordFailed": "No se pudo leer Discord",
+    "createFailed": "No se pudo crear la hermandad"
+  },
+  "dashboard": {
+    "lead": "Tu hermandad está configurada. Aquí aparecerán los próximos eventos, los roles sin cubrir y los registros pendientes.",
+    "faction": "Facción",
+    "discordServer": "Servidor de Discord",
+    "officerRole": "Rol de Officer",
+    "unavailable": "No se puede leer de Discord en este momento",
+    "loading": "Cargando la hermandad",
+    "loadFailed": "No se pudo cargar la hermandad"
   }
 }

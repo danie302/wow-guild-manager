@@ -14,6 +14,10 @@ const paths = {
   user: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
   status: 'M22 12h-4l-3 9L9 3l-3 9H2',
   arrowRight: 'M5 12h14M13 6l6 6-6 6',
+  arrowLeft: 'M19 12H5M11 6l-6 6 6 6',
+  check: 'M20 6 9 17l-5-5',
+  refresh: 'M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5',
+  external: 'M14 3h7v7M10 14 21 3M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5',
 } as const;
 
 export type IconName = keyof typeof paths;

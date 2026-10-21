@@ -98,5 +98,47 @@
     "saved": "Settings saved",
     "noTimeZone": "No time zone matches.",
     "useDetectedTimeZone": "Use this device's time zone ({{timeZone}})"
+  },
+  "factions": {
+    "alliance": "Alliance",
+    "horde": "Horde"
+  },
+  "setup": {
+    "title": "Set up your guild",
+    "lead": "Three steps. Everything except the faction can be changed later in Guild settings.",
+    "progress": "Step {{current}} of {{total}}",
+    "stepGuild": "Create the guild",
+    "stepBot": "Add the Discord bot",
+    "stepRole": "Choose the Officer role",
+    "name": "Guild name",
+    "faction": "Faction",
+    "factionHelp": "Only characters of this faction can be on the roster. It can't be changed later.",
+    "continue": "Continue",
+    "back": "Back",
+    "finish": "Finish setup",
+    "botHelp": "The bot posts events and collects sign-ups. Add it to your guild's Discord server, then choose the server here.",
+    "addBot": "Add the bot to a Discord server",
+    "reload": "Reload",
+    "server": "Discord server",
+    "serversHelp": "Only servers where the bot is and you have the Manage Server permission are listed.",
+    "noServers": "No servers yet. Add the bot to a server where you have the Manage Server permission, then come back to this page.",
+    "serverTaken": "Already connected to another guild",
+    "loadingServers": "Loading your Discord servers",
+    "loadingRoles": "Loading the server roles",
+    "officerRole": "Discord role that grants Officer",
+    "noRoleMatch": "No role matches",
+    "noRoles": "This server has no roles that can grant Officer. Create one in Discord (Server Settings → Roles), then reload.",
+    "officerHelp": "Members with this role are Officers and can manage the guild in this app. You're the Guild Master of this guild. You can transfer leadership later in Guild settings.",
+    "discordFailed": "Couldn't read Discord",
+    "createFailed": "The guild couldn't be created"
+  },
+  "dashboard": {
+    "lead": "Your guild is set up. Upcoming events, missing roles, and pending registrations will show up here.",
+    "faction": "Faction",
+    "discordServer": "Discord server",
+    "officerRole": "Officer role",
+    "unavailable": "Can't be read from Discord right now",
+    "loading": "Loading the guild",
+    "loadFailed": "The guild couldn't be loaded"
   }
 }

@@ -1,4 +1,4 @@
-import type { MeResponse } from '@wgm/shared';
+import type { GuildResponse, MeResponse } from '@wgm/shared';
 import { vi } from 'vitest';
 
 export const testUser: MeResponse = {
@@ -9,18 +9,33 @@ export const testUser: MeResponse = {
   locale: 'en',
   timeZone: 'UTC',
   theme: 'dark',
-  guilds: [],
+  guilds: [{ id: 1, name: 'Ashen Vanguard', access: 'guild_master' }],
+};
+
+/** A logged-in user who doesn't lead or belong to any guild yet. */
+export const userWithoutGuild: MeResponse = { ...testUser, guilds: [] };
+
+export const testGuild: GuildResponse = {
+  id: 1,
+  name: 'Ashen Vanguard',
+  faction: 'alliance',
+  discordServer: { id: '300000000000000001', name: 'Ashen Vanguard Discord', iconUrl: null },
+  officerRole: { id: '400000000000000001', name: 'Officers' },
 };
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>;
 
 /**
  * Fakes the API: each key is "METHOD /api/path" (or just "/api/path" for GET). Unlisted
- * requests answer 404. `GET /api/me` answers with `testUser` unless a test overrides it.
+ * requests answer 404. `GET /api/me` answers with `testUser`, and `GET /api/guilds/1` with
+ * `testGuild`, unless a test overrides them.
  * Returns the fetch mock, to check the requests that were made.
  */
 export function mockApi(handlers: Record<string, Handler> = {}) {
-  const all: Record<string, Handler> = { 'GET /api/me': () => Response.json(testUser) };
+  const all: Record<string, Handler> = {
+    'GET /api/me': () => Response.json(testUser),
+    'GET /api/guilds/1': () => Response.json(testGuild),
+  };
   for (const [key, handler] of Object.entries(handlers)) {
     all[key.startsWith('/') ? `GET ${key}` : key] = handler;
   }

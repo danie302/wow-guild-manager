@@ -54,7 +54,7 @@ The bot and the web app's login share one Discord application, and you need a Di
    - Under **Redirects**, add `http://localhost:5173/api/auth/discord/callback` and save. If you changed `WEB_PORT`, use that port instead.
 6. Recreate the containers with `docker compose up -d` (`restart` keeps the old environment and doesn't read `.env` again).
    - The bot's log (`docker compose logs bot`) shows "Bot online" and "Registered slash commands". In the test server, type `/ping`: the bot answers with a message only you can see.
-   - Open http://localhost:5173 and click **Log in with Discord**.
+   - Open http://localhost:5173 and click **Log in with Discord**. The first time, you go through the guild setup: name and faction, the Discord server (your test server), and the Officer role.
 
 Without `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`, the API still runs, but the login page says that login isn't set up. The API also uses `DISCORD_BOT_TOKEN` (with `DISCORD_CLIENT_ID`) to read your servers and roles during guild setup; without them, guild setup says Discord isn't set up. Only servers where the bot is and you have the **Manage Server** permission (the server owner always does) can be connected. `SESSION_SECRET` comes with a value for local development in `.env.example`; an `.env` made before the login existed needs it added.
 

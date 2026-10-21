@@ -19,7 +19,7 @@ export function Layout() {
       <AppShell.Sidebar>
         <AppShell.Brand title={t('app.name')} subtitle={t('app.game')} initials="GM" />
         <AppShell.Nav label={t('nav.label')}>
-          <AppShell.NavItem to="/" icon="dashboard" end>
+          <AppShell.NavItem to="/dashboard" icon="dashboard">
             {t('nav.dashboard')}
           </AppShell.NavItem>
           <AppShell.NavItem to="/events" icon="events">

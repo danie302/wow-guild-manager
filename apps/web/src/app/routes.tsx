@@ -1,9 +1,12 @@
 import type { RouteObject } from 'react-router';
 
+import { DashboardPage } from '../pages/DashboardPage';
+import { GuildSetupPage } from '../pages/GuildSetupPage';
 import { LoginPage } from '../pages/LoginPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 import { StatusPage } from '../pages/StatusPage';
 import { UserSettingsPage } from '../pages/UserSettingsPage';
+import { HomeRedirect } from './HomeRedirect';
 import { Layout } from './Layout';
 import { RequireAuth } from './RequireAuth';
 
@@ -13,10 +16,13 @@ export const routes: RouteObject[] = [
   {
     element: <RequireAuth />,
     children: [
+      { index: true, element: <HomeRedirect /> },
+      // Full screen, outside the app shell.
+      { path: 'setup', element: <GuildSetupPage /> },
       {
         element: <Layout />,
         children: [
-          { index: true, element: <PlaceholderPage titleKey="nav.dashboard" /> },
+          { path: 'dashboard', element: <DashboardPage /> },
           { path: 'events', element: <PlaceholderPage titleKey="nav.events" /> },
           { path: 'roster', element: <PlaceholderPage titleKey="nav.roster" /> },
           { path: 'registrations', element: <PlaceholderPage titleKey="nav.registrations" /> },
