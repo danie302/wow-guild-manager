@@ -80,6 +80,11 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
   - `/register` is refused (with a reply only they see) if they're already on the roster, if they already have a request waiting, or if the Discord server isn't connected to a guild.
   - Approving adds them as a Member without characters, or restores their old record if they were removed (see below). The Officer then adds their characters on their member page.
 - Characters are added and edited by the Guild Master and Officers in the web app, not from Discord. This will be reviewed once the Battle.net API supports World of Warcraft: Forever.
+  - Every field of a character can be edited except the faction, which is always the guild's, with the same rules as when adding it.
+- The Guild Master and Officers can remove any character in the web app. Members can remove their own characters with a `/character remove` command in Discord, which asks them to confirm with buttons.
+  - A removed character's record is kept (marked as removed), so its past sign-ups and attendance stay, and its name is freed. Its sign-ups for upcoming events are removed and their spots released, as when a member is removed.
+  - Removing the main makes the member's oldest remaining character the main. A member can be left without characters.
+  - Adding a character to the same member with the name of one they removed restores its record, with the new details.
 - Members choose their own main with a `/main` command in Discord, which suggests their characters on the roster. The change applies right away. Only they see the reply.
 - The Guild Master and Officers can also add members and characters by hand, choosing the member's Discord account from the server's members.
 - A member's first character becomes their main, whenever it's added. The Guild Master and Officers can change which character is the main. The roster shows each member's main, with a count of their alts.
@@ -150,6 +155,7 @@ A character can only sign up for an event with a combat role their class can fil
 | Remove any member from the roster | ✓ | |
 | Remove Raiders and Members from the roster | ✓ | ✓ |
 | Add characters and approve requests to join (`/register`) | ✓ | ✓ |
+| Edit and remove characters (members remove their own with `/character remove`) | ✓ | ✓ |
 | Read and write officer notes | ✓ | ✓ |
 | Change a member's main character (members change their own with `/main`) | ✓ | ✓ |
 | Create, edit, and cancel events | ✓ | ✓ |

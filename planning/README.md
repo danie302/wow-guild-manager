@@ -29,7 +29,7 @@ Name new files `story-NNN-short-name.md`, using the next free number, and copy t
 
 ## Index
 
-Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done.
+Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018.
 
 ### Battle.net plan
 
@@ -38,7 +38,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 - Story 017 only defines the `CharacterLookup` interface, with an "unavailable" implementation. The real Battle.net client is story 037, blocked until Blizzard publishes the API.
 - Story 018 made `/register` a request to join, without a character: Officers add characters in the web app. Registering characters from Discord will be reviewed once Blizzard's API exists.
 - The gear checks (031, 032) wait for story 037. The dashboard (034) can be built first without its gear section.
-- Suggested order: events (020–027), attendance (028–030), then 017, 018, 019, 033, and 036, and finally 037, 031, and 032 once Blizzard's API exists.
+- Suggested order: events (020–027), attendance (028–030), then 017, 018, 038, 019, 033, and 036, and finally 037, 031, and 032 once Blizzard's API exists.
 
 ### Foundation
 
@@ -73,6 +73,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [016](story-016-roster-management.md) | Roster page and management | Done with debt | 014, 015 |
 | [017](story-017-character-lookup.md) | Character lookup interface | Done | 009 |
 | [018](story-018-register-command.md) | Requests to join with /register, and /main | Done with debt | 008, 016, 017 |
+| [038](story-038-edit-and-remove-characters.md) | Editing and removing characters | Not started | 016, 018 |
 | [019](story-019-member-left-discord.md) | Members who leave the Discord server | Not started | 008, 016 |
 
 ### Events
