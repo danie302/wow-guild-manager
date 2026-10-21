@@ -36,7 +36,7 @@ The reasons behind each choice are in [`docs/tech-decisions.md`](docs/tech-decis
 
 ## Getting started
 
-Instructions for the Battle.net API client will be added with its story (017).
+Instructions for the Battle.net API client will be added with its story (037), once Blizzard publishes an API for World of Warcraft: Forever. Until then the app works without Battle.net credentials.
 
 ### Set up Discord
 

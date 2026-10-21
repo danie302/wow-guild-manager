@@ -2,7 +2,7 @@
 
 **Status:** Not started  
 **Phase:** Roster  
-**Depends on:** [Story 008](story-008-bot-skeleton.md), [Story 016](story-016-roster-management.md), [Story 017](story-017-battlenet-client.md)
+**Depends on:** [Story 008](story-008-bot-skeleton.md), [Story 016](story-016-roster-management.md), [Story 017](story-017-character-lookup.md)
 
 ## Goal
 
@@ -11,7 +11,7 @@ Let members register their own characters from Discord, for an Officer to approv
 ## Scope
 
 - A `/register` command that takes a character name.
-- Looking the character up in the Battle.net API.
+- Looking the character up through `CharacterLookup` (story 017). Until the real Battle.net client exists (story 037), every lookup is "unavailable", so registrations are flagged and the Officer enters the class, race, and level.
 - A pending registrations list in the web app.
 - Approving or rejecting registrations.
 
@@ -27,6 +27,8 @@ Let members register their own characters from Discord, for an Officer to approv
 ## Notes
 
 - The design's pending registrations screen (06) has class and race fields for characters not found in Battle.net, but no level field. Add one, because a character needs a level.
+
+- Until story 037, this story works in manual mode: the lookup is always "unavailable", which follows the same path as a character Battle.net can't find. Once story 037 is done, found characters get their class, race, and level filled in with no change here.
 
 ## Technical debt
 

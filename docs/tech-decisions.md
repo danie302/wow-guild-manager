@@ -121,7 +121,7 @@ wowGuildManager/
 │     │  ├─ auth/             Discord OAuth2 and app users
 │     │  ├─ bot/              Discord commands and buttons
 │     │  ├─ jobs/             BullMQ queue, worker, and job handlers
-│     │  ├─ integrations/     Discord (from story 012) and Battle.net (from story 017) API clients
+│     │  ├─ integrations/     Discord (from story 012) and character lookup (story 017; Battle.net in 037) clients
 │     │  ├─ i18n/, locales/   Server translations (bot replies, DMs, Discord posts)
 │     │  └─ entrypoints/      api.ts, bot.ts, worker.ts
 │     ├─ test/                Test setup (test database and Redis)

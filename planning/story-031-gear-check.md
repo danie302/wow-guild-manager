@@ -2,7 +2,7 @@
 
 **Status:** Not started  
 **Phase:** Gear checks  
-**Depends on:** [Story 017](story-017-battlenet-client.md), [Story 025](story-025-manage-participants.md)
+**Depends on:** [Story 037](story-037-battlenet-client.md), [Story 025](story-025-manage-participants.md)
 
 ## Goal
 

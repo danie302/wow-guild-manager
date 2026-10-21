@@ -31,6 +31,15 @@ Name new files `story-NNN-short-name.md`, using the next free number, and copy t
 
 Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done.
 
+### Battle.net plan
+
+Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (releasing November 5th), so the MVP goes ahead without it (decided on 2026-10-20):
+
+- Story 017 only defines the `CharacterLookup` interface, with an "unavailable" implementation. The real Battle.net client is story 037, blocked until Blizzard publishes the API.
+- Story 018 (`/register`) works in manual mode until then: lookups are "unavailable", so the Officer enters the class, race, and level when approving, as for a character Battle.net can't find.
+- The gear checks (031, 032) wait for story 037. The dashboard (034) can be built first without its gear section.
+- Suggested order: events (020–027), attendance (028–030), then 017, 018, 019, 033, and 036, and finally 037, 031, and 032 once Blizzard's API exists.
+
 ### Foundation
 
 | Story | Title | Status | Depends on |
@@ -62,7 +71,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 |---|---|---|---|
 | [015](story-015-roster-data-model.md) | Roster data model | Done | 007, 012 |
 | [016](story-016-roster-management.md) | Roster page and management | Done with debt | 014, 015 |
-| [017](story-017-battlenet-client.md) | Battle.net API client | Not started | 009 |
+| [017](story-017-character-lookup.md) | Character lookup interface | Not started | 009 |
 | [018](story-018-register-command.md) | Character registration with /register | Not started | 008, 016, 017 |
 | [019](story-019-member-left-discord.md) | Members who leave the Discord server | Not started | 008, 016 |
 
@@ -91,7 +100,8 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 
 | Story | Title | Status | Depends on |
 |---|---|---|---|
-| [031](story-031-gear-check.md) | Gear check | Not started | 017, 025 |
+| [031](story-031-gear-check.md) | Gear check | Not started | 025, 037 |
+| [037](story-037-battlenet-client.md) | Battle.net API client | Blocked | 009, 017 |
 | [032](story-032-automatic-gear-check.md) | Automatic gear check and direct messages | Not started | 009, 031 |
 
 ### Leadership and dashboard
