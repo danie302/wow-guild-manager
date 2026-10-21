@@ -28,6 +28,7 @@ Read character data from the Battle.net API reliably, as the real implementation
 ## Notes
 
 - **Blocked:** World of Warcraft: Forever releases on November 5th, and Blizzard hasn't published a Battle.net API for it yet. It isn't known whether the API will support Forever, or how it will look up characters without realms (the Classic API needs a realm). Start this story once Blizzard publishes the API. Until then, the app uses the "unavailable" implementation from story 017, and `/register` works with characters entered by hand.
+- Once this story is done, review registering characters from Discord, checked against Battle.net (dropped from `/register` in story 018; see `requirements.md`).
 - Split from story 017 on 2026-10-20, so the rest of the MVP doesn't wait for Blizzard.
 
 ## Technical debt

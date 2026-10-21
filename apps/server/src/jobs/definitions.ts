@@ -8,9 +8,7 @@
 export interface JobPayloads {
   /** Logs a message. Only used to check the queue end to end; real jobs come in later stories. */
   ping: { message: string };
-  /** Looks up a character registered with /register (domain/registrations.ts). */
-  'registration-lookup': { registrationId: string };
-  /** Tells the member by direct message that their registration was approved or rejected. */
+  /** Tells someone by direct message that their request to join was approved or rejected. */
   'registration-reviewed': { registrationId: string };
 }
 

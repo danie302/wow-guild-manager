@@ -12,6 +12,7 @@ function fakeCommandInteraction(commandName: string, locale = 'en-US') {
     locale,
     replied: false,
     deferred: false,
+    isAutocomplete: () => false,
     isChatInputCommand: () => true,
     reply: vi.fn(() => Promise.resolve()),
   };
@@ -51,7 +52,7 @@ describe('handleInteraction', () => {
     const command = { definition: ping.definition, execute } as SlashCommand;
 
     await handleInteraction(
-      asInteraction({ isChatInputCommand: () => false }),
+      asInteraction({ isAutocomplete: () => false, isChatInputCommand: () => false }),
       [command],
       createTestLogger().logger,
     );

@@ -27,7 +27,7 @@ Let roster members log into the web app to see upcoming events and the roster, w
 - [ ] On a raid they're signed up for, members see their own gear check result, and no one else's.
 - [ ] Members see the roster with Discord names, ranks, main and alt characters, professions, and attendance rates. They don't see the "left Discord" flag or any filter for it.
 - [ ] Members can open only their own member page, which shows their characters and their own attendance history.
-- [ ] Members can't see officer notes, rank history, pending registrations, the attendance report, the dashboard, or the guild settings. Their navigation doesn't show those pages.
+- [ ] Members can't see officer notes, rank history, pending requests to join, the attendance report, the dashboard, or the guild settings. Their navigation doesn't show those pages.
 - [ ] Members can change their own time zone, language, and theme.
 - [ ] Every API endpoint a member can call returns only the data listed above. Tests call each endpoint with a member session and check that hidden fields (e.g. officer notes, other people's gear results) aren't in the response.
 - [ ] Every change endpoint returns 403 for a member session.

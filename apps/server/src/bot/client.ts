@@ -64,6 +64,14 @@ export async function handleInteraction(
   commands: readonly SlashCommand[],
   logger: Logger,
 ): Promise<void> {
+  if (interaction.isAutocomplete()) {
+    const command = commands.find((c) => c.definition.name === interaction.commandName);
+    // Discord drops suggestions that come late or fail, so errors are only logged.
+    await command?.autocomplete?.(interaction).catch((err: unknown) => {
+      logger.error({ err, command: interaction.commandName }, 'Autocomplete failed');
+    });
+    return;
+  }
   if (!interaction.isChatInputCommand()) {
     return;
   }

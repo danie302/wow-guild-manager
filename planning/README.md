@@ -36,7 +36,7 @@ Story 035 was added after the first plan. It belongs to the Foundation phase and
 Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (releasing November 5th), so the MVP goes ahead without it (decided on 2026-10-20):
 
 - Story 017 only defines the `CharacterLookup` interface, with an "unavailable" implementation. The real Battle.net client is story 037, blocked until Blizzard publishes the API.
-- Story 018 (`/register`) works in manual mode until then: lookups are "unavailable", so the Officer enters the class, race, and level when approving, as for a character Battle.net can't find.
+- Story 018 made `/register` a request to join, without a character: Officers add characters in the web app. Registering characters from Discord will be reviewed once Blizzard's API exists.
 - The gear checks (031, 032) wait for story 037. The dashboard (034) can be built first without its gear section.
 - Suggested order: events (020–027), attendance (028–030), then 017, 018, 019, 033, and 036, and finally 037, 031, and 032 once Blizzard's API exists.
 
@@ -72,7 +72,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [015](story-015-roster-data-model.md) | Roster data model | Done | 007, 012 |
 | [016](story-016-roster-management.md) | Roster page and management | Done with debt | 014, 015 |
 | [017](story-017-character-lookup.md) | Character lookup interface | Done | 009 |
-| [018](story-018-register-command.md) | Character registration with /register | In progress | 008, 016, 017 |
+| [018](story-018-register-command.md) | Requests to join with /register, and /main | Done with debt | 008, 016, 017 |
 | [019](story-019-member-left-discord.md) | Members who leave the Discord server | Not started | 008, 016 |
 
 ### Events

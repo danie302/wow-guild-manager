@@ -10,7 +10,7 @@ The app is available in English and Spanish.
 
 - **Discord login** for everyone, with access based on the guild's roster and a Discord role for Officers.
 - **Roster** of members and their characters (main and alts), with ranks, officer notes, and rank history.
-- **Character registration** from Discord with `/register`, checked against the Battle.net API and approved by an Officer.
+- **Requests to join** from Discord with `/register`, approved by an Officer, and **choosing your main** with `/main`.
 - **Events** (raids, dungeons, and PvP) with slots per combat role, weekly recurring events, and a post in Discord that updates in real time.
 - **Sign-ups from Discord** with a waitlist per role, and a configurable deadline for Tentative sign-ups with reminders.
 - **Missing-role alerts** in Discord before each event.

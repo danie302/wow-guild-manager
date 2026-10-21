@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { SUPPORTED_LOCALES, type Locale } from './locales.js';
 import { isValidTimeZone, normalizeTimeZone, THEMES, type Theme } from './preferences.js';
 import type { BaseRank, CharacterClass, Faction, Profession, Race, Rank } from './game.js';
-import type { RegistrationLookup } from './schemas/registration.js';
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
 import { GUILD_ERROR_CODES } from './schemas/guild.js';
 import { ROSTER_ERROR_CODES } from './schemas/roster.js';
@@ -254,22 +253,25 @@ export interface AddMemberResponse {
   unrestoredCharacters: string[];
 }
 
-/** A registration on `GET /api/guilds/:guildId/registrations`, oldest first. */
+/** A request to join on `GET /api/guilds/:guildId/registrations`, oldest first. */
 export interface PendingRegistration {
   id: string;
-  /** The character name they registered. */
-  name: string;
   discordUserId: string;
   discordName: string;
   avatarUrl: string;
-  /** Whether they're on the roster now (removed members count as not on it). */
+  /** Added by hand since they asked, so approving only closes the request. */
   onRoster: boolean;
-  registeredAt: string;
-  lookup: RegistrationLookup;
-  /** When the game data was read; null until a lookup has answered. */
-  lookedUpAt: string | null;
-  /** What the lookup found; null unless `lookup` is "found". */
-  character: { faction: Faction; race: Race; class: CharacterClass; level: number } | null;
+  /** They were removed from the roster; approving restores them with their characters. */
+  returning: boolean;
+  requestedAt: string;
+}
+
+/** `POST /api/guilds/:guildId/registrations/:registrationId/approve`. */
+export interface ApproveRegistrationResponse {
+  /** The member on the roster, to add their characters. */
+  memberId: string;
+  /** True when a removed member was added back with their old record. */
+  restored: boolean;
 }
 
 /** A Discord server member found by `GET /api/guilds/:guildId/discord-members?query=`. */

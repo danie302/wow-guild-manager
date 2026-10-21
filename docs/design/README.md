@@ -19,7 +19,7 @@ The visual design for the web app, made in Claude Design. Last downloaded on 202
 | 03 | Dashboard | 034 |
 | 04 | Roster (filters by rank and class, "left Discord" filter, add member, main and alts) | 016 |
 | 05 | Member detail (characters with Make main, rank, rank history, officer notes, attendance by event type, remove from roster) | 016, 029 |
-| 06 | Pending registrations (found / not found in Battle.net) | 018 |
+| 06 | Pending registrations (found / not found in Battle.net), built as requests to join | 018 |
 | 07 | Events (list and calendar, recurring series) | 020, 021 |
 | 08 | Create/edit event (running slot total, pre-confirmed raid participants, own Tentative deadline) | 020, 021, 025, 026 |
 | 09 | Event detail: Sign-ups tab (by role, waitlist, remove, replace, move to slot, cancel event) | 020, 025 |
@@ -61,5 +61,5 @@ None known. Every earlier difference was fixed in the design.
 - **No access (01b) and guild picker (01c)** name a specific Discord channel and role. The app uses generic copy, since a user without access isn't tied to one guild (story 014).
 - **Guild settings (12)** names the Discord server's owner. The app says instead that owning the server doesn't make someone the Guild Master, without reading the owner's name (story 013).
 - **Guild setup step 2** shows one server after adding the bot. The app instead lists every server where the bot is and the user can manage the server, and opens the bot invite in a new tab (story 012).
-- **Pending registrations (06)** only asks for class and race for characters not found in Battle.net. The app also asks for the level, and lets the Officer pick professions (optional) for every registration (story 018).
+- **Pending registrations (06)** shows characters registered with /register, found or not in Battle.net, with class and race fields. In the app, /register is a request to join without a character (story 018, `requirements.md`): the page is "Requests to join", approving is one click, and Officers add characters on the member page. It asks before rejecting, since the person gets a direct message, and shows dates instead of "2 h ago".
 - **Transferring leadership** keeps the old Guild Master on the roster as a Raider, and **disbanding** makes the bot leave the Discord server. Both are still assumptions in story 033.

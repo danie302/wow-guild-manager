@@ -1,14 +1,14 @@
-import type { PendingRegistration } from '@wgm/shared';
+import type { ApproveRegistrationResponse, PendingRegistration } from '@wgm/shared';
 import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loginAs, testApp } from '../../../test/api-app.js';
 import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
-import { CharacterRegistration, Member, User } from '../../db/models/index.js';
+import { Member, Registration, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
-import { lookUpRegistration, registerCharacter } from '../../domain/registrations.js';
-import { FakeCharacterLookup } from '../../../test/fake-character-lookup.js';
+import { requestToJoin } from '../../domain/registrations.js';
+import { addMember, removeMember } from '../../domain/roster.js';
 
 const gm = '200000000000000001';
 const thrall = { discordUserId: '200000000000000002', discordName: 'Thrall', discordAvatar: null };
@@ -28,24 +28,28 @@ beforeEach(async () => {
   await User.destroy({ truncate: true, cascade: true });
 });
 
-/** A Horde guild led by `gm`, logged in, with Thrall's registration of "Thrall". */
+/** A Horde guild led by `gm`, logged in. `request()` makes Thrall ask to join. */
 async function setup() {
   const jobs = new FakeJobQueue();
   const app = testApp(null, undefined, jobs);
   const agent = await loginAs(app, gm);
-  const guild = await createTestGuild((await User.findOne({ where: { discordId: gm } }))!, {
-    serverId,
-  });
-  const outcome = await registerCharacter(serverId, thrall, 'Thrall', 'en');
-  if (outcome.result !== 'created') throw new Error(outcome.result);
+  const leader = (await User.findOne({ where: { discordId: gm } }))!;
+  const guild = await createTestGuild(leader, { serverId });
+  const request = async () => {
+    const outcome = await requestToJoin(serverId, thrall, 'en');
+    if (outcome.result !== 'created') throw new Error(outcome.result);
+    return outcome.registration;
+  };
   const base = `/api/guilds/${guild.id}/registrations`;
-  return { app, agent, jobs, guild, base, registration: outcome.registration };
+  return { app, agent, jobs, guild, leader, base, request };
 }
 
-describe('pending registrations', () => {
-  it('lists them with what the lookup found', async () => {
-    const { agent, base, registration } = await setup();
-    await lookUpRegistration(registration.id, new FakeCharacterLookup());
+describe('pending requests', () => {
+  it('lists them, saying who is returning to the roster', async () => {
+    const { agent, base, guild, leader, request } = await setup();
+    const { member } = await addMember(guild, thrall, 'raider', leader);
+    await removeMember(member, guild);
+    const registration = await request();
 
     const response = await agent.get(base);
 
@@ -53,15 +57,12 @@ describe('pending registrations', () => {
     expect(response.body as PendingRegistration[]).toEqual([
       {
         id: registration.id,
-        name: 'Thrall',
         discordUserId: thrall.discordUserId,
         discordName: 'Thrall',
         avatarUrl: expect.stringContaining('https://cdn.discordapp.com/') as string,
         onRoster: false,
-        registeredAt: registration.createdAt.toISOString(),
-        lookup: 'not_found',
-        lookedUpAt: '2026-11-05T12:00:00.000Z',
-        character: null,
+        returning: true,
+        requestedAt: registration.createdAt.toISOString(),
       },
     ]);
   });
@@ -75,44 +76,30 @@ describe('pending registrations', () => {
   });
 });
 
-describe('approving a registration', () => {
-  it('adds the member and character, and queues the direct message', async () => {
-    const { agent, base, jobs, registration } = await setup();
+describe('approving a request', () => {
+  it('adds them to the roster and queues the direct message', async () => {
+    const { agent, base, jobs, request } = await setup();
+    const registration = await request();
 
-    const response = await agent
-      .post(`${base}/${registration.id}/approve`)
-      .send({ race: 'orc', class: 'shaman', level: 60, professions: ['alchemy'] });
+    const response = await agent.post(`${base}/${registration.id}/approve`);
 
-    expect(response.status).toBe(204);
-    expect(await Member.count({ where: { discordUserId: thrall.discordUserId } })).toBe(1);
+    const member = await Member.findOne({ where: { discordUserId: thrall.discordUserId } });
+    expect(response.status).toBe(200);
+    expect(response.body as ApproveRegistrationResponse).toEqual({
+      memberId: member!.id,
+      restored: false,
+    });
     expect(jobs.payloads('registration-reviewed')).toEqual([{ registrationId: registration.id }]);
     expect((await agent.get(base)).body).toEqual([]);
   });
 
-  it('answers with the missing fields of a character the lookup did not find', async () => {
-    const { agent, base, jobs, registration } = await setup();
-
-    const response = await agent.post(`${base}/${registration.id}/approve`).send({ level: 60 });
-
-    expect(response.status).toBe(400);
-    expect(response.body).toEqual({
-      error: {
-        code: 'VALIDATION_ERROR',
-        issues: [
-          { field: 'race', code: 'REQUIRED' },
-          { field: 'class', code: 'REQUIRED' },
-        ],
-      },
-    });
-    expect(jobs.jobs).toEqual([]);
-  });
-
   it('answers 409 once it was reviewed, and 404 for an unknown one', async () => {
-    const { agent, base, registration } = await setup();
+    const { agent, base, request } = await setup();
+    const registration = await request();
     await agent.post(`${base}/${registration.id}/reject`);
 
-    const again = await agent.post(`${base}/${registration.id}/approve`).send({});
-    const unknown = await agent.post(`${base}/not-an-id/approve`).send({});
+    const again = await agent.post(`${base}/${registration.id}/approve`);
+    const unknown = await agent.post(`${base}/not-an-id/approve`);
 
     expect(again.status).toBe(409);
     expect(again.body).toEqual({ error: { code: 'REGISTRATION_NOT_PENDING' } });
@@ -120,19 +107,17 @@ describe('approving a registration', () => {
   });
 });
 
-describe('rejecting a registration', () => {
+describe('rejecting a request', () => {
   it('records who rejected it and queues the direct message', async () => {
-    const { agent, base, jobs, registration } = await setup();
+    const { agent, base, jobs, leader, request } = await setup();
+    const registration = await request();
 
     const response = await agent.post(`${base}/${registration.id}/reject`);
 
     expect(response.status).toBe(204);
     await registration.reload();
-    expect(registration.status).toBe('rejected');
-    expect(registration.reviewedByUserId).toBe(
-      (await User.findOne({ where: { discordId: gm } }))!.id,
-    );
+    expect(registration).toMatchObject({ status: 'rejected', reviewedByUserId: leader.id });
     expect(jobs.payloads('registration-reviewed')).toEqual([{ registrationId: registration.id }]);
-    expect(await CharacterRegistration.count({ where: { status: 'pending' } })).toBe(0);
+    expect(await Registration.count({ where: { status: 'pending' } })).toBe(0);
   });
 });

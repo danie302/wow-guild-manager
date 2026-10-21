@@ -7,7 +7,7 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 - Supported game version: **World of Warcraft: Forever** (releasing November 5th). It is based on Classic and adds one new race, the **Skyborne**.
 - There are no realms. Characters and guilds are only separated by faction.
 - The Guild Master and Officers manage the guild in the web app. Members sign up for events only through Discord, and can view upcoming events and the roster in the web app without changing anything.
-- Members register their characters from Discord with `/register`, checked against the Battle.net API, and Officers can also add them by hand. Character gear is read from the Battle.net API.
+- People ask to join the roster from Discord with `/register`, and an Officer approves them. Officers add and manage characters in the web app, and members choose their main with `/main`. Character gear is read from the Battle.net API.
 - In the MVP:
   - Login with Discord, and a roster managed by Officers.
   - Read-only access for members to upcoming events and the roster.
@@ -73,11 +73,14 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 - Each member has:
   - A linked Discord account
   - A rank. The Officer rank comes from the Discord role. Raider and Member are set in the app.
-  - Their characters, one of which is their **main**. The others are **alts**. A member can be added without characters and get them later (by hand or with `/register`).
+  - Their characters, one of which is their **main**. The others are **alts**. A member can be added without characters and get them later from an Officer.
   - Private officer notes (e.g. warnings, trial status)
   - A history of rank changes, including gaining or losing the Officer role in Discord
-- Members register their own characters with a `/register` command in Discord. The app looks the character up in the Battle.net API to confirm it exists and fills in its class, race, and level. An Officer then approves the registration.
-- If the Battle.net API can't find the character, the registration is still sent to Officers, flagged, with class, race, and level entered by hand.
+- People ask to join the roster with a `/register` command in Discord. It has no options and doesn't register a character. The Guild Master or an Officer approves or rejects the request in the web app, and the person gets a direct message with the result.
+  - `/register` is refused (with a reply only they see) if they're already on the roster, if they already have a request waiting, or if the Discord server isn't connected to a guild.
+  - Approving adds them as a Member without characters, or restores their old record if they were removed (see below). The Officer then adds their characters on their member page.
+- Characters are added and edited by the Guild Master and Officers in the web app, not from Discord. This will be reviewed once the Battle.net API supports World of Warcraft: Forever.
+- Members choose their own main with a `/main` command in Discord, which suggests their characters on the roster. The change applies right away. Only they see the reply.
 - The Guild Master and Officers can also add members and characters by hand, choosing the member's Discord account from the server's members.
 - A member's first character becomes their main, whenever it's added. The Guild Master and Officers can change which character is the main. The roster shows each member's main, with a count of their alts.
 - When a member leaves the guild's Discord server, they are flagged on the roster and the dashboard. An Officer decides whether to remove them. They aren't removed automatically.
@@ -86,11 +89,11 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
   - Their history is kept: past sign-ups and attendance records stay as they were, and past events still show them, marked as no longer on the roster.
   - They no longer appear on the roster or in the attendance report's member list.
   - Their characters are freed, so they can join another guild.
-- If a removed member is added back to the same guild (by hand or through an approved `/register`), their previous record is restored, with their characters, rank history, officer notes, and attendance history. A character whose name another active character has taken in the meantime stays removed (its history is kept), and if it was the main, the first restored character becomes the main.
+- If a removed member is added back to the same guild (by hand or through an approved `/register` request), their previous record is restored, with their characters, rank history, officer notes, and attendance history. A character whose name another active character has taken in the meantime stays removed (its history is kept), and if it was the main, the first restored character becomes the main.
 - There is no limit on the number of Officers.
 
 ### Characters
-- A character has a name, faction, class, race, level (1–60), and its professions, if any. Professions are optional, since `/register` and the Battle.net lookup don't provide them.
+- A character has a name, faction, class, race, level (1–60), and its professions, if any. Professions are optional.
 - The app doesn't restrict the characters in a name beyond it not being empty. The Battle.net lookup is what confirms a character exists.
 - Character names are unique across the whole game, since there are no realms. No two active characters can have the same name.
 - Professions are the Classic ones: Alchemy, Blacksmithing, Enchanting, Engineering, Herbalism, Leatherworking, Mining, Skinning, Tailoring, Cooking, First Aid, and Fishing.
@@ -146,9 +149,9 @@ A character can only sign up for an event with a combat role their class can fil
 | Change a member's rank between Raider and Member | ✓ | ✓ |
 | Remove any member from the roster | ✓ | |
 | Remove Raiders and Members from the roster | ✓ | ✓ |
-| Add characters and approve character registrations | ✓ | ✓ |
+| Add characters and approve requests to join (`/register`) | ✓ | ✓ |
 | Read and write officer notes | ✓ | ✓ |
-| Change a member's main character | ✓ | ✓ |
+| Change a member's main character (members change their own with `/main`) | ✓ | ✓ |
 | Create, edit, and cancel events | ✓ | ✓ |
 | Accept, remove, or replace event participants | ✓ | ✓ |
 | Pre-confirm participants when scheduling a raid | ✓ | |
@@ -171,7 +174,7 @@ A character can only sign up for an event with a combat role their class can fil
   - **The roster:** each member's Discord name, rank, main and alt characters (class, race, level, professions), and attendance rate.
   - **Their own attendance history.**
   - **Their own settings:** time zone, language, and theme.
-- Members can't see: officer notes, rank history, which members left the Discord server, pending character registrations, the attendance report, other participants' gear check results, past events, the dashboard, or the guild settings.
+- Members can't see: officer notes, rank history, which members left the Discord server, pending requests to join, the attendance report, other participants' gear check results, past events, the dashboard, or the guild settings.
 - Members can't change anything in the web app. Event pages show the Tentative deadline and remind them that sign-ups happen in Discord, with a link to the event's Discord post.
 - Members can open only their own member page, not other members' pages.
 - Hidden data is filtered on the server. It's never sent to a member's browser.
@@ -307,7 +310,7 @@ The home page for the Guild Master and Officers shows:
 - Events with missing roles.
 - Tentative sign-ups close to their event's Tentative deadline.
 - Participants in upcoming raids with empty slots or missing enchants.
-- Pending character registrations.
+- Pending requests to join.
 - Members who left the guild's Discord server.
 
 ## After the MVP

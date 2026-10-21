@@ -37,7 +37,7 @@ Let the Guild Master and Officers see and manage the roster in the web app.
 - Search and filters run in the browser, since a roster is a few hundred members at most.
 - The design's add-member form says "Professions (up to 2)". The requirements allow 2 primary professions plus any secondary ones, and they win.
 - Officer notes can be read and added, not edited or deleted.
-- A member can be added without characters (decided during this story; `requirements.md` updated), and get them later on their page or with `/register`. The add-member form starts with none.
+- A member can be added without characters (decided during this story; `requirements.md` updated), and get them later on their page. The add-member form starts with none.
 
 ## Technical debt
 

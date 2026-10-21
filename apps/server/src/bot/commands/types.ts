@@ -1,5 +1,6 @@
 import type { Locale } from '@wgm/shared';
 import type {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from 'discord.js';
@@ -15,4 +16,6 @@ export interface CommandContext {
 export interface SlashCommand {
   definition: RESTPostAPIChatInputApplicationCommandsJSONBody;
   execute(interaction: ChatInputCommandInteraction, context: CommandContext): Promise<void>;
+  /** Suggests values for an option with autocomplete while the member types. */
+  autocomplete?(interaction: AutocompleteInteraction): Promise<void>;
 }

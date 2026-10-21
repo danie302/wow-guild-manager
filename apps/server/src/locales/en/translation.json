@@ -5,17 +5,23 @@
       "reply": "Pong! The bot is online."
     },
     "register": {
-      "description": "Register one of your characters for this server's guild",
-      "nameOption": {
-        "name": "name",
-        "description": "The character's name"
-      },
-      "created": "**{{name}}** is registered. An Officer of {{guild}} will review it, and I'll send you a direct message when they do.",
+      "description": "Ask to join the roster of this server's guild",
+      "created": "Your request to join {{guild}} was sent. An Officer will review it, and I'll send you a direct message when they do.",
       "noGuild": "This Discord server isn't connected to a guild yet.",
-      "invalidName": "Enter a character name of up to {{max}} characters.",
-      "onRoster": "**{{name}}** is already on the roster of {{guild}}.",
-      "inAnotherGuild": "**{{name}}** is already in another guild. A character can only be in one guild at a time.",
-      "alreadyPending": "**{{name}}** already has a registration waiting for an Officer."
+      "onRoster": "You're already on the roster of {{guild}}.",
+      "alreadyPending": "You already asked to join {{guild}}. An Officer will review it soon."
+    },
+    "main": {
+      "description": "Choose your main character in this server's guild",
+      "characterOption": {
+        "name": "character",
+        "description": "One of your characters on the roster"
+      },
+      "changed": "**{{name}}** is now your main.",
+      "alreadyMain": "**{{name}}** is already your main.",
+      "noGuild": "This Discord server isn't connected to a guild yet.",
+      "notOnRoster": "You aren't on the roster of {{guild}}. Use /register to ask to join.",
+      "notYourCharacter": "You don't have a character called **{{name}}** on the roster. An Officer can add it in the web app."
     }
   },
   "errors": {
@@ -23,9 +29,8 @@
   },
   "registrations": {
     "directMessage": {
-      "approved": "Your character **{{name}}** was approved and added to the roster of {{guild}}.",
-      "rejected": "An Officer of {{guild}} rejected your registration of **{{name}}**.",
-      "wrongFaction": "Your registration of **{{name}}** in {{guild}} was rejected: {{name}} is {{faction}}, and {{guild}} is a {{guildFaction}} guild."
+      "approved": "Your request to join {{guild}} was approved. You're on the roster now.",
+      "rejected": "An Officer of {{guild}} rejected your request to join."
     }
   }
 }

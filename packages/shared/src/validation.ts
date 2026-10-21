@@ -42,8 +42,10 @@ function issueCode(
     case 'invalid_format':
       return { code: 'INVALID_FORMAT' };
     case 'invalid_value':
-      // A missing choice (e.g. no race picked) fails as an invalid enum value.
-      return { code: value === undefined || value === null ? 'REQUIRED' : 'INVALID_VALUE' };
+      // A missing or empty choice (e.g. no race picked) fails as an invalid enum value.
+      return {
+        code: value === undefined || value === null || value === '' ? 'REQUIRED' : 'INVALID_VALUE',
+      };
     case 'custom':
       // Rule checks in the shared schemas use their error code as the message.
       return isIssueCode(issue.message)

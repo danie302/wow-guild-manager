@@ -1,4 +1,6 @@
 // The only entry point to the UI kit. Pages and features import from here, never from @mui/*.
+export { ActionList } from './ActionList';
+export type { ActionListItemProps, ActionListProps } from './ActionList';
 export { AppShell } from './AppShell';
 export type {
   AppShellAccountProps,

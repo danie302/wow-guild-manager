@@ -8,7 +8,7 @@
     "dashboard": "Panel",
     "events": "Eventos",
     "roster": "Plantilla",
-    "registrations": "Registros pendientes",
+    "registrations": "Solicitudes para entrar",
     "attendance": "Informe de asistencia",
     "guildSettings": "Ajustes de la hermandad",
     "userSettings": "Ajustes de usuario",
@@ -49,7 +49,7 @@
     "INVALID_IMAGE": "No se pudo leer el archivo como imagen.",
     "MEMBER_ALREADY_ON_ROSTER": "Este usuario de Discord ya está en la plantilla.",
     "GUILD_MASTER_CANNOT_BE_REMOVED": "No se puede quitar al Guild Master de la plantilla. Primero transfiere el liderazgo.",
-    "REGISTRATION_NOT_PENDING": "Este registro ya fue aprobado o rechazado."
+    "REGISTRATION_NOT_PENDING": "Esta solicitud ya fue aprobada o rechazada."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",
@@ -144,7 +144,7 @@
     "createFailed": "No se pudo crear la hermandad"
   },
   "dashboard": {
-    "lead": "Tu hermandad está configurada. Aquí aparecerán los próximos eventos, los roles sin cubrir y los registros pendientes.",
+    "lead": "Tu hermandad está configurada. Aquí aparecerán los próximos eventos, los roles sin cubrir y las solicitudes para entrar.",
     "faction": "Facción",
     "discordServer": "Servidor de Discord",
     "officerRole": "Rol de Officer",
@@ -286,5 +286,25 @@
     "loading": "Cargando el miembro",
     "notFound": "Este miembro no está en la plantilla.",
     "actionFailed": "No se pudo guardar el cambio"
+  },
+  "registrations": {
+    "title": "Solicitudes para entrar",
+    "lead": "Personas que pidieron entrar en la plantilla desde Discord con /register. Después de aprobar, añade sus personajes en su página de miembro.",
+    "loading": "Cargando las solicitudes…",
+    "loadFailed": "No se pudieron cargar las solicitudes.",
+    "empty": "No hay solicitudes pendientes.",
+    "requestedAt": "/register · {{date}}",
+    "returning": "Estuvo en la plantilla: vuelve con sus personajes",
+    "onRoster": "Ya está en la plantilla",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "cancel": "Cancelar",
+    "approved": "{{name}} entró en la plantilla.",
+    "restored": "{{name}} volvió a la plantilla, con sus personajes.",
+    "openMember": "Añadir personajes",
+    "rejected": "Se rechazó la solicitud de {{name}}.",
+    "rejectTitle": "¿Rechazar la solicitud de {{name}}?",
+    "rejectBody": "{{name}} recibirá un mensaje directo diciendo que un Officer la rechazó.",
+    "reviewFailed": "No se pudo revisar la solicitud."
   }
 }

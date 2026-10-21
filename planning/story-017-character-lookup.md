@@ -29,7 +29,7 @@ Define how the app looks characters up in the game, behind an interface that wor
 
 - Split on 2026-10-20: Blizzard hasn't published a Battle.net API for Forever (releasing November 5th), so the real client moved to story 037 and the rest of the MVP goes ahead without it. See "Battle.net plan" in `planning/README.md`.
 
-- Decided on 2026-10-20: the Battle.net environment variables wait for story 037. Until then `createCharacterLookup()` always returns the "unavailable" implementation, which is the case "no credentials configured". Nothing calls the lookup yet: story 018 is the first caller, from the worker.
+- Decided on 2026-10-20: the Battle.net environment variables wait for story 037. Until then `createCharacterLookup()` always returns the "unavailable" implementation, which is the case "no credentials configured". Nothing calls the lookup yet: story 018 made `/register` a request to join without a lookup, so the first callers are the gear checks (031, 032).
 
 ## Technical debt
 

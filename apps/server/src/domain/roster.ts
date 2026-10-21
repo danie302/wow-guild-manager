@@ -213,6 +213,46 @@ export async function setMainCharacter(member: Member, characterId: string): Pro
   });
 }
 
+/** The Discord user's active member record in the guild of a Discord server, if any. */
+export async function memberOnServer(
+  serverId: string,
+  discordUserId: string,
+): Promise<{ guild: Guild | null; member: Member | null }> {
+  const guild = await Guild.findOne({ where: { discordServerId: serverId } });
+  if (!guild) return { guild: null, member: null };
+  const member = await Member.findOne({
+    where: { guildId: guild.id, discordUserId, removedAt: null },
+    include: [{ model: Character, as: 'characters', where: { removedAt: null }, required: false }],
+    order: [[{ model: Character, as: 'characters' }, 'name', 'ASC']],
+  });
+  return { guild, member };
+}
+
+/** What /main did. */
+export type ChooseMainOutcome =
+  | { result: 'changed' | 'already_main'; name: string }
+  | { result: 'no_guild' }
+  | { result: 'not_on_roster'; guild: Guild }
+  | { result: 'not_your_character' };
+
+/** A member picks their main from Discord, by the name of one of their active characters. */
+export async function chooseMainByName(
+  serverId: string,
+  discordUserId: string,
+  name: string,
+): Promise<ChooseMainOutcome> {
+  const { guild, member } = await memberOnServer(serverId, discordUserId);
+  if (!guild) return { result: 'no_guild' };
+  if (!member) return { result: 'not_on_roster', guild };
+  const character = member.characters!.find(
+    (candidate) => candidate.name.toLowerCase() === name.trim().toLowerCase(),
+  );
+  if (!character) return { result: 'not_your_character' };
+  if (character.isMain) return { result: 'already_main', name: character.name };
+  await setMainCharacter(member, character.id);
+  return { result: 'changed', name: character.name };
+}
+
 /**
  * Removes a member from the roster. Their record and characters stay, marked as removed, so
  * past sign-ups and attendance remain, and their character names are free for other guilds.

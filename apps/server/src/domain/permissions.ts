@@ -16,7 +16,7 @@ export const PERMISSIONS = {
   chooseOfficerRole: ['guild_master'],
   /** See the roster and each member's page. */
   viewRoster: ['guild_master', 'officer'],
-  /** Add members and characters by hand, and approve character registrations. */
+  /** Add members and characters by hand, and approve requests to join (/register). */
   addCharacters: ['guild_master', 'officer'],
   /** Change a member's rank between Raider and Member (Officers: see canChangeRankOf). */
   changeMemberRank: ['guild_master', 'officer'],

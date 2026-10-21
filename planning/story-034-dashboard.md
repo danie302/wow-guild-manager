@@ -18,7 +18,7 @@ Show the Guild Master and Officers what needs attention on the app's home page.
 - [ ] It shows events with missing roles.
 - [ ] It shows Tentative sign-ups close to their event's Tentative deadline.
 - [ ] It shows participants in upcoming raids with empty slots or missing enchants.
-- [ ] It shows pending character registrations.
+- [ ] It shows pending requests to join.
 - [ ] It shows members who left the guild's Discord server.
 - [ ] Each item links to the page where it can be handled.
 - [ ] The Guild Master and Officers land on the dashboard after login. It follows screen 03 in `docs/design/`.
