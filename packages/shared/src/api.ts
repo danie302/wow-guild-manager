@@ -4,6 +4,7 @@ import { SUPPORTED_LOCALES, type Locale } from './locales.js';
 import { isValidTimeZone, normalizeTimeZone, THEMES, type Theme } from './preferences.js';
 import type { BaseRank, CharacterClass, Faction, Profession, Race, Rank } from './game.js';
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
+import { EVENT_ERROR_CODES, type EventType } from './schemas/event.js';
 import { GUILD_ERROR_CODES } from './schemas/guild.js';
 import { ROSTER_ERROR_CODES } from './schemas/roster.js';
 
@@ -23,6 +24,7 @@ export const VALIDATION_ISSUE_CODES = [
   ...Object.values(CHARACTER_ERROR_CODES),
   ...Object.values(GUILD_ERROR_CODES),
   ...Object.values(ROSTER_ERROR_CODES),
+  ...Object.values(EVENT_ERROR_CODES),
 ] as const;
 
 export type ValidationIssueCode = (typeof VALIDATION_ISSUE_CODES)[number];
@@ -66,7 +68,11 @@ export type ApiError =
         // The Guild Master can't leave the roster; they transfer leadership first.
         | 'GUILD_MASTER_CANNOT_BE_REMOVED'
         // The registration was already approved or rejected.
-        | 'REGISTRATION_NOT_PENDING';
+        | 'REGISTRATION_NOT_PENDING'
+        // The event has started, so it can't be edited or cancelled any more.
+        | 'EVENT_STARTED'
+        // The event was cancelled, so it can't be edited or cancelled again.
+        | 'EVENT_CANCELLED';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
@@ -253,6 +259,21 @@ export interface AddMemberResponse {
   restored: boolean;
   /** Names of a restored member's characters that stay removed (their name is taken now). */
   unrestoredCharacters: string[];
+}
+
+/** An event on `GET /api/guilds/:guildId/events` and its own page. Times are UTC ISO strings. */
+export interface EventResponse {
+  id: string;
+  type: EventType;
+  name: string;
+  description: string;
+  startsAt: string;
+  size: number;
+  slots: { tank: number; healer: number; dps: number };
+  /** Null when the creator's account no longer exists. */
+  createdBy: string | null;
+  /** Set once the event is cancelled; `by` is null when that account no longer exists. */
+  cancelled: { at: string; by: string | null } | null;
 }
 
 /** A request to join on `GET /api/guilds/:guildId/registrations`, oldest first. */

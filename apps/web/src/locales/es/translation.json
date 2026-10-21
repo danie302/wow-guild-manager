@@ -49,7 +49,9 @@
     "INVALID_IMAGE": "No se pudo leer el archivo como imagen.",
     "MEMBER_ALREADY_ON_ROSTER": "Este usuario de Discord ya está en la plantilla.",
     "GUILD_MASTER_CANNOT_BE_REMOVED": "No se puede quitar al Guild Master de la plantilla. Primero transfiere el liderazgo.",
-    "REGISTRATION_NOT_PENDING": "Esta solicitud ya fue aprobada o rechazada."
+    "REGISTRATION_NOT_PENDING": "Esta solicitud ya fue aprobada o rechazada.",
+    "EVENT_STARTED": "Este evento ya empezó, así que no se puede cambiar ni cancelar.",
+    "EVENT_CANCELLED": "Este evento fue cancelado, así que no se puede cambiar."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",
@@ -78,7 +80,11 @@
     "OFFICER_ROLE_NOT_FOUND": "Este rol no está en el servidor o no se puede usar como rol de Officer.",
     "CHARACTER_NAME_TAKEN": "Ya hay otro personaje con este nombre.",
     "CHARACTER_WRONG_FACTION": "La facción del personaje debe ser la de la hermandad.",
-    "DISCORD_USER_NOT_IN_SERVER": "Este usuario de Discord no está en el servidor de Discord de la hermandad."
+    "DISCORD_USER_NOT_IN_SERVER": "Este usuario de Discord no está en el servidor de Discord de la hermandad.",
+    "INVALID_RAID_SIZE": "Una raid tiene 10, 20 o 40 jugadores.",
+    "DUNGEON_SLOTS_FIXED": "Una dungeon siempre tiene el grupo estándar de 5 jugadores, y sus slots no se pueden cambiar.",
+    "SLOTS_DONT_ADD_UP": "Los slots de los tres roles de combate deben sumar el tamaño.",
+    "EVENT_STARTS_IN_PAST": "Elige una fecha y hora en el futuro."
   },
   "auth": {
     "checking": "Comprobando tu sesión",

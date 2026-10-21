@@ -49,7 +49,9 @@
     "INVALID_IMAGE": "The file couldn't be read as an image.",
     "MEMBER_ALREADY_ON_ROSTER": "This Discord user is already on the roster.",
     "GUILD_MASTER_CANNOT_BE_REMOVED": "The Guild Master can't be removed from the roster. Transfer leadership first.",
-    "REGISTRATION_NOT_PENDING": "This request was already approved or rejected."
+    "REGISTRATION_NOT_PENDING": "This request was already approved or rejected.",
+    "EVENT_STARTED": "This event has started, so it can't be changed or cancelled.",
+    "EVENT_CANCELLED": "This event was cancelled, so it can't be changed."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -78,7 +80,11 @@
     "OFFICER_ROLE_NOT_FOUND": "This role isn't in the server, or can't be used as the Officer role.",
     "CHARACTER_NAME_TAKEN": "Another character already has this name.",
     "CHARACTER_WRONG_FACTION": "The character's faction must match the guild's.",
-    "DISCORD_USER_NOT_IN_SERVER": "This Discord user isn't on the guild's Discord server."
+    "DISCORD_USER_NOT_IN_SERVER": "This Discord user isn't on the guild's Discord server.",
+    "INVALID_RAID_SIZE": "A raid has 10, 20, or 40 players.",
+    "DUNGEON_SLOTS_FIXED": "A dungeon always has the standard 5-player group, and its slots can't change.",
+    "SLOTS_DONT_ADD_UP": "The slots of the three combat roles must add up to the size.",
+    "EVENT_STARTS_IN_PAST": "Pick a date and time in the future."
   },
   "auth": {
     "checking": "Checking your session",

@@ -16,6 +16,8 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   officerNotes: { guildMaster: true, officer: true },
   changeMainCharacter: { guildMaster: true, officer: true },
   editCharacters: { guildMaster: true, officer: true },
+  viewEvents: { guildMaster: true, officer: true },
+  manageEvents: { guildMaster: true, officer: true },
 };
 
 describe('permissions', () => {

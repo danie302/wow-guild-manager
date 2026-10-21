@@ -200,7 +200,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 ## Events
 
 ### Rules for all event types
-- Every event has a name, a description, and a date and time.
+- Every event has a type (raid, dungeon, or PvP), a name, a description, and a date and time. The type can't change once the event is created. Events can't be created in the past, and once an event starts it can't be edited or cancelled.
 - The description holds details such as the instance (MC, BWL, ZG…) and requirements (minimum level, resistance gear, etc.).
 - Dates and times are stored in UTC.
 - Events can be one-time or recurring (e.g. "MC every Tuesday").
@@ -229,7 +229,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - Fixed size of 5 players: 1 Tank, 1 Healer, and 3 DPS.
 
 ### PvP events
-- The total number of players is configurable.
+- The total number of players is configurable, from 1 to 80.
 - The number of Tank, Healer, and DPS slots is configurable. The slots must add up to the total.
 
 ## Discord integration

@@ -30,6 +30,10 @@ export const PERMISSIONS = {
   changeMainCharacter: ['guild_master', 'officer'],
   /** Edit and remove any member's characters (members remove their own from Discord). */
   editCharacters: ['guild_master', 'officer'],
+  /** See the guild's events (members get read-only access in story 036). */
+  viewEvents: ['guild_master', 'officer'],
+  /** Create, edit, and cancel events. */
+  manageEvents: ['guild_master', 'officer'],
 } as const satisfies Record<string, readonly GuildAccess[]>;
 
 export type GuildAction = keyof typeof PERMISSIONS;

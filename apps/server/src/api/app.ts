@@ -8,6 +8,7 @@ import { memoryFileStorage, type FileStorage } from '../storage/file-storage.js'
 import { authRouter } from './auth.js';
 import { discordRouter, type DiscordAccess } from './discord.js';
 import { errorHandler, notFoundHandler } from './errors.js';
+import { eventsRouter } from './events.js';
 import { guildsRouter } from './guilds.js';
 import { healthRouter, type HealthChecks } from './health.js';
 import { meRouter } from './me.js';
@@ -58,6 +59,7 @@ export function createApp({
     api.use(discordRouter(discord));
     api.use(guildsRouter(discord, storage));
     api.use(membersRouter(discord));
+    api.use(eventsRouter());
     if (jobs) api.use(registrationsRouter(jobs));
   }
   app.use('/api', api);
