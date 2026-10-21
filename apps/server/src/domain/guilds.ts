@@ -32,16 +32,16 @@ export async function createGuild(
   return withUniqueErrors(() => Guild.create({ ...input, guildMasterUserId: user.id }));
 }
 
-/** Connects the guild to another server or Officer role. Only its Guild Master can. */
+/**
+ * Connects the guild to another server or Officer role. Callers check the permission first
+ * (`connectDiscordServer` and `chooseOfficerRole`). The user must manage the new server.
+ */
 export async function changeGuildDiscord(
   user: User,
   guild: Guild,
   input: GuildDiscordInput,
   discord: DiscordDirectory,
 ): Promise<Guild> {
-  if (guild.guildMasterUserId !== user.id) {
-    throw new DomainError({ code: 'FORBIDDEN' });
-  }
   await checkDiscordConnection(user, input, discord);
   await checkServerIsFree(input.discordServerId, guild.id);
 
@@ -118,7 +118,7 @@ async function checkDiscordConnection(
   }
 }
 
-async function checkServerIsFree(serverId: string, exceptGuildId?: number): Promise<void> {
+async function checkServerIsFree(serverId: string, exceptGuildId?: string): Promise<void> {
   const where = exceptGuildId === undefined ? {} : { id: { [Op.ne]: exceptGuildId } };
   if ((await Guild.count({ where: { ...where, discordServerId: serverId } })) > 0) {
     throw new DomainError({ code: 'DISCORD_SERVER_TAKEN' });

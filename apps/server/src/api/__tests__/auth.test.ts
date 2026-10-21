@@ -10,6 +10,7 @@ import { createTestLogger } from '../../test-logger.js';
 import { createApp } from '../app.js';
 
 const up = () => Promise.resolve();
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 /** A fake Discord that returns `profile` for the code "good-code". */
 function fakeDiscord(profile: DiscordProfile): DiscordOAuth {
@@ -83,7 +84,7 @@ describe('Discord login', () => {
     const me = await agent.get('/api/me');
     expect(me.status).toBe(200);
     expect(me.body).toEqual({
-      id: expect.any(Number) as unknown,
+      id: expect.stringMatching(uuid) as unknown,
       discordId: thrall.id,
       name: 'Thrall',
       avatarUrl: `https://cdn.discordapp.com/avatars/${thrall.id}/a1b2c3.png?size=64`,
@@ -91,6 +92,7 @@ describe('Discord login', () => {
       timeZone: 'America/Bogota',
       theme: 'dark',
       guilds: [],
+      canCreateGuild: true,
     });
   });
 

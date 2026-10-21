@@ -3,7 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { mockApi, testGuild, userWithoutGuild } from '../../test/api';
+import { ashenId, mockApi, testGuild, userWithoutGuild } from '../../test/api';
 import { renderRoute } from '../../test/render';
 
 const servers: DiscordServersResponse = {
@@ -31,7 +31,8 @@ function mockSetupApi(overrides: Parameters<typeof mockApi>[0] = {}) {
     'POST /api/guilds': () => {
       me = {
         ...userWithoutGuild,
-        guilds: [{ id: 1, name: testGuild.name, access: 'guild_master' }],
+        guilds: [{ id: ashenId, name: testGuild.name, access: 'guild_master' }],
+        canCreateGuild: false,
       };
       return Response.json(testGuild, { status: 201 });
     },
@@ -44,13 +45,14 @@ beforeEach(() => {
 });
 
 describe('GuildSetupPage', () => {
-  it('sends a user without a guild from the home page to the setup', async () => {
+  it('opens from the no-access page', async () => {
     mockSetupApi();
+    renderRoute('/no-access');
 
-    renderRoute('/');
-
-    expect(await screen.findByRole('heading', { name: 'Set up your guild' })).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Create a new guild' })).toHaveAttribute(
+      'href',
+      '/setup',
+    );
   });
 
   it('creates the guild in one request at the last step, then opens the dashboard', async () => {

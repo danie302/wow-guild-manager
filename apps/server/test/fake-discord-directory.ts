@@ -58,6 +58,16 @@ export class FakeDiscordDirectory implements DiscordDirectory {
     return this.answer(() => this.members.get(`${serverId}/${userId}`) ?? null);
   }
 
+  membersWithRole(serverId: string, roleId: string) {
+    return this.answer(() =>
+      [...this.members.entries()]
+        .filter(
+          ([key, member]) => key.startsWith(`${serverId}/`) && member.roleIds.includes(roleId),
+        )
+        .map(([key]) => key.slice(serverId.length + 1)),
+    );
+  }
+
   private answer<T>(value: () => T): Promise<T> {
     this.calls += 1;
     return this.down

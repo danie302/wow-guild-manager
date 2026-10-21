@@ -1,16 +1,19 @@
-import type { RouteObject } from 'react-router';
+import { Navigate, type RouteObject } from 'react-router';
 
 import { DashboardPage } from '../pages/DashboardPage';
+import { GuildPickerPage } from '../pages/GuildPickerPage';
 import { GuildSetupPage } from '../pages/GuildSetupPage';
 import { LoginPage } from '../pages/LoginPage';
+import { NoAccessPage } from '../pages/NoAccessPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 import { StatusPage } from '../pages/StatusPage';
 import { UserSettingsPage } from '../pages/UserSettingsPage';
+import { GuildRoute } from './GuildRoute';
 import { HomeRedirect } from './HomeRedirect';
 import { Layout } from './Layout';
 import { RequireAuth } from './RequireAuth';
 
-// Placeholder pages until their stories build them.
+// Placeholder pages until their stories build them. A guild's pages are under /guilds/:guildId.
 export const routes: RouteObject[] = [
   { path: 'login', element: <LoginPage /> },
   {
@@ -19,15 +22,24 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomeRedirect /> },
       // Full screen, outside the app shell.
       { path: 'setup', element: <GuildSetupPage /> },
+      { path: 'no-access', element: <NoAccessPage /> },
+      { path: 'guilds', element: <GuildPickerPage /> },
       {
         element: <Layout />,
         children: [
-          { path: 'dashboard', element: <DashboardPage /> },
-          { path: 'events', element: <PlaceholderPage titleKey="nav.events" /> },
-          { path: 'roster', element: <PlaceholderPage titleKey="nav.roster" /> },
-          { path: 'registrations', element: <PlaceholderPage titleKey="nav.registrations" /> },
-          { path: 'attendance', element: <PlaceholderPage titleKey="nav.attendance" /> },
-          { path: 'settings/guild', element: <PlaceholderPage titleKey="nav.guildSettings" /> },
+          {
+            path: 'guilds/:guildId',
+            element: <GuildRoute />,
+            children: [
+              { index: true, element: <Navigate to="dashboard" replace /> },
+              { path: 'dashboard', element: <DashboardPage /> },
+              { path: 'events', element: <PlaceholderPage titleKey="nav.events" /> },
+              { path: 'roster', element: <PlaceholderPage titleKey="nav.roster" /> },
+              { path: 'registrations', element: <PlaceholderPage titleKey="nav.registrations" /> },
+              { path: 'attendance', element: <PlaceholderPage titleKey="nav.attendance" /> },
+              { path: 'settings', element: <PlaceholderPage titleKey="nav.guildSettings" /> },
+            ],
+          },
           { path: 'settings/user', element: <UserSettingsPage /> },
           { path: 'status', element: <StatusPage /> },
           { path: '*', element: <PlaceholderPage titleKey="pages.notFound" /> },

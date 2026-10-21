@@ -12,6 +12,7 @@ import { Navigate, useNavigate } from 'react-router';
 import { ApiRequestError } from '../api/client';
 import { useCreateGuild, useDiscordRoles, useDiscordServers } from '../api/guilds';
 import { useMe } from '../api/me';
+import { guildPath } from '../app/guildSelection';
 import {
   Button,
   ChoiceGroup,
@@ -81,8 +82,8 @@ export function GuildSetupPage() {
   const roles = useDiscordRoles(state.step >= 2 ? state.serverId : null);
 
   // A user leads at most one guild.
-  if (me && me.guilds.length > 0 && !createGuild.isSuccess) {
-    return <Navigate to="/dashboard" replace />;
+  if (me && !me.canCreateGuild && !createGuild.isSuccess) {
+    return <Navigate to="/" replace />;
   }
 
   const nameResult = guildNameSchema.safeParse(state.name);
@@ -106,9 +107,9 @@ export function GuildSetupPage() {
         officerRoleId: role.id,
       },
       {
-        onSuccess: () => {
+        onSuccess: (guild) => {
           saveState(null);
-          void navigate('/dashboard', { replace: true });
+          void navigate(guildPath(guild.id, 'dashboard'), { replace: true });
         },
       },
     );

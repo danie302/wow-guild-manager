@@ -9,7 +9,7 @@ import {
   role,
   server,
 } from '../../../../test/fake-discord-directory.js';
-import { cachedDiscordDirectory } from '../cached-directory.js';
+import { cachedDiscordDirectory, discordCacheInvalidator } from '../cached-directory.js';
 
 const redis = createClient({ url: process.env.REDIS_URL });
 
@@ -27,8 +27,9 @@ function setup() {
       roles: [role('400000000000000001', 'Officers', { permissions: MANAGE_GUILD })],
     }),
   );
-  const cached = cachedDiscordDirectory(fake, { redis, prefix: `test:${randomUUID()}:` });
-  return { fake, cached };
+  const prefix = `test:${randomUUID()}:`;
+  const cached = cachedDiscordDirectory(fake, { redis, prefix });
+  return { fake, cached, invalidator: discordCacheInvalidator({ redis, prefix }) };
 }
 
 describe('cachedDiscordDirectory', () => {
@@ -61,5 +62,27 @@ describe('cachedDiscordDirectory', () => {
       'Ashen Vanguard',
       'Emberwatch',
     ]);
+  });
+
+  it('reads a member again after the bot says their roles changed', async () => {
+    const { fake, cached, invalidator } = setup();
+    await cached.member('300000000000000001', '200000000000000001');
+    fake.addMember('300000000000000001', '200000000000000001', ['400000000000000001']);
+
+    await invalidator.forgetMember('300000000000000001', '200000000000000001');
+
+    expect(await cached.member('300000000000000001', '200000000000000001')).toEqual({
+      roleIds: ['400000000000000001'],
+    });
+  });
+
+  it('reads a server again after the bot says its roles changed', async () => {
+    const { fake, cached, invalidator } = setup();
+    await cached.server('300000000000000001');
+
+    await invalidator.forgetServer('300000000000000001');
+    await cached.server('300000000000000001');
+
+    expect(fake.calls).toBe(2);
   });
 });

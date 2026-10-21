@@ -12,7 +12,9 @@
     "attendance": "Attendance report",
     "guildSettings": "Guild settings",
     "userSettings": "User settings",
-    "status": "System status"
+    "status": "System status",
+    "switchGuild": "Switch guild",
+    "createGuild": "Create a new guild"
   },
   "pages": {
     "notFound": "Page not found"
@@ -140,5 +142,23 @@
     "unavailable": "Can't be read from Discord right now",
     "loading": "Loading the guild",
     "loadFailed": "The guild couldn't be loaded"
+  },
+  "noAccess": {
+    "title": "You don't have access to Guild Manager",
+    "signedInAs": "Logged in as {{name}}",
+    "body": "Your Discord account isn't the Guild Master of any guild, and doesn't have the Officer role in any guild's Discord server.",
+    "signUpTitle": "Signing up for events?",
+    "signUp": "Use the buttons on the event posts in your guild's Discord server. You don't need this app.",
+    "officerTitle": "Are you an Officer?",
+    "officer": "Ask your Guild Master to give you the Officer role in Discord, then log in again.",
+    "newGuildTitle": "Starting a new guild?",
+    "newGuild": "Set up your own guild. You'll be its Guild Master.",
+    "createGuild": "Create a new guild",
+    "otherAccount": "Log in with a different account"
+  },
+  "guildPicker": {
+    "title": "Choose a guild",
+    "lead": "You have access to more than one guild. You can switch later from the sidebar.",
+    "yourRank": "You: {{rank}}"
   }
 }

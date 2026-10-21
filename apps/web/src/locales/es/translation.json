@@ -12,7 +12,9 @@
     "attendance": "Informe de asistencia",
     "guildSettings": "Ajustes de la hermandad",
     "userSettings": "Ajustes de usuario",
-    "status": "Estado del sistema"
+    "status": "Estado del sistema",
+    "switchGuild": "Cambiar de hermandad",
+    "createGuild": "Crear una hermandad nueva"
   },
   "pages": {
     "notFound": "Página no encontrada"
@@ -140,5 +142,23 @@
     "unavailable": "No se puede leer de Discord en este momento",
     "loading": "Cargando la hermandad",
     "loadFailed": "No se pudo cargar la hermandad"
+  },
+  "noAccess": {
+    "title": "No tienes acceso a Gestor de hermandad",
+    "signedInAs": "Sesión iniciada como {{name}}",
+    "body": "Tu cuenta de Discord no es Guild Master de ninguna hermandad ni tiene el rol de Officer en el servidor de Discord de ninguna hermandad.",
+    "signUpTitle": "¿Quieres inscribirte en eventos?",
+    "signUp": "Usa los botones de los mensajes de eventos en el servidor de Discord de tu hermandad. No necesitas esta aplicación.",
+    "officerTitle": "¿Eres Officer?",
+    "officer": "Pide a tu Guild Master que te dé el rol de Officer en Discord y vuelve a iniciar sesión.",
+    "newGuildTitle": "¿Vas a crear una hermandad?",
+    "newGuild": "Configura tu propia hermandad. Serás su Guild Master.",
+    "createGuild": "Crear una hermandad nueva",
+    "otherAccount": "Iniciar sesión con otra cuenta"
+  },
+  "guildPicker": {
+    "title": "Elige una hermandad",
+    "lead": "Tienes acceso a más de una hermandad. Puedes cambiar más tarde desde la barra lateral.",
+    "yourRank": "Tú: {{rank}}"
   }
 }

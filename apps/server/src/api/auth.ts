@@ -108,7 +108,7 @@ function sameState(received: unknown, expected: string | undefined): boolean {
 }
 
 /** Starts a fresh session for the user, so a session ID set before login can't be reused. */
-function logIn(req: Request, userId: number): Promise<void> {
+function logIn(req: Request, userId: string): Promise<void> {
   return new Promise((resolve, reject) => {
     req.session.regenerate((regenerateError) => {
       if (regenerateError) {

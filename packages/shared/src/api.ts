@@ -72,9 +72,12 @@ export interface HealthResponse {
   };
 }
 
+/** Every ID in the API is a UUID (v7). */
+export const uuidSchema = z.uuid();
+
 /** The logged-in app user, from `GET /api/me`. */
 export interface MeResponse {
-  id: number;
+  id: string;
   discordId: string;
   name: string;
   avatarUrl: string;
@@ -82,15 +85,25 @@ export interface MeResponse {
   /** IANA time zone name. Every date in the web app is shown in it. */
   timeZone: string;
   theme: Theme;
-  /** The guilds the user can open. */
+  /** The guilds the user can open, by name. */
   guilds: MeGuild[];
+  /** False when the user already leads a guild, since a user leads at most one. */
+  canCreateGuild: boolean;
 }
 
-/** A guild the user can open, and why. Story 014 adds Officers. */
+/**
+ * Why a user can open a guild: they're its Guild Master, or they have its Officer role in
+ * Discord. Story 036 adds read-only access for roster members.
+ */
+export const GUILD_ACCESS = ['guild_master', 'officer'] as const;
+
+export type GuildAccess = (typeof GUILD_ACCESS)[number];
+
+/** A guild the user can open, and why. */
 export interface MeGuild {
-  id: number;
+  id: string;
   name: string;
-  access: 'guild_master';
+  access: GuildAccess;
 }
 
 /** A Discord server the user could connect a guild to, from `GET /api/discord/servers`. */
@@ -123,9 +136,11 @@ export interface DiscordRolesResponse {
 }
 
 export interface GuildResponse {
-  id: number;
+  id: string;
   name: string;
   faction: Faction;
+  /** The logged-in user's access to this guild. */
+  access: GuildAccess;
   /** `name` is null when Discord can't be read right now; the page still shows. */
   discordServer: { id: string; name: string | null; iconUrl: string | null };
   officerRole: { id: string; name: string | null };

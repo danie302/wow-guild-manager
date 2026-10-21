@@ -1,16 +1,34 @@
+import { createClient } from 'redis';
+
+import { watchDiscordChanges } from '../bot/cache-events.js';
 import { createBotClient, describeLoginError } from '../bot/client.js';
+import { syncOfficers } from '../bot/officer-sync.js';
 import { commands } from '../bot/commands/index.js';
 import { botConfigSchema, loadConfigOrExit } from '../config.js';
+import { createSequelize } from '../db/sequelize.js';
+import { discordCacheInvalidator } from '../integrations/discord/cached-directory.js';
 import { createLogger } from '../logger.js';
 
 const config = loadConfigOrExit(botConfigSchema);
 const logger = createLogger(config);
 
+// Keeps the Officers table in step with Discord.
+const sequelize = createSequelize(config.DATABASE_URL, logger);
+
+// Clears the API's cached Discord data when roles or members change.
+const redis = createClient({ url: config.REDIS_URL, disableOfflineQueue: true });
+redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis client error'));
+await redis.connect();
+
 const client = createBotClient({ logger, commands });
+watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
+syncOfficers(client, logger);
 
 process.on('SIGTERM', () => {
   logger.info('Disconnecting from Discord');
-  void client.destroy().then(() => process.exit(0));
+  void Promise.allSettled([client.destroy(), redis.close(), sequelize.close()]).then(() =>
+    process.exit(0),
+  );
 });
 
 try {

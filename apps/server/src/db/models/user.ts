@@ -1,6 +1,7 @@
 import type { Locale, Theme } from '@wgm/shared';
 import {
   DataTypes,
+  literal,
   Model,
   type CreationOptional,
   type InferAttributes,
@@ -10,7 +11,7 @@ import {
 
 /** Someone who has logged into the web app with Discord. */
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
-  declare id: CreationOptional<number>;
+  declare id: CreationOptional<string>;
   declare discordId: string;
   /** Discord display name, refreshed on every login. */
   declare name: string;
@@ -27,7 +28,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   static initModel(sequelize: Sequelize): void {
     User.init(
       {
-        id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+        id: { type: DataTypes.UUID, primaryKey: true, defaultValue: literal('uuidv7()') },
         discordId: { type: DataTypes.STRING(20), allowNull: false, unique: true },
         name: { type: DataTypes.STRING(100), allowNull: false },
         avatar: { type: DataTypes.STRING(100), allowNull: true },

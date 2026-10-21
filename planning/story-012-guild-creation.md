@@ -48,5 +48,5 @@ Built in two parts to keep each session small:
 ## Technical debt
 
 - Listing the servers reads every server the bot is in, plus the user's membership in each (cached for 60 seconds). That's fine for a bot in a few servers, but it grows with the number of servers. If the bot ends up in many, keep a list of servers and members from the bot's Gateway events instead.
-- Until story 014, a logged-in user without a guild goes straight to the setup (not a no-access page), and the dashboard shows the user's first guild.
-- Cached Discord data can be up to 60 seconds old (e.g. a role created in Discord a moment ago). Story 014 can clear the cache from the bot's role events.
+- ~~Cached Discord data can be up to 60 seconds old.~~ Fixed in story 014: the bot clears it when roles or members change.
+- ~~Integer IDs in URLs.~~ Changed to UUID v7 in story 014.

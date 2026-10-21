@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ChangeEvent, type ReactNode } from 'react';
 import { NavLink } from 'react-router';
 
 import { Icon, type IconName } from './Icon';
@@ -117,6 +117,47 @@ function Brand({ title, subtitle, initials }: AppShellBrandProps) {
         {subtitle && (
           <Box sx={{ fontSize: 11.5, color: token('mt'), whiteSpace: 'nowrap' }}>{subtitle}</Box>
         )}
+      </Box>
+    </Box>
+  );
+}
+
+export interface AppShellSwitcherProps {
+  /** Accessible name, e.g. "Switch guild". */
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+/** A compact dropdown under the brand, e.g. to switch between guilds. */
+function Switcher({ label, value, options, onChange }: AppShellSwitcherProps) {
+  useAppShell('Switcher');
+  return (
+    <Box sx={{ p: '0 16px 12px', flex: 'none' }}>
+      <Box
+        component="select"
+        aria-label={label}
+        title={label}
+        value={value}
+        onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.target.value)}
+        sx={{
+          width: '100%',
+          minHeight: 32,
+          p: '4px 8px',
+          font: 'inherit',
+          fontSize: 12.5,
+          color: token('tx'),
+          bgcolor: token('bg'),
+          border: `1px solid ${token('dv')}`,
+          '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: 0 },
+        }}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
       </Box>
     </Box>
   );
@@ -252,6 +293,7 @@ function Account({ name, avatarUrl, children }: AppShellAccountProps) {
 }
 
 export const AppShell = Object.assign(AppShellRoot, {
+  Switcher,
   Sidebar,
   Brand,
   Nav,

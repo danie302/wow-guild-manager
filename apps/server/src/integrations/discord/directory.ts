@@ -10,6 +10,11 @@ export interface DiscordDirectory {
   server(serverId: string): Promise<DiscordServer | null>;
   /** A user's membership in a server, or null when they aren't in it. */
   member(serverId: string, userId: string): Promise<DiscordMember | null>;
+  /**
+   * The IDs of every member with a role. It reads the whole member list, so it's only for
+   * specific moments (a guild is created or its Officer role changes), never per request.
+   */
+  membersWithRole(serverId: string, roleId: string): Promise<string[]>;
 }
 
 export interface DiscordServerSummary {

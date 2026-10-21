@@ -34,10 +34,11 @@ export function cachedDiscordDirectory(
 
   return {
     botServers: () => directory.botServers(),
+    membersWithRole: (serverId, roleId) => directory.membersWithRole(serverId, roleId),
 
     server: (serverId) =>
       cached(
-        `server:${serverId}`,
+        serverKey(serverId),
         () => directory.server(serverId),
         // Permission bits are bigints, which JSON can't hold.
         (server) =>
@@ -54,11 +55,39 @@ export function cachedDiscordDirectory(
 
     member: (serverId, userId) =>
       cached(
-        `member:${serverId}:${userId}`,
+        memberKey(serverId, userId),
         () => directory.member(serverId, userId),
         (member) => member,
         (json: DiscordMember | null) => json,
       ),
+  };
+}
+
+const serverKey = (serverId: string) => `server:${serverId}`;
+const memberKey = (serverId: string, userId: string) => `member:${serverId}:${userId}`;
+
+export interface DiscordCacheInvalidator {
+  /** After a member's roles change, or they join or leave the server. */
+  forgetMember(serverId: string, userId: string): Promise<void>;
+  /** After the server's roles or owner change, or the bot leaves it. */
+  forgetServer(serverId: string): Promise<void>;
+}
+
+/** Drops cached entries, so the next read sees the change. The bot calls it on Discord events. */
+export function discordCacheInvalidator({
+  redis,
+  prefix = 'discord:',
+}: {
+  redis: Pick<RedisClientType, 'del'>;
+  prefix?: string;
+}): DiscordCacheInvalidator {
+  return {
+    forgetMember: async (serverId, userId) => {
+      await redis.del(prefix + memberKey(serverId, userId));
+    },
+    forgetServer: async (serverId) => {
+      await redis.del(prefix + serverKey(serverId));
+    },
   };
 }
 

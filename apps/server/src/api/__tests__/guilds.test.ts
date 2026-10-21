@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type { Sequelize } from 'sequelize';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -12,10 +14,12 @@ import {
 } from '../../../test/fake-discord-directory.js';
 import { Guild, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
+import { updateServerMember } from '../../domain/officers.js';
 
 /** The response fields these tests read. */
 interface Body {
-  id: number;
+  id: string;
+  canCreateGuild: boolean;
   servers: unknown;
   guilds: unknown;
   officerRole: unknown;
@@ -26,6 +30,7 @@ const body = (response: request.Response) => response.body as Body;
 
 const gm = '200000000000000001';
 const other = '200000000000000002';
+const stranger = '200000000000000003';
 
 const ashen = '300000000000000001';
 const ember = '300000000000000002';
@@ -179,9 +184,10 @@ describe('POST /api/guilds', () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toEqual({
-      id: expect.any(Number) as unknown,
+      id: expect.stringMatching(/^[0-9a-f-]{36}$/) as unknown,
       name: 'Ashen Vanguard',
       faction: 'alliance',
+      access: 'guild_master',
       discordServer: {
         id: ashen,
         name: 'Ashen Vanguard',
@@ -293,18 +299,37 @@ describe('GET /api/guilds/:guildId', () => {
     });
   });
 
-  it('answers 403 to someone who is not its Guild Master, and 404 for no guild', async () => {
+  it('answers 403 to someone without access, and 404 for no guild', async () => {
     const app = testApp(discord());
     const created = await (await loginAs(app, gm)).post('/api/guilds').send(newGuild);
-    const agent = await loginAs(app, other);
+    const agent = await loginAs(app, stranger);
 
     expect((await agent.get(`/api/guilds/${body(created).id}`)).status).toBe(403);
-    expect((await agent.get('/api/guilds/999999')).status).toBe(404);
+    expect((await agent.get(`/api/guilds/${randomUUID()}`)).status).toBe(404);
     expect((await agent.get('/api/guilds/abc')).status).toBe(404);
   });
 });
 
 describe('PUT /api/guilds/:guildId/discord', () => {
+  it('reads the Officers again when the Officer role changes', async () => {
+    const access = discord();
+    access.directory.addMember(ashen, stranger, [managers]);
+    const app = testApp(access);
+    const gmAgent = await loginAs(app, gm);
+    const guildId = body(await gmAgent.post('/api/guilds').send(newGuild)).id;
+    const officer = await loginAs(app, other);
+    const manager = await loginAs(app, stranger);
+    await officer.get(`/api/guilds/${guildId}`).expect(200);
+
+    await gmAgent
+      .put(`/api/guilds/${guildId}/discord`)
+      .send({ discordServerId: ashen, officerRoleId: managers })
+      .expect(200);
+
+    expect((await officer.get(`/api/guilds/${guildId}`)).status).toBe(403);
+    expect((await manager.get(`/api/guilds/${guildId}`)).status).toBe(200);
+  });
+
   it('lets the Guild Master connect another server and Officer role', async () => {
     const agent = await loginAs(testApp(discord()), gm);
     const created = await agent.post('/api/guilds').send(newGuild);
@@ -346,5 +371,89 @@ describe('PUT /api/guilds/:guildId/discord', () => {
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ error: { code: 'FORBIDDEN' } });
+  });
+});
+
+describe('Officer access', () => {
+  /** A guild led by `gm`, and an app where `other` has its Officer role. */
+  async function guildWithOfficer() {
+    const access = discord();
+    const app = testApp(access);
+    const created = await (await loginAs(app, gm)).post('/api/guilds').send(newGuild);
+    const officer = await loginAs(app, other);
+    return { access, officer, guildId: body(created).id };
+  }
+
+  it('lists the guild for a member with the Officer role, who can still create a guild', async () => {
+    const { officer, guildId } = await guildWithOfficer();
+
+    const me = await officer.get('/api/me');
+
+    expect(body(me).guilds).toEqual([{ id: guildId, name: 'Ashen Vanguard', access: 'officer' }]);
+    expect(body(me).canCreateGuild).toBe(true);
+  });
+
+  it("doesn't let the Guild Master create a second guild", async () => {
+    const app = testApp(discord());
+    const agent = await loginAs(app, gm);
+    await agent.post('/api/guilds').send(newGuild).expect(201);
+
+    expect(body(await agent.get('/api/me')).canCreateGuild).toBe(false);
+  });
+
+  it("opens the guild's pages for an Officer", async () => {
+    const { officer, guildId } = await guildWithOfficer();
+
+    const response = await officer.get(`/api/guilds/${guildId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ id: guildId, access: 'officer' });
+  });
+
+  it('denies the next request once the bot sees the Officer role removed', async () => {
+    const { officer, guildId } = await guildWithOfficer();
+    await officer.get(`/api/guilds/${guildId}`).expect(200);
+
+    await updateServerMember(ashen, other, []);
+
+    expect((await officer.get(`/api/guilds/${guildId}`)).status).toBe(403);
+    expect(body(await officer.get('/api/me')).guilds).toEqual([]);
+  });
+
+  it("doesn't call Discord to check access", async () => {
+    const { access, officer, guildId } = await guildWithOfficer();
+    access.directory.down = true;
+
+    expect((await officer.get(`/api/guilds/${guildId}`)).status).toBe(200);
+  });
+
+  it('denies a member of the Discord server without the Officer role', async () => {
+    const { officer, guildId } = await guildWithOfficer();
+    await updateServerMember(ashen, other, [managers]);
+
+    expect((await officer.get(`/api/guilds/${guildId}`)).status).toBe(403);
+  });
+
+  it("doesn't let an Officer change the Discord server or Officer role", async () => {
+    const { officer, guildId } = await guildWithOfficer();
+
+    const response = await officer
+      .put(`/api/guilds/${guildId}/discord`)
+      .send({ discordServerId: ashen, officerRoleId: managers });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("still lists the Guild Master's guild when Discord is down", async () => {
+    const access = discord();
+    const app = testApp(access);
+    const agent = await loginAs(app, gm);
+    await agent.post('/api/guilds').send(newGuild).expect(201);
+    access.directory.down = true;
+
+    const me = await agent.get('/api/me');
+
+    expect(me.status).toBe(200);
+    expect(body(me).guilds).toEqual([expect.objectContaining({ access: 'guild_master' })]);
   });
 });

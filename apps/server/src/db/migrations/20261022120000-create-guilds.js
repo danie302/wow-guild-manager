@@ -4,7 +4,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('guilds', {
-      id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
+      id: { type: Sequelize.UUID, primaryKey: true, defaultValue: Sequelize.literal('uuidv7()') },
       name: { type: Sequelize.STRING(50), allowNull: false },
       faction: { type: Sequelize.STRING(8), allowNull: false },
       // A Discord server is connected to at most one guild.
@@ -12,7 +12,7 @@ module.exports = {
       officer_role_id: { type: Sequelize.STRING(20), allowNull: false },
       // A user leads at most one guild at a time. Disbanding deletes the guild, not the user.
       guild_master_user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         unique: true,
         references: { model: 'users', key: 'id' },

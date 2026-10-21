@@ -8,7 +8,7 @@ import type {
 
 import { apiRequest } from './client';
 
-export function useGuild(guildId: number | undefined) {
+export function useGuild(guildId: string | undefined) {
   return useQuery({
     queryKey: ['guilds', guildId],
     queryFn: () => apiRequest<GuildResponse>(`/guilds/${guildId}`),

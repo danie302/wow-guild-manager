@@ -1,4 +1,4 @@
-import { updateMeSchema } from '@wgm/shared';
+import { updateMeSchema, uuidSchema } from '@wgm/shared';
 import express, { type RequestHandler, type Response } from 'express';
 
 import { toMeResponse } from '../auth/users.js';
@@ -7,8 +7,9 @@ import { sendError, sendValidationError } from './errors.js';
 
 /** Loads the logged-in user into `res.locals.user`, or answers 401. */
 export const requireUser: RequestHandler = async (req, res, next) => {
+  // A session from before IDs were UUIDs holds a number; it counts as logged out.
   const userId = req.session.userId;
-  const user = userId === undefined ? null : await User.findByPk(userId);
+  const user = uuidSchema.safeParse(userId).success ? await User.findByPk(userId) : null;
   if (!user) {
     sendError(res, 401, { code: 'UNAUTHENTICATED' });
     return;

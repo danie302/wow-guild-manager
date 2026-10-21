@@ -1,6 +1,7 @@
 import type { Locale, MeResponse } from '@wgm/shared';
 
-import { Guild, User } from '../db/models/index.js';
+import { User } from '../db/models/index.js';
+import { accessibleGuilds } from '../domain/access.js';
 import { discordAvatarUrl, type DiscordProfile } from './discord-oauth.js';
 
 /** Settings a new user starts with, taken from the browser they first log in from. */
@@ -28,10 +29,8 @@ export async function upsertUserFromDiscord(
 }
 
 export async function toMeResponse(user: User): Promise<MeResponse> {
-  const led = await Guild.findAll({
-    where: { guildMasterUserId: user.id },
-    order: [['id', 'ASC']],
-  });
+  const guilds = await accessibleGuilds(user);
+  const leads = guilds.some(({ access }) => access === 'guild_master');
   return {
     id: user.id,
     discordId: user.discordId,
@@ -40,6 +39,7 @@ export async function toMeResponse(user: User): Promise<MeResponse> {
     locale: user.locale,
     timeZone: user.timeZone,
     theme: user.theme,
-    guilds: led.map((guild) => ({ id: guild.id, name: guild.name, access: 'guild_master' })),
+    guilds: guilds.map(({ guild, access }) => ({ id: guild.id, name: guild.name, access })),
+    canCreateGuild: !leads,
   };
 }

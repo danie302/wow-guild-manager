@@ -15,8 +15,9 @@ import {
   type DiscordServerSummary,
 } from './directory.js';
 
-/** Discord returns at most this many servers per page. */
+/** Discord returns at most this many servers, or members, per page. */
 const SERVERS_PER_PAGE = 200;
+const MEMBERS_PER_PAGE = 1000;
 
 /** Reads Discord's REST API with the bot token. discord.js's REST client waits out rate limits. */
 export function createRestDiscordDirectory(botToken: string): DiscordDirectory {
@@ -49,7 +50,25 @@ export function createRestDiscordDirectory(botToken: string): DiscordDirectory {
       )) as APIGuildMember | null;
       return member && ({ roleIds: member.roles } satisfies DiscordMember);
     },
+
+    async membersWithRole(serverId, roleId) {
+      const ids: string[] = [];
+      let after = '0';
+      for (;;) {
+        const query = new URLSearchParams({ limit: String(MEMBERS_PER_PAGE), after });
+        const page = (await call(() =>
+          rest.get(Routes.guildMembers(serverId), { query }),
+        )) as APIGuildMember[];
+        ids.push(...page.filter((member) => member.roles.includes(roleId)).map(memberId));
+        if (page.length < MEMBERS_PER_PAGE) return ids;
+        after = memberId(page.at(-1)!);
+      }
+    },
   };
+}
+
+function memberId(member: APIGuildMember): string {
+  return member.user.id;
 }
 
 function toServer(guild: APIGuild): DiscordServer {

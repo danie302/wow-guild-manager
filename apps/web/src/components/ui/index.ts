@@ -6,6 +6,7 @@ export type {
   AppShellNavItemProps,
   AppShellNavProps,
   AppShellProps,
+  AppShellSwitcherProps,
 } from './AppShell';
 export { Button } from './Button';
 export type { ButtonProps } from './Button';
@@ -24,7 +25,7 @@ export type { PageSectionProps, PageSettingProps } from './Page';
 export { RadioList } from './RadioList';
 export type { RadioListOptionProps, RadioListProps } from './RadioList';
 export { Splash } from './Splash';
-export type { SplashProps } from './Splash';
+export type { SplashCardProps, SplashChoiceProps, SplashProps } from './Splash';
 export { StatusList } from './StatusList';
 export type { StatusListItemProps, Tone } from './StatusList';
 export { TextField } from './TextField';

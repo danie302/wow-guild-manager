@@ -1,6 +1,7 @@
 import type { Faction } from '@wgm/shared';
 import {
   DataTypes,
+  literal,
   Model,
   type CreationOptional,
   type ForeignKey,
@@ -14,7 +15,7 @@ import { User } from './user.js';
 
 /** A guild, connected to one Discord server. */
 export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes<Guild>> {
-  declare id: CreationOptional<number>;
+  declare id: CreationOptional<string>;
   declare name: string;
   /** Only characters of this faction can be on the roster. */
   declare faction: Faction;
@@ -33,7 +34,7 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   static initModel(sequelize: Sequelize): void {
     Guild.init(
       {
-        id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+        id: { type: DataTypes.UUID, primaryKey: true, defaultValue: literal('uuidv7()') },
         name: { type: DataTypes.STRING(50), allowNull: false },
         faction: { type: DataTypes.STRING(8), allowNull: false },
         discordServerId: { type: DataTypes.STRING(20), allowNull: false, unique: true },

@@ -4,7 +4,7 @@ import session, { type Store } from 'express-session';
 declare module 'express-session' {
   interface SessionData {
     /** The logged-in app user. */
-    userId?: number;
+    userId?: string;
     /** The OAuth2 `state` sent to Discord, checked on the callback. */
     oauthState?: string;
     /** The web app's language when the login started, for a user created by this login. */
