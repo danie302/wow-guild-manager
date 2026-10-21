@@ -1,4 +1,4 @@
-import Box from '@mui/material/Box';
+import SvgIcon from '@mui/material/SvgIcon';
 
 // Stroke paths from the prototype (docs/design).
 const paths = {
@@ -33,13 +33,13 @@ export interface IconProps {
 
 export function Icon({ name, size = 16 }: IconProps) {
   return (
-    <Box
-      component="svg"
+    <SvgIcon
       viewBox="0 0 24 24"
       aria-hidden
       sx={{
         width: size,
         height: size,
+        fontSize: size,
         flex: 'none',
         fill: 'none',
         stroke: 'currentColor',
@@ -49,6 +49,6 @@ export function Icon({ name, size = 16 }: IconProps) {
       }}
     >
       <path d={paths[name]} />
-    </Box>
+    </SvgIcon>
   );
 }

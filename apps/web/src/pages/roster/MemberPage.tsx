@@ -29,11 +29,12 @@ import {
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import {
   Button,
+  Card,
   CharacterName,
   ConfirmDialog,
-  DetailList,
   Dialog,
   Loading,
+  MarkerList,
   Notice,
   Page,
   Select,
@@ -121,13 +122,12 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
   const failed = [changeRank, setMain, addNote, removeMember, removeCharacter].find(
     (action) => action.error,
   )?.error;
-  const historyText = (entry: RankHistoryEntry) =>
-    entry.fromRank
-      ? t('member.changed', { from: RANK_NAMES[entry.fromRank], to: RANK_NAMES[entry.toRank] })
-      : t('member.joined', { rank: RANK_NAMES[entry.toRank] });
   const historyBy = (entry: RankHistoryEntry) =>
-    entry.changedBy ??
-    (entry.source === 'discord' ? t('member.fromDiscord') : t('member.unknownUser'));
+    entry.changedBy
+      ? t('member.by', { name: entry.changedBy })
+      : entry.source === 'discord'
+        ? t('member.fromDiscord')
+        : t('member.unknownUser');
 
   const characterError =
     saveCharacter.error instanceof ApiRequestError &&
@@ -149,39 +149,58 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
     else addCharacter.mutate(character, done);
   };
 
+  const joined = member.rankHistory.at(-1)?.at;
+
   return (
     <Page>
-      <Page.Header>
+      <Page.Header back={{ to: guildPath(guildId, 'roster'), label: t('member.back') }}>
         <div>
-          <Button variant="text" startIcon="chevronLeft" to={guildPath(guildId, 'roster')}>
-            {t('member.back')}
-          </Button>
           <Page.Title>{member.discordName}</Page.Title>
-          <Page.Text>{RANK_NAMES[member.rank]}</Page.Text>
+          <Page.Text>
+            {RANK_NAMES[member.rank]}
+            {joined &&
+              ` · ${t('member.joinedOn', { date: format.parts(new Date(joined), { day: 'numeric', month: 'long', year: 'numeric' }) })}`}
+          </Page.Text>
         </div>
-        <div>
-          {canActOn ? (
-            <Select
-              label={t('member.rank')}
-              value={member.baseRank}
-              options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
-              onChange={(rank) => changeRank.mutate(rank as BaseRank)}
-              disabled={changeRank.isPending}
-            />
-          ) : null}
-          {rankNote && <Page.Text>{rankNote}</Page.Text>}
-        </div>
-        <div>
-          <Button onClick={() => setConfirmRemove(true)} disabled={removeReason !== undefined}>
-            {t('member.remove')}
-          </Button>
-          {removeReason && <Page.Text>{removeReason}</Page.Text>}
-        </div>
+        <Page.Actions>
+          <Page.Field label={t('member.rank')}>
+            {isGuildMaster || isOfficer ? (
+              <>
+                <strong>{RANK_NAMES[member.rank]}</strong>
+                {rankNote && <Page.Muted>{rankNote}</Page.Muted>}
+              </>
+            ) : null}
+            {canActOn && !isOfficer && (
+              <Select
+                label={t('member.rank')}
+                hideLabel
+                value={member.baseRank}
+                options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
+                onChange={(rank) => changeRank.mutate(rank as BaseRank)}
+                disabled={changeRank.isPending}
+              />
+            )}
+            {!canActOn && !isGuildMaster && !isOfficer && rankNote && (
+              <Page.Muted>{rankNote}</Page.Muted>
+            )}
+          </Page.Field>
+          <Page.Field label={'\u00a0'}>
+            <Button
+              size="medium"
+              tone="danger"
+              onClick={() => setConfirmRemove(true)}
+              disabled={removeReason !== undefined}
+            >
+              {t('member.remove')}
+            </Button>
+            {removeReason && <Page.Muted>{removeReason}</Page.Muted>}
+          </Page.Field>
+        </Page.Actions>
       </Page.Header>
 
       {member.leftDiscordAt && (
         <Notice
-          tone="warn"
+          tone="bad"
           title={t('member.leftDiscord', {
             date: format.date(new Date(member.leftDiscordAt)),
           })}
@@ -196,85 +215,123 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
         </Notice>
       )}
 
-      <Page.Section title={t('member.characters')}>
-        <DetailList>
-          {member.characters.map((character) => (
-            <DetailList.Item
-              key={character.id}
-              label={character.isMain ? t('member.main') : t('member.alt')}
-            >
-              <CharacterName name={character.name} characterClass={character.class} />{' '}
-              {character.isMain && <Tag tone="accent">{t('member.main')}</Tag>}
-              <Page.Text>
-                {RACE_NAMES[character.race]} {CLASS_NAMES[character.class]} · {character.level}
-                {character.professions.length > 0 &&
-                  ` · ${character.professions.map((p) => PROFESSION_NAMES[p]).join(', ')}`}
-              </Page.Text>
-              {!character.isMain && (
-                <Button onClick={() => setMain.mutate(character.id)} disabled={setMain.isPending}>
-                  {t('member.makeMain')}
-                </Button>
-              )}{' '}
-              <Button onClick={() => openForm(character.id, toCharacterDraft(character))}>
-                {t('member.editCharacter')}
-              </Button>{' '}
-              <Button
-                onClick={() => setRemovingCharacter(character)}
-                disabled={removeCharacter.isPending}
-              >
-                {t('member.removeCharacter')}
-              </Button>
-            </DetailList.Item>
-          ))}
-        </DetailList>
-        <Button onClick={() => openForm(null, emptyCharacter)}>{t('member.addCharacter')}</Button>
-      </Page.Section>
-
-      <Page.Section title={t('member.history')}>
-        <DetailList>
-          {member.rankHistory.map((entry) => (
-            <DetailList.Item
-              key={entry.id}
-              label={`${format.dateTime(new Date(entry.at))} · ${historyBy(entry)}`}
-            >
-              {historyText(entry)}
-            </DetailList.Item>
-          ))}
-        </DetailList>
-      </Page.Section>
-
-      <Page.Section title={t('member.notes')}>
-        <Page.Text>{t('member.notesPrivate')}</Page.Text>
-        {member.officerNotes.length === 0 ? (
-          <Page.Text>{t('member.noNotes')}</Page.Text>
-        ) : (
-          <DetailList>
-            {member.officerNotes.map((entry) => (
-              <DetailList.Item
-                key={entry.id}
-                label={`${entry.author ?? t('member.unknownUser')} · ${format.dateTime(new Date(entry.at))}`}
-              >
-                {entry.text}
-              </DetailList.Item>
+      <Page.Columns>
+        <div>
+          <Page.Block title={t('member.characters')}>
+            {member.characters.length === 0 && <Page.Text>{t('member.noCharacters')}</Page.Text>}
+            {member.characters.map((character) => (
+              <Card key={character.id} label={character.name}>
+                <Card.Column>
+                  <span>
+                    <CharacterName
+                      name={character.name}
+                      characterClass={character.class}
+                      size="large"
+                    />{' '}
+                    {character.isMain && <Tag tone="accent">{t('member.main')}</Tag>}
+                  </span>
+                  <Page.Muted>
+                    {CLASS_NAMES[character.class]} · {RACE_NAMES[character.race]} ·{' '}
+                    {t('member.level', { level: character.level })}
+                  </Page.Muted>
+                </Card.Column>
+                <Card.Column>
+                  <Page.Muted>
+                    {character.professions.map((p) => PROFESSION_NAMES[p]).join(', ') ||
+                      t('member.noProfessions')}
+                  </Page.Muted>
+                  <Page.Inline>
+                    {!character.isMain && (
+                      <Button
+                        variant="text"
+                        onClick={() => setMain.mutate(character.id)}
+                        disabled={setMain.isPending}
+                      >
+                        {t('member.makeMain')}
+                      </Button>
+                    )}
+                    <Button
+                      variant="text"
+                      onClick={() => openForm(character.id, toCharacterDraft(character))}
+                    >
+                      {t('member.editCharacter')}
+                    </Button>
+                    <Button
+                      variant="text"
+                      onClick={() => setRemovingCharacter(character)}
+                      disabled={removeCharacter.isPending}
+                    >
+                      {t('member.removeCharacter')}
+                    </Button>
+                  </Page.Inline>
+                </Card.Column>
+              </Card>
             ))}
-          </DetailList>
-        )}
-        <TextField
-          label={t('member.addNote')}
-          hideLabel
-          multiline
-          placeholder={t('member.notePlaceholder')}
-          value={note}
-          onChange={setNote}
-        />
-        <Button
-          variant="primary"
-          disabled={!note.trim() || addNote.isPending}
-          onClick={() => addNote.mutate(note, { onSuccess: () => setNote('') })}
-        >
-          {t('member.addNote')}
-        </Button>
-      </Page.Section>
+            <span>
+              <Button startIcon="plus" onClick={() => openForm(null, emptyCharacter)}>
+                {t('member.addCharacter')}
+              </Button>
+            </span>
+          </Page.Block>
+
+          <Page.Block title={t('member.history')}>
+            {isOfficer && canActOn && (
+              <>
+                <Select
+                  label={t('member.baseRank')}
+                  value={member.baseRank}
+                  options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
+                  onChange={(rank) => changeRank.mutate(rank as BaseRank)}
+                  disabled={changeRank.isPending}
+                />
+                <Page.Muted>{t('member.baseRankHint')}</Page.Muted>
+              </>
+            )}
+            <MarkerList
+              label={t('member.history')}
+              items={member.rankHistory.map((entry, index) => ({
+                key: entry.id,
+                label: RANK_NAMES[entry.toRank],
+                detail: `${format.parts(new Date(entry.at), { day: 'numeric', month: 'long', year: 'numeric' })} · ${historyBy(entry)}`,
+                highlight: index === 0,
+              }))}
+            />
+          </Page.Block>
+
+          <Page.Block title={t('member.notes')} description={t('member.notesPrivate')}>
+            {member.officerNotes.map((entry) => (
+              <Card key={entry.id}>
+                <Card.Column>
+                  <Page.Muted>
+                    <strong>{entry.author ?? t('member.unknownUser')}</strong> ·{' '}
+                    {format.dateTime(new Date(entry.at))}
+                  </Page.Muted>
+                  <span>{entry.text}</span>
+                </Card.Column>
+              </Card>
+            ))}
+            <TextField
+              label={t('member.addNote')}
+              hideLabel
+              multiline
+              wide
+              placeholder={t('member.notePlaceholder')}
+              value={note}
+              onChange={setNote}
+            />
+            <span>
+              <Button
+                variant="primary"
+                size="medium"
+                disabled={!note.trim() || addNote.isPending}
+                onClick={() => addNote.mutate(note, { onSuccess: () => setNote('') })}
+              >
+                {t('member.addNote')}
+              </Button>
+            </span>
+          </Page.Block>
+        </div>
+      </Page.Columns>
 
       <ConfirmDialog
         open={confirmRemove}

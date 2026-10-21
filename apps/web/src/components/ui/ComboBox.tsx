@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { useId } from 'react';
 
-import { token } from './tokens';
+import { controlRadius, token } from './tokens';
 
 export interface ComboBoxOption {
   value: string;
@@ -123,6 +123,7 @@ export function ComboBox({
             {...params}
             placeholder={placeholder}
             size="small"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: controlRadius } }}
             slotProps={{
               ...params.slotProps,
               htmlInput: {
@@ -134,7 +135,13 @@ export function ComboBox({
           />
         )}
         slotProps={{
-          paper: { sx: { bgcolor: token('sf'), border: `1px solid ${token('dv')}` } },
+          paper: {
+            sx: {
+              bgcolor: token('sf'),
+              border: `1px solid ${token('dv')}`,
+              borderRadius: controlRadius,
+            },
+          },
           listbox: {
             sx: {
               '& .MuiAutocomplete-groupLabel': {

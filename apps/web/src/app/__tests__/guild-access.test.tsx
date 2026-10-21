@@ -12,6 +12,7 @@ import {
   userWithoutGuild,
 } from '../../test/api';
 import { renderRoute } from '../../test/render';
+import { choose } from '../../test/select';
 
 const twoGuilds: MeResponse = {
   ...testUser,
@@ -85,7 +86,7 @@ describe('guild access', () => {
     renderRoute(`/guilds/${ashenId}/dashboard`);
     await screen.findByRole('heading', { name: 'Ashen Vanguard' });
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Switch guild' }), 'Emberwatch');
+    await choose(user, screen.getByRole('combobox', { name: 'Switch guild' }), 'Emberwatch');
 
     expect(await screen.findByRole('heading', { name: 'Emberwatch' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Roster' })).toHaveAttribute(

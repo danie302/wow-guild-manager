@@ -1,6 +1,12 @@
-import Box from '@mui/material/Box';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
+import FormHelperText from '@mui/material/FormHelperText';
+import FormLabel from '@mui/material/FormLabel';
+import MuiCheckbox from '@mui/material/Checkbox';
 import { useId } from 'react';
 
+import { checkboxSx } from './Checkbox';
 import { token } from './tokens';
 
 export interface CheckboxGroupProps {
@@ -22,16 +28,28 @@ export function CheckboxGroup({
   hint,
 }: CheckboxGroupProps) {
   const id = useId();
+  const toggle = (value: string) =>
+    onChange(values.includes(value) ? values.filter((v) => v !== value) : [...values, value]);
   return (
-    <Box
+    <FormControl
       component="fieldset"
-      aria-describedby={error ? `${id}-error` : undefined}
-      sx={{ m: 0, p: 0, border: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}
+      error={Boolean(error)}
+      aria-describedby={(error ?? hint) ? `${id}-message` : undefined}
+      sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
     >
-      <Box component="legend" sx={{ p: 0, mb: '6px', fontSize: 12, color: token('mt') }}>
+      <FormLabel
+        component="legend"
+        sx={{
+          p: 0,
+          mb: '6px',
+          fontSize: 12,
+          color: token('mt'),
+          '&.Mui-focused': { color: token('mt') },
+        }}
+      >
         {label}
-      </Box>
-      <Box
+      </FormLabel>
+      <FormGroup
         sx={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
@@ -39,39 +57,34 @@ export function CheckboxGroup({
         }}
       >
         {options.map((option) => (
-          <Box
-            component="label"
+          <FormControlLabel
             key={option.value}
+            label={option.label}
+            control={
+              <MuiCheckbox
+                checked={values.includes(option.value)}
+                onChange={() => toggle(option.value)}
+                disableRipple
+                size="small"
+                sx={checkboxSx}
+              />
+            }
             sx={{
-              display: 'flex',
-              alignItems: 'center',
+              m: 0,
               gap: '8px',
-              fontSize: 14,
-              cursor: 'pointer',
+              '& .MuiFormControlLabel-label': { font: 'inherit', fontSize: 14 },
             }}
-          >
-            <Box
-              component="input"
-              type="checkbox"
-              checked={values.includes(option.value)}
-              onChange={() =>
-                onChange(
-                  values.includes(option.value)
-                    ? values.filter((value) => value !== option.value)
-                    : [...values, option.value],
-                )
-              }
-              sx={{ accentColor: token('ac'), m: 0 }}
-            />
-            {option.label}
-          </Box>
+          />
         ))}
-      </Box>
+      </FormGroup>
       {(error ?? hint) && (
-        <Box id={`${id}-error`} sx={{ fontSize: 13, color: error ? token('bad') : token('mt') }}>
+        <FormHelperText
+          id={`${id}-message`}
+          sx={{ m: 0, font: 'inherit', fontSize: 13, color: error ? token('bad') : token('mt') }}
+        >
           {error ?? hint}
-        </Box>
+        </FormHelperText>
       )}
-    </Box>
+    </FormControl>
   );
 }

@@ -1,3 +1,5 @@
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { ReactNode } from 'react';
@@ -13,20 +15,23 @@ export interface NoticeProps {
 /** A tinted message block, e.g. for an error state. */
 export function Notice({ tone, title, children }: NoticeProps) {
   return (
-    <Box
+    <Alert
+      severity={tone === 'bad' ? 'error' : tone === 'warn' ? 'warning' : 'success'}
       role={tone === 'bad' ? 'alert' : 'status'}
+      icon={false}
       sx={{
         p: '14px 16px',
+        borderRadius: 0,
         bgcolor: token(`${tone}-bg`),
+        color: token('tx'),
         borderLeft: `2px solid ${token(tone)}`,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4px',
+        font: 'inherit',
+        '& .MuiAlert-message': { p: 0, display: 'flex', flexDirection: 'column', gap: '4px' },
       }}
     >
-      <Box sx={{ fontWeight: 700 }}>{title}</Box>
+      <AlertTitle sx={{ m: 0, font: 'inherit', fontWeight: 700 }}>{title}</AlertTitle>
       {children && <Box sx={{ color: token('mt') }}>{children}</Box>}
-    </Box>
+    </Alert>
   );
 }
 

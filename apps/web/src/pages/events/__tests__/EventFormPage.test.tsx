@@ -69,7 +69,7 @@ describe('EventFormPage', () => {
     await user.type(screen.getByLabelText('Name'), 'Molten Core');
     await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
     await user.type(screen.getByLabelText('Time'), '16:00');
-    await user.click(screen.getByRole('radio', { name: '20' }));
+    await user.click(screen.getByRole('button', { name: '20' }));
     expect(screen.getByRole('group', { name: 'Total' })).toHaveTextContent('20 / 20');
     expect(create).toBeEnabled();
 
@@ -101,7 +101,7 @@ describe('EventFormPage', () => {
     const user = userEvent.setup();
     renderRoute(`/guilds/${ashenId}/events/new`);
 
-    await user.click(await screen.findByRole('radio', { name: 'Dungeon' }));
+    await user.click(await screen.findByRole('button', { name: 'Dungeon' }));
 
     expect(screen.getByRole('group', { name: 'Total' })).toHaveTextContent('5 / 5');
     expect(screen.getByLabelText('Tanks')).toBeDisabled();
@@ -119,7 +119,7 @@ describe('EventFormPage', () => {
 
     const name = await screen.findByLabelText('Name');
     expect(screen.getByLabelText('Time')).toHaveValue('16:00');
-    expect(screen.queryByRole('radio', { name: 'Dungeon' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Dungeon' })).not.toBeInTheDocument();
     await user.clear(name);
     await user.type(name, 'Onyxia');
     await user.click(screen.getByRole('button', { name: 'Save' }));

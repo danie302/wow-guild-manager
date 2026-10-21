@@ -1,4 +1,5 @@
-import Box from '@mui/material/Box';
+import MuiTab from '@mui/material/Tab';
+import MuiTabs from '@mui/material/Tabs';
 
 import { token } from './tokens';
 
@@ -12,39 +13,35 @@ export interface TabsProps<Value extends string> {
 /** Tabs that switch what a page shows below them. */
 export function Tabs<Value extends string>({ label, value, tabs, onChange }: TabsProps<Value>) {
   return (
-    <Box
-      role="tablist"
+    <MuiTabs
       aria-label={label}
-      sx={{ display: 'flex', flexWrap: 'wrap', borderBottom: `2px solid ${token('dv')}` }}
+      value={value}
+      onChange={(_, next: Value) => onChange(next)}
+      variant="scrollable"
+      scrollButtons={false}
+      slotProps={{ indicator: { sx: { height: 3, bgcolor: token('ac') } } }}
+      sx={{ minHeight: 0, borderBottom: `2px solid ${token('dv')}` }}
     >
-      {tabs.map((tab) => {
-        const selected = tab.value === value;
-        return (
-          <Box
-            key={tab.value}
-            component="button"
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            onClick={() => onChange(tab.value)}
-            sx={{
-              p: '10px 16px',
-              mb: '-2px',
-              font: 'inherit',
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              bgcolor: 'transparent',
-              border: 0,
-              borderBottom: `3px solid ${selected ? token('ac') : 'transparent'}`,
-              color: selected ? token('tx') : token('mt'),
-              '&:hover': { color: token('tx') },
-            }}
-          >
-            {tab.label}
-          </Box>
-        );
-      })}
-    </Box>
+      {tabs.map((tab) => (
+        <MuiTab
+          key={tab.value}
+          value={tab.value}
+          label={tab.label}
+          disableRipple
+          sx={{
+            minHeight: 0,
+            minWidth: 0,
+            p: '10px 16px',
+            font: 'inherit',
+            fontWeight: 700,
+            textTransform: 'none',
+            color: token('mt'),
+            '&:hover': { color: token('tx') },
+            '&.Mui-selected': { color: token('tx') },
+            '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}`, outlineOffset: -2 },
+          }}
+        />
+      ))}
+    </MuiTabs>
   );
 }

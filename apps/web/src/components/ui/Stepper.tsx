@@ -1,7 +1,9 @@
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import InputBase from '@mui/material/InputBase';
 import { useId } from 'react';
 
-import { token, type TokenName } from './tokens';
+import { controlRadius, token, type TokenName } from './tokens';
 
 export interface StepperProps {
   label: string;
@@ -36,10 +38,12 @@ export function Stepper({
     bgcolor: 'transparent',
     color: token('tx'),
     border: 0,
+    borderRadius: 0,
     fontSize: 18,
     fontWeight: 700,
-    cursor: 'pointer',
-    '&:disabled': { opacity: 0.4, cursor: 'default' },
+    '&:hover': { bgcolor: token('sf2') },
+    '&.Mui-disabled': { color: token('tx'), opacity: 0.4 },
+    '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}`, outlineOffset: -2 },
   };
   return (
     <Box
@@ -57,24 +61,30 @@ export function Stepper({
       <Box component="label" htmlFor={id} sx={{ flex: 1, fontWeight: 700 }}>
         {label}
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'stretch', border: `1px solid ${token('dv')}` }}>
-        <Box
-          component="button"
-          type="button"
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'stretch',
+          border: `1px solid ${token('dv')}`,
+          borderRadius: controlRadius,
+          overflow: 'hidden',
+        }}
+      >
+        <IconButton
+          disableRipple
           aria-label={decreaseLabel}
           disabled={disabled || value <= min}
           onClick={() => onChange(clamp(value - 1))}
           sx={button}
         >
           −
-        </Box>
-        <Box
-          component="input"
+        </IconButton>
+        <InputBase
           id={id}
-          inputMode="numeric"
+          inputProps={{ inputMode: 'numeric' }}
           value={String(value)}
           disabled={disabled}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+          onChange={(event) => {
             const next = Number(event.target.value.replace(/\D/g, '') || 0);
             onChange(clamp(next));
           }}
@@ -89,18 +99,18 @@ export function Stepper({
             font: 'inherit',
             fontSize: 15,
             fontWeight: 800,
+            '& input': { p: 0, textAlign: 'center' },
           }}
         />
-        <Box
-          component="button"
-          type="button"
+        <IconButton
+          disableRipple
           aria-label={increaseLabel}
           disabled={disabled || value >= max}
           onClick={() => onChange(clamp(value + 1))}
           sx={button}
         >
           +
-        </Box>
+        </IconButton>
       </Box>
     </Box>
   );

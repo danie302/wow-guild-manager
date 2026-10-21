@@ -89,7 +89,7 @@ describe('EventsPage', () => {
     renderRoute(path);
 
     await screen.findByText('Molten Core');
-    await user.click(screen.getByRole('radio', { name: 'Past' }));
+    await user.click(screen.getByRole('button', { name: 'Past' }));
 
     expect(await screen.findByText('No past events.')).toBeInTheDocument();
   });

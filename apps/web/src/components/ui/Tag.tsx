@@ -1,4 +1,4 @@
-import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import type { ReactNode } from 'react';
 
 import { token } from './tokens';
@@ -17,11 +17,19 @@ export function Tag({ children, tone = 'neutral' }: TagProps) {
     bad: { bgcolor: token('bad-bg'), color: token('bad') },
   }[tone];
   return (
-    <Box
+    <Chip
       component="span"
-      sx={{ ...colors, fontSize: 11.5, fontWeight: 700, p: '2px 8px', whiteSpace: 'nowrap' }}
-    >
-      {children}
-    </Box>
+      size="small"
+      label={children}
+      sx={{
+        ...colors,
+        height: 'auto',
+        borderRadius: 0,
+        fontSize: 11.5,
+        fontWeight: 700,
+        verticalAlign: 'middle',
+        '& .MuiChip-label': { p: '2px 8px', whiteSpace: 'nowrap' },
+      }}
+    />
   );
 }

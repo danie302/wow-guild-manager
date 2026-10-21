@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ashenId, mockApi, testUser } from '../../../test/api';
 import { renderRoute } from '../../../test/render';
+import { choose } from '../../../test/select';
 
 const rosterPath = `/guilds/${ashenId}/roster`;
 
@@ -87,11 +88,11 @@ describe('RosterPage', () => {
     expect(rows()).toHaveLength(1);
     await user.clear(screen.getByRole('searchbox'));
 
-    await user.click(screen.getByRole('radio', { name: 'Raider' }));
+    await user.click(screen.getByRole('button', { name: 'Raider' }));
     expect(rows().map((row) => row.textContent)).toEqual([expect.stringContaining('Varian')]);
-    await user.click(screen.getByRole('radio', { name: 'All' }));
+    await user.click(screen.getByRole('button', { name: 'All' }));
 
-    await user.click(screen.getByRole('radio', { name: 'Warlock' }));
+    await user.click(screen.getByRole('button', { name: 'Warlock' }));
     expect(rows().map((row) => row.textContent)).toEqual([expect.stringContaining('Jaina')]);
   });
 
@@ -125,13 +126,30 @@ describe('RosterPage', () => {
       await screen.findByRole('option', { name: /Tyrion.*Already on the roster/ }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: /Tyrande/ }));
-    await user.click(within(dialog).getByRole('radio', { name: 'Member' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Member' }));
     await user.click(within(dialog).getByRole('button', { name: 'Add character' }));
     await user.type(within(dialog).getByLabelText('Character name'), 'Tyrande');
     // Only Alliance races, and classes of the chosen race.
-    expect(within(dialog).queryByRole('option', { name: 'Orc' })).not.toBeInTheDocument();
-    await user.selectOptions(within(dialog).getByLabelText('Race'), 'Night Elf');
-    await user.selectOptions(within(dialog).getByLabelText('Class'), 'Priest');
+    await user.click(within(dialog).getByRole('combobox', { name: 'Race' }));
+    const races = within(await screen.findByRole('listbox')).getAllByRole('option');
+    expect(races.map((race) => race.textContent)).toEqual([
+      'Human',
+      'Dwarf',
+      'Night Elf',
+      'Gnome',
+      'Skyborne',
+    ]);
+    await user.click(screen.getByRole('option', { name: 'Night Elf' }));
+    await user.click(within(dialog).getByRole('combobox', { name: 'Class' }));
+    const classes = within(await screen.findByRole('listbox')).getAllByRole('option');
+    expect(classes.map((option) => option.textContent)).toEqual([
+      'Warrior',
+      'Hunter',
+      'Rogue',
+      'Priest',
+      'Druid',
+    ]);
+    await user.click(screen.getByRole('option', { name: 'Priest' }));
     await user.click(within(dialog).getByRole('checkbox', { name: 'First Aid' }));
     await user.click(within(dialog).getByRole('button', { name: 'Add to roster' }));
 
@@ -226,8 +244,8 @@ describe('RosterPage', () => {
     await user.click(await screen.findByRole('option', { name: /Tyrande/ }));
     await user.click(within(dialog).getByRole('button', { name: 'Add character' }));
     await user.type(within(dialog).getByLabelText('Character name'), 'Thrall');
-    await user.selectOptions(within(dialog).getByLabelText('Race'), 'Human');
-    await user.selectOptions(within(dialog).getByLabelText('Class'), 'Mage');
+    await choose(user, within(dialog).getByRole('combobox', { name: 'Race' }), 'Human');
+    await choose(user, within(dialog).getByRole('combobox', { name: 'Class' }), 'Mage');
     await user.click(within(dialog).getByRole('checkbox', { name: 'Tailoring' }));
     await user.click(within(dialog).getByRole('button', { name: 'Add to roster' }));
 
@@ -258,7 +276,7 @@ describe('RosterPage', () => {
     expect(within(rows()[0]!).getByText('You')).toBeInTheDocument();
     expect(within(rows()[1]!).queryByText('You')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('radio', { name: 'Druid' }));
+    await user.click(screen.getByRole('button', { name: 'Druid' }));
 
     expect(screen.getByText('No members match.')).toBeInTheDocument();
   });

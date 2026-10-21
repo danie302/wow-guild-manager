@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import { Link } from 'react-router';
 
 import { Icon } from './Icon';
-import { token } from './tokens';
+import { controlRadius, token } from './tokens';
 
 export interface MonthCalendarEntry {
   key: string;
@@ -58,6 +58,7 @@ export function MonthCalendar({
     bgcolor: 'transparent',
     color: token('tx'),
     border: `1px solid ${token('dv')}`,
+    borderRadius: controlRadius,
     cursor: 'pointer',
     '&:hover': { bgcolor: token('sf2') },
   };

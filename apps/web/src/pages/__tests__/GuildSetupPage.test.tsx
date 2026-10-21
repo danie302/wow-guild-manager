@@ -61,7 +61,7 @@ describe('GuildSetupPage', () => {
     renderRoute('/setup');
 
     await user.type(await screen.findByLabelText('Guild name'), '  Ashen Vanguard ');
-    await user.click(screen.getByRole('radio', { name: 'Horde' }));
+    await user.click(screen.getByRole('button', { name: 'Horde' }));
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(await screen.findByText('Step 2 of 3')).toBeInTheDocument();

@@ -29,16 +29,16 @@ describe('UserSettingsPage', () => {
     expect(await screen.findByRole('heading', { name: 'User settings' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Events' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('radio', { name: 'Español' }));
+    await user.click(screen.getByRole('button', { name: 'Español' }));
 
     expect(await screen.findByRole('heading', { name: 'Ajustes de usuario' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Eventos' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Español' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Español' })).toHaveAttribute('aria-pressed', 'true');
     expect(document.documentElement.lang).toBe('es');
     expect(localStorage.getItem('wgm.locale')).toBe('es');
     expect(fetchMock).toHaveBeenCalledWith(...patchedWith({ locale: 'es' }));
 
-    await user.click(screen.getByRole('radio', { name: 'English' }));
+    await user.click(screen.getByRole('button', { name: 'English' }));
 
     expect(await screen.findByRole('heading', { name: 'User settings' })).toBeInTheDocument();
   });
@@ -94,12 +94,15 @@ describe('UserSettingsPage', () => {
     const user = userEvent.setup();
     renderRoute('/settings/user');
 
-    expect(await screen.findByRole('radio', { name: 'Dark' })).toBeChecked();
+    expect(await screen.findByRole('button', { name: 'Dark' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
-    await user.click(screen.getByRole('radio', { name: 'Light' }));
+    await user.click(screen.getByRole('button', { name: 'Light' }));
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'light');
-    expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'true');
     expect(fetchMock).toHaveBeenCalledWith(...patchedWith({ theme: 'light' }));
   });
 });

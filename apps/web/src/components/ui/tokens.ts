@@ -88,4 +88,7 @@ export function token(name: TokenName): string {
 export const fontFamily = "'Archivo Variable', Archivo, system-ui, sans-serif";
 
 /** Below this width the sidebar becomes a top bar, as in the prototype. */
+/** Rounded corners of buttons and inputs (the rest of the design stays square). */
+export const controlRadius = '6px';
+
 export const compactBreakpoint = 880;

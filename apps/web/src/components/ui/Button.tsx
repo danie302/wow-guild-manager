@@ -1,9 +1,10 @@
 import Box from '@mui/material/Box';
+import MuiButton from '@mui/material/Button';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { Icon, type IconName } from './Icon';
-import { token } from './tokens';
+import { controlRadius, token } from './tokens';
 
 export interface ButtonProps {
   children: ReactNode;
@@ -46,26 +47,35 @@ export function Button({
   const text = variant === 'text';
   const large = size === 'large';
   const medium = size === 'medium';
+  const linkProps = to
+    ? { component: Link, to }
+    : href
+      ? { href, ...(newTab && { target: '_blank', rel: 'noopener noreferrer' }) }
+      : { type, onClick };
   return (
-    <Box
-      component={to ? Link : href ? 'a' : 'button'}
-      {...(to
-        ? { to }
-        : href
-          ? { href, ...(newTab && { target: '_blank', rel: 'noopener noreferrer' }) }
-          : { type, onClick, disabled })}
+    <MuiButton
+      {...linkProps}
+      disabled={disabled}
+      disableRipple
+      disableElevation
+      startIcon={startIcon && <Icon name={startIcon} size={14} />}
+      endIcon={endIcon && <Icon name={endIcon} />}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: medium ? '8px' : '10px',
-        p: large ? '12px 18px' : medium ? '9px 16px' : '6px 10px',
-        minWidth: large ? 260 : undefined,
+        gap: text ? '6px' : medium ? '8px' : '10px',
+        p: text ? '2px 0' : large ? '12px 18px' : medium ? '9px 16px' : '6px 10px',
+        minWidth: large ? 260 : 0,
+        // Rounded buttons, a change from the design's square ones (decided on 2026-10-21).
+        borderRadius: controlRadius,
         font: 'inherit',
-        fontSize: large ? 15 : medium ? 14 : 12,
+        fontSize: text ? 12.5 : large ? 15 : medium ? 14 : 12,
         fontWeight: large || medium ? 800 : 600,
+        lineHeight: 1.45,
+        textTransform: 'none',
         textDecoration: 'none',
         whiteSpace: 'nowrap',
-        cursor: 'pointer',
+        alignSelf: text ? 'flex-start' : undefined,
         bgcolor: primary ? token('ac') : 'transparent',
         color: primary
           ? token('ac-on')
@@ -75,21 +85,22 @@ export function Button({
               ? token('mt')
               : token('tx'),
         border: primary || text ? 0 : `1px solid ${token('dv')}`,
-        ...(text && { p: '2px 0', gap: '6px', fontSize: 12.5, alignSelf: 'flex-start' }),
+        '& .MuiButton-startIcon, & .MuiButton-endIcon': { m: 0 },
         '&:hover': text
-          ? { color: token('tx') }
+          ? { color: token('tx'), bgcolor: 'transparent' }
           : {
               bgcolor: primary ? token('ac-h') : tone === 'danger' ? token('bad-bg') : token('sf2'),
             },
-        '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: 2 },
-        '&:disabled': { opacity: 0.6, cursor: 'default' },
+        '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}`, outlineOffset: 2 },
+        '&.Mui-disabled': {
+          opacity: 0.6,
+          color: primary ? token('ac-on') : tone === 'danger' ? token('bad') : token('mt'),
+        },
       }}
     >
-      {startIcon && <Icon name={startIcon} size={14} />}
-      <Box component="span" sx={{ flex: large ? 1 : 'none' }}>
+      <Box component="span" sx={{ flex: large ? 1 : 'none', textAlign: 'left' }}>
         {children}
       </Box>
-      {endIcon && <Icon name={endIcon} />}
-    </Box>
+    </MuiButton>
   );
 }

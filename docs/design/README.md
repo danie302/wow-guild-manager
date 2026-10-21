@@ -55,6 +55,7 @@ The tokens below are implemented in `apps/web/src/components/ui/tokens.ts` (stor
 None known. Every earlier difference was fixed in the design.
 
 ### Notes for implementation
+- **Buttons and inputs have rounded corners (6px)**, unlike the prototype's square ones (decided on 2026-10-21): buttons, segmented controls, filter chips, the − / + steppers, text fields, dropdowns and their menus, and searchable lists. It's `controlRadius` in `src/components/ui/tokens.ts`. Cards, panels, tags, and notices stay square.
 - **The sample data is partial.** It has no Shaman class and only Alliance races, and the second guild in the picker (Emberwatch) shows Ashen Vanguard's data. Use the full tables from `packages/shared` and real data.
 - **Item names are invented**, and attendance per event type is sample data.
 - **Guild setup step 3 says "Everyone with this role can use this app."** Since members also have read-only access, the copy should say Officers can *manage* the guild (story 012).

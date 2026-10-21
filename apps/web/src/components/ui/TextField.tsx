@@ -1,7 +1,8 @@
 import Box from '@mui/material/Box';
-import { useId, type ChangeEvent } from 'react';
+import InputBase from '@mui/material/InputBase';
+import { useId } from 'react';
 
-import { token } from './tokens';
+import { controlRadius, token } from './tokens';
 
 export interface TextFieldProps {
   label: string;
@@ -62,31 +63,35 @@ export function TextField({
       >
         {label}
       </Box>
-      <Box
-        component={multiline ? 'textarea' : 'input'}
+      <InputBase
         id={id}
-        {...(multiline ? { rows: 3 } : { type })}
+        type={multiline ? undefined : type}
+        multiline={multiline}
+        minRows={multiline ? 3 : undefined}
         placeholder={placeholder}
         value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-          onChange(event.target.value)
-        }
-        maxLength={maxLength}
+        onChange={(event) => onChange(event.target.value)}
         autoFocus={autoFocus}
         disabled={disabled}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={message ? `${id}-message` : undefined}
+        error={Boolean(error)}
+        inputProps={{
+          maxLength,
+          'aria-invalid': error ? true : undefined,
+          'aria-describedby': message ? `${id}-message` : undefined,
+        }}
         sx={{
           minHeight: 38,
           p: '7px 10px',
           font: 'inherit',
           fontSize: 14,
-          resize: 'vertical',
           color: token('tx'),
           bgcolor: token('bg'),
           border: `1px solid ${error ? token('bad') : token('dv')}`,
-          '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: 0 },
-          '&:disabled': { color: token('mt'), bgcolor: token('sf') },
+          borderRadius: controlRadius,
+          '&.Mui-focused': { outline: `2px solid ${token('ac')}`, outlineOffset: 0 },
+          '&.Mui-disabled': { bgcolor: token('sf') },
+          '& .MuiInputBase-input': { p: 0, height: 'auto' },
+          '& textarea': { resize: 'vertical' },
         }}
       />
       {message && (

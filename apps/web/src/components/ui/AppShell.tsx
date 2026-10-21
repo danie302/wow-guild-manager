@@ -1,9 +1,10 @@
 import Box from '@mui/material/Box';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { createContext, useContext, type ChangeEvent, type ReactNode } from 'react';
+import { createContext, useContext, useId, type ReactNode } from 'react';
 import { NavLink } from 'react-router';
 
 import { Icon, type IconName } from './Icon';
+import { SelectMenu } from './Select';
 import { compactBreakpoint, token } from './tokens';
 
 interface AppShellContextValue {
@@ -139,35 +140,31 @@ export interface AppShellSwitcherProps {
 /** A compact dropdown under the brand, e.g. to switch between guilds. */
 function Switcher({ label, value, options, onChange }: AppShellSwitcherProps) {
   useAppShell('Switcher');
+  const labelId = useId();
   return (
     <Box sx={{ p: '0 16px 12px', flex: 'none' }}>
-      <Box
-        component="select"
-        aria-label={label}
-        title={label}
-        value={value}
-        onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.target.value)}
-        sx={{
-          width: '100%',
-          minHeight: 32,
-          p: '4px 8px',
-          font: 'inherit',
-          fontSize: 12.5,
-          color: token('tx'),
-          bgcolor: token('bg'),
-          border: `1px solid ${token('dv')}`,
-          '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: 0 },
-        }}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+      <Box component="span" id={labelId} sx={visuallyHiddenLabel}>
+        {label}
       </Box>
+      <SelectMenu
+        labelId={labelId}
+        value={value}
+        options={options}
+        onChange={onChange}
+        size="compact"
+      />
     </Box>
   );
 }
+
+const visuallyHiddenLabel = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+} as const;
 
 export interface AppShellNavProps {
   /** Accessible name of the navigation landmark. */

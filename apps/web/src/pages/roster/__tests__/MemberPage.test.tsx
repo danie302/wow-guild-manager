@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ashenId, mockApi, testGuild, testUser } from '../../../test/api';
 import { renderRoute } from '../../../test/render';
+import { choose } from '../../../test/select';
 
 const memberId = '019a0c3e-5b1e-7c2a-9f3d-000000000100';
 const memberPath = `/guilds/${ashenId}/roster/${memberId}`;
@@ -131,10 +132,18 @@ describe('MemberPage', () => {
     renderRoute(memberPath);
 
     expect(await screen.findByRole('heading', { name: 'Jaina' })).toBeInTheDocument();
-    expect(screen.getByText('Human Mage · 60 · Tailoring, Enchanting')).toBeInTheDocument();
-    expect(screen.getByText('Raider → Officer')).toBeInTheDocument();
-    expect(screen.getByText(/Discord role$/)).toBeInTheDocument();
-    expect(screen.getByText('Joined the roster as Raider')).toBeInTheDocument();
+    expect(screen.getByText('Raider · Joined September 1, 2026')).toBeInTheDocument();
+    const main = screen.getByRole('group', { name: 'Jaina' });
+    expect(main).toHaveTextContent('Main');
+    expect(main).toHaveTextContent('Mage · Human · Level 60');
+    expect(main).toHaveTextContent('Tailoring, Enchanting');
+    const history = within(screen.getByRole('list', { name: 'Rank history' })).getAllByRole(
+      'listitem',
+    );
+    expect(history.map((entry) => entry.textContent)).toEqual([
+      'OfficerOctober 1, 2026 · Discord role',
+      'RaiderSeptember 1, 2026 · by Anduin',
+    ]);
     expect(screen.getByText('Trial until June.')).toBeInTheDocument();
   });
 
@@ -143,14 +152,14 @@ describe('MemberPage', () => {
     const user = userEvent.setup();
     renderRoute(memberPath);
 
-    await user.selectOptions(await screen.findByRole('combobox', { name: 'Rank' }), 'Member');
+    await choose(user, await screen.findByRole('combobox', { name: 'Rank' }), 'Member');
     await user.click(screen.getByRole('button', { name: 'Make main' }));
     await user.type(screen.getByRole('textbox', { name: 'Add note' }), 'Passed the trial.');
     await user.click(screen.getByRole('button', { name: 'Add note' }));
 
     expect(await screen.findByText('Passed the trial.')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Add note' })).toHaveValue('');
-    expect(screen.getByRole('combobox', { name: 'Rank' })).toHaveValue('member');
+    expect(screen.getByRole('combobox', { name: 'Rank' })).toHaveTextContent('Member');
     const sent = fetchMock.mock.calls.filter(([, init]) => init?.method && init.method !== 'GET');
     expect(sent.map(([url, init]) => `${init!.method} ${url as string}`)).toEqual([
       `PATCH ${memberApi}`,
@@ -173,7 +182,7 @@ describe('MemberPage', () => {
     await user.type(within(dialog).getByLabelText('Level'), '50');
     await user.click(within(dialog).getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText(/Human Priest · 50/)).toBeInTheDocument();
+    expect(await screen.findByText(/Priest · Human · Level 50/)).toBeInTheDocument();
     const [, init] = fetchMock.mock.calls.find(
       ([url, request]) =>
         url === `${memberApi}/characters/${proudmooreId}` && request?.method === 'PUT',

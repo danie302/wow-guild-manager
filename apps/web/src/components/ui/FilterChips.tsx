@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
-import { token, type TokenName } from './tokens';
+import { controlRadius, token, type TokenName } from './tokens';
 
 export interface FilterChipOption<Value extends string> {
   value: Value;
@@ -25,44 +27,47 @@ export function FilterChips<Value extends string>({
   onChange,
 }: FilterChipsProps<Value>) {
   return (
-    <Box
-      role="radiogroup"
+    <ToggleButtonGroup
+      exclusive
       aria-label={label}
+      value={value}
+      onChange={(_, next: Value | null) => next !== null && onChange(next)}
       sx={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}
     >
-      {options.map((option) => {
-        const selected = option.value === value;
-        return (
-          <Box
-            key={option.value}
-            component="button"
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(option.value)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              p: '5px 12px',
-              font: 'inherit',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              bgcolor: selected ? token('tx') : 'transparent',
-              color: selected ? token('bg') : token('tx'),
-              border: `1px solid ${selected ? token('tx') : token('dv')}`,
-              '&:hover': { bgcolor: selected ? token('tx') : token('sf2') },
-              '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: 2 },
-            }}
-          >
-            {option.dot && (
-              <Box component="span" sx={{ width: 8, height: 8, bgcolor: token(option.dot) }} />
-            )}
-            {option.label}
-          </Box>
-        );
-      })}
-    </Box>
+      {options.map((option) => (
+        <ToggleButton
+          key={option.value}
+          value={option.value}
+          disableRipple
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            m: '0 !important',
+            p: '5px 12px',
+            font: 'inherit',
+            fontSize: 13,
+            fontWeight: 600,
+            lineHeight: 1.45,
+            textTransform: 'none',
+            borderRadius: `${controlRadius} !important`,
+            border: `1px solid ${token('dv')} !important`,
+            color: token('tx'),
+            '&:hover': { bgcolor: token('sf2') },
+            '&.Mui-selected, &.Mui-selected:hover': {
+              bgcolor: token('tx'),
+              color: token('bg'),
+              borderColor: `${token('tx')} !important`,
+            },
+            '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}`, outlineOffset: 2 },
+          }}
+        >
+          {option.dot && (
+            <Box component="span" sx={{ width: 8, height: 8, bgcolor: token(option.dot) }} />
+          )}
+          {option.label}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   );
 }

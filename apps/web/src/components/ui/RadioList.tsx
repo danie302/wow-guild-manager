@@ -1,4 +1,6 @@
 import Box from '@mui/material/Box';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
 import { createContext, useContext, useId, type ReactNode } from 'react';
 
 import { token } from './tokens';
@@ -31,13 +33,15 @@ function RadioListRoot({ label, value, onChange, children }: RadioListProps) {
   const name = useId();
   return (
     <RadioListContext.Provider value={{ name, value, onChange }}>
-      <Box
-        role="radiogroup"
+      <RadioGroup
         aria-label={label}
+        name={name}
+        value={value ?? ''}
+        onChange={(_, next) => onChange(next)}
         sx={{ display: 'flex', flexDirection: 'column', border: `1px solid ${token('dv')}` }}
       >
         {children}
-      </Box>
+      </RadioGroup>
     </RadioListContext.Provider>
   );
 }
@@ -74,19 +78,11 @@ function Option({ value, imageUrl, detail, disabled, children }: RadioListOption
         boxShadow: checked ? `inset 2px 0 0 ${token('ac')}` : 'none',
         '& + &': { borderTop: `1px solid ${token('ln')}` },
         '&:hover': disabled || checked ? {} : { bgcolor: token('sf2') },
-        '&:has(input:focus-visible)': { outline: `2px solid ${token('ac')}`, outlineOffset: -2 },
+        '&:has(.Mui-focusVisible)': { outline: `2px solid ${token('ac')}`, outlineOffset: -2 },
       }}
     >
-      <Box
-        component="input"
-        type="radio"
-        name={list.name}
-        value={value}
-        checked={checked}
-        disabled={disabled}
-        onChange={() => list.onChange(value)}
-        sx={visuallyHidden}
-      />
+      {/* The row itself shows the choice, so the radio is only for keyboards and screen readers. */}
+      <Radio value={value} disabled={disabled} disableRipple sx={visuallyHidden} />
       {imageUrl ? (
         <Box component="img" src={imageUrl} alt="" sx={{ width: 32, height: 32, flex: 'none' }} />
       ) : (
