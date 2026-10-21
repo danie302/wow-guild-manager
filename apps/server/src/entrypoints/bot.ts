@@ -3,7 +3,7 @@ import { createClient } from 'redis';
 import { watchDiscordChanges } from '../bot/cache-events.js';
 import { createBotClient, describeLoginError } from '../bot/client.js';
 import { syncMemberProfiles } from '../bot/member-profiles.js';
-import { syncOfficers } from '../bot/officer-sync.js';
+import { syncServerMembers } from '../bot/server-sync.js';
 import { commands } from '../bot/commands/index.js';
 import { botConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
@@ -23,7 +23,7 @@ await redis.connect();
 
 const client = createBotClient({ logger, commands });
 watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
-syncOfficers(client, logger);
+syncServerMembers(client, logger);
 syncMemberProfiles(client, logger);
 
 process.on('SIGTERM', () => {

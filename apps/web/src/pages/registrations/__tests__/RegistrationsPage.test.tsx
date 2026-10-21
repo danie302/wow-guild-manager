@@ -18,6 +18,7 @@ const tyra: PendingRegistration = {
   onRoster: false,
   returning: false,
   requestedAt: '2026-10-20T18:30:00.000Z',
+  leftDiscordAt: null,
 };
 const furion: PendingRegistration = {
   ...tyra,
@@ -124,5 +125,15 @@ describe('RegistrationsPage', () => {
 
     expect(await screen.findByText("Tyra's request was rejected.")).toBeInTheDocument();
     expect(await screen.findByText('No requests waiting.')).toBeInTheDocument();
+  });
+
+  it('marks a request from someone who left the Discord server', async () => {
+    mockApi({
+      [api]: () => Response.json([{ ...tyra, leftDiscordAt: '2026-10-21T08:00:00.000Z' }]),
+    });
+
+    renderRoute(path);
+
+    expect(await screen.findByText('Left the Discord server')).toBeInTheDocument();
   });
 });

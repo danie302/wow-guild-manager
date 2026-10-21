@@ -27,6 +27,8 @@ export function formatters(locale: string, timeZone: string) {
         timeZone,
         ...options,
       }).format(value),
+    date: (value: Date | number) =>
+      new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(value),
     time: (value: Date | number) =>
       new Intl.DateTimeFormat(locale, { timeStyle: 'medium', timeZone }).format(value),
     number: (value: number, options?: Intl.NumberFormatOptions) =>

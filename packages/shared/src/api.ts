@@ -216,6 +216,8 @@ export interface RosterMember {
   rank: Rank;
   baseRank: BaseRank;
   characters: RosterCharacter[];
+  /** When they left the guild's Discord server; null while they're in it. Officers only. */
+  leftDiscordAt: string | null;
 }
 
 export interface RankHistoryEntry {
@@ -264,6 +266,8 @@ export interface PendingRegistration {
   /** They were removed from the roster; approving restores them with their characters. */
   returning: boolean;
   requestedAt: string;
+  /** When they left the guild's Discord server; null while they're in it. */
+  leftDiscordAt: string | null;
 }
 
 /** `POST /api/guilds/:guildId/registrations/:registrationId/approve`. */

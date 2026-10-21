@@ -108,6 +108,7 @@ export function RegistrationsPage() {
               </>
             }
           >
+            {registration.leftDiscordAt && <Tag tone="bad">{t('registrations.leftDiscord')}</Tag>}
             {registration.returning && <Tag>{t('registrations.returning')}</Tag>}
             {registration.onRoster && <Tag>{t('registrations.onRoster')}</Tag>}
           </ActionList.Item>

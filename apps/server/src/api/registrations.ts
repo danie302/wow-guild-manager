@@ -44,6 +44,7 @@ export function registrationsRouter(jobs: JobEnqueuer) {
           onRoster: member !== undefined && !member.removedAt,
           returning: member !== undefined && member.removedAt !== null,
           requestedAt: registration.createdAt.toISOString(),
+          leftDiscordAt: registration.leftDiscordAt?.toISOString() ?? null,
         };
       }) satisfies PendingRegistration[],
     );

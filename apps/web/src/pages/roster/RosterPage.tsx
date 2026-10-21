@@ -17,14 +17,17 @@ import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import {
   Button,
   CharacterName,
+  Checkbox,
   ChoiceGroup,
   ListTable,
   Loading,
   Notice,
   Page,
   Select,
+  Tag,
   TextField,
 } from '../../components/ui';
+import { useFormat } from '../../i18n/format';
 import { AddMemberDialog } from './AddMemberDialog';
 
 /** Lowercase without accents, so searching "jaina" finds "Jainá". */
@@ -35,8 +38,16 @@ function searchable(text: string): string {
     .toLowerCase();
 }
 
-function matches(member: RosterMember, query: string, rank: string, characterClass: string) {
+interface Filters {
+  query: string;
+  rank: string;
+  characterClass: string;
+  leftOnly: boolean;
+}
+
+function matches(member: RosterMember, { query, rank, characterClass, leftOnly }: Filters) {
   if (rank !== 'all' && member.rank !== rank) return false;
+  if (leftOnly && !member.leftDiscordAt) return false;
   if (characterClass && !member.characters.some((c) => c.class === characterClass)) return false;
   const words = searchable(query).trim();
   return (
@@ -56,13 +67,17 @@ export function RosterPage() {
   const [query, setQuery] = useState('');
   const [rank, setRank] = useState('all');
   const [characterClass, setCharacterClass] = useState('');
+  const [leftOnly, setLeftOnly] = useState(false);
+  const format = useFormat();
   const [adding, setAdding] = useState(false);
   const [lastAdded, setLastAdded] = useState<AddMemberResponse>();
 
   if (roster.isPending || guild.isPending) return <Loading label={t('roster.loading')} />;
   if (roster.isError || guild.isError) return <Notice tone="bad" title={t('roster.loadFailed')} />;
 
-  const members = roster.data.filter((member) => matches(member, query, rank, characterClass));
+  const members = roster.data.filter((member) =>
+    matches(member, { query, rank, characterClass, leftOnly }),
+  );
 
   return (
     <Page>
@@ -113,6 +128,7 @@ export function RosterPage() {
           options={CLASSES.map((option) => ({ value: option, label: CLASS_NAMES[option] }))}
           onChange={setCharacterClass}
         />
+        <Checkbox label={t('roster.leftOnly')} checked={leftOnly} onChange={setLeftOnly} />
       </Page.Section>
 
       <ListTable
@@ -130,7 +146,16 @@ export function RosterPage() {
           const [main, ...alts] = member.characters;
           return (
             <ListTable.Row key={member.id} to={guildPath(guildId, `roster/${member.id}`)}>
-              <strong>{member.discordName}</strong>
+              <div>
+                <strong>{member.discordName}</strong>{' '}
+                {member.leftDiscordAt && (
+                  <Tag tone="bad">
+                    {t('roster.leftDiscord', {
+                      date: format.date(new Date(member.leftDiscordAt)),
+                    })}
+                  </Tag>
+                )}
+              </div>
               <span>{RANK_NAMES[member.rank]}</span>
               {main ? (
                 <div>

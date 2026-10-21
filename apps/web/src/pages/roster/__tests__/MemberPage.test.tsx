@@ -20,6 +20,7 @@ const jaina: MemberDetailResponse = {
   avatarUrl: '',
   rank: 'raider',
   baseRank: 'raider',
+  leftDiscordAt: null,
   characters: [
     {
       id: '019a0c3e-5b1e-7c2a-9f3d-000000000201',
@@ -240,5 +241,14 @@ describe('MemberPage', () => {
     expect(
       screen.getByText("The Guild Master can't be removed. Transfer leadership first."),
     ).toBeInTheDocument();
+  });
+
+  it('warns when the member left the Discord server', async () => {
+    mockMemberApi({ ...jaina, leftDiscordAt: '2026-10-19T12:00:00.000Z' });
+
+    renderRoute(memberPath);
+
+    expect(await screen.findByText('Left the Discord server on Oct 19, 2026')).toBeInTheDocument();
+    expect(screen.getByText(/can't sign up for events/)).toBeInTheDocument();
   });
 });

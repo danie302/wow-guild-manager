@@ -286,7 +286,7 @@ Two options were rejected for the setup data: the bot copying servers, roles, an
 
 A user is an Officer of a guild while they have its Officer role in its Discord server. Who has it is stored in `guild_officers` (guild, Discord user ID), the source of truth for Officer access. The API reads only this table, so checking access costs no Discord API calls.
 
-- **The bot keeps it current from Gateway events** (`src/bot/officer-sync.ts`): a member's roles change, they join or leave, the Officer role is deleted, or the bot leaves the server. Gateway events are pushed over the bot's open connection and don't count against Discord's REST rate limits.
+- **The bot keeps it current from Gateway events** (`src/bot/server-sync.ts`): a member's roles change, they join or leave, the Officer role is deleted, or the bot leaves the server. Gateway events are pushed over the bot's open connection and don't count against Discord's REST rate limits.
 - **Full resync at specific moments:** each time the bot connects (or reconnects with a new session, when events may have been missed) it reads every server's members over the Gateway and replaces each guild's Officers. When a guild is created or its Officer role changes, the API reads the role's members once with REST.
 - **The trade-off:** while the bot is down, a removed Officer role keeps working until the bot reconnects and resyncs.
 - `src/domain/access.ts` works out a user's access (Guild Master from the guild, Officer from the table), `src/domain/permissions.ts` maps each action to the ranks allowed, and `requireGuildPermission(action)` guards each guild route.

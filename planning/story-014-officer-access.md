@@ -25,7 +25,7 @@ Give app access to the Guild Master and to members with the Officer role in Disc
 
 ## Notes
 
-- Officer access is stored in `guild_officers`, which the bot keeps current from Gateway events (`bot/officer-sync.ts`) and resyncs each time it connects. The API reads only the database, so it makes no Discord API calls to check access. When a guild is created or its Officer role changes, the API reads the role's members once with REST. See "Officer access" in `docs/tech-decisions.md`.
+- Officer access is stored in `guild_officers`, which the bot keeps current from Gateway events (`bot/officer-sync.ts`, now `bot/server-sync.ts`) and resyncs each time it connects. The API reads only the database, so it makes no Discord API calls to check access. When a guild is created or its Officer role changes, the API reads the role's members once with REST. See "Officer access" in `docs/tech-decisions.md`.
 - Every table's ID is now a UUID v7 (see "IDs: UUID v7" in `docs/tech-decisions.md`), so guild URLs can't be guessed or counted. The `users` and `guilds` migrations were rewritten, since there was no real data yet.
 - Permissions are in `apps/server/src/domain/permissions.ts`, checked by `requireGuildPermission(action)` on each guild route.
 - The web app has a guild's pages under `/guilds/:guildId/...`. `/` opens the user's only guild, the one they last opened, the guild picker (`/guilds`), or the no-access page (`/no-access`). The sidebar switches guild and, for users who don't lead one, offers to create a guild.

@@ -63,6 +63,7 @@ describe('pending requests', () => {
         onRoster: false,
         returning: true,
         requestedAt: registration.createdAt.toISOString(),
+        leftDiscordAt: null,
       },
     ]);
   });

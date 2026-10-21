@@ -88,7 +88,7 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 - Members choose their own main with a `/main` command in Discord, which suggests their characters on the roster. The change applies right away. Only they see the reply.
 - The Guild Master and Officers can also add members and characters by hand, choosing the member's Discord account from the server's members.
 - A member's first character becomes their main, whenever it's added. The Guild Master and Officers can change which character is the main. The roster shows each member's main, with a count of their alts.
-- When a member leaves the guild's Discord server, they are flagged on the roster and the dashboard. An Officer decides whether to remove them. They aren't removed automatically.
+- When a member leaves the guild's Discord server, they are flagged on the roster and the dashboard, with the date. An Officer decides whether to remove them. They aren't removed automatically, and the flag clears if they come back. A pending request to join from someone who left stays, flagged the same way.
 - When a member is removed from the roster:
   - Their sign-ups for upcoming events are removed and their spots are released.
   - Their history is kept: past sign-ups and attendance records stay as they were, and past events still show them, marked as no longer on the roster.

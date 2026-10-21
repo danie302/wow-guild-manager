@@ -5,7 +5,7 @@ import { token } from './tokens';
 
 export interface TagProps {
   children: ReactNode;
-  tone?: 'neutral' | 'accent' | 'warn';
+  tone?: 'neutral' | 'accent' | 'warn' | 'bad';
 }
 
 /** A small label next to a name, e.g. "Main" or "Left Discord". */
@@ -14,6 +14,7 @@ export function Tag({ children, tone = 'neutral' }: TagProps) {
     neutral: { bgcolor: token('sf2'), color: token('mt') },
     accent: { bgcolor: token('ac-bg'), color: token('ac-ink') },
     warn: { bgcolor: token('warn-bg'), color: token('warn') },
+    bad: { bgcolor: token('bad-bg'), color: token('bad') },
   }[tone];
   return (
     <Box

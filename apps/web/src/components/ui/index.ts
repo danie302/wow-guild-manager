@@ -13,6 +13,8 @@ export type {
 export { Button } from './Button';
 export { CharacterName } from './CharacterName';
 export type { CharacterNameProps } from './CharacterName';
+export { Checkbox } from './Checkbox';
+export type { CheckboxProps } from './Checkbox';
 export { CheckboxGroup } from './CheckboxGroup';
 export type { CheckboxGroupProps } from './CheckboxGroup';
 export type { ButtonProps } from './Button';

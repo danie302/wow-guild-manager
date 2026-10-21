@@ -177,6 +177,17 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
         </div>
       </Page.Header>
 
+      {member.leftDiscordAt && (
+        <Notice
+          tone="warn"
+          title={t('member.leftDiscord', {
+            date: format.date(new Date(member.leftDiscordAt)),
+          })}
+        >
+          {t('member.leftDiscordBody')}
+        </Notice>
+      )}
+
       {failed && (
         <Notice tone="bad" title={t('member.actionFailed')}>
           {apiErrorText(t, failed)}

@@ -92,6 +92,7 @@ async function restoreMember(member: Member, profile: DiscordProfile): Promise<C
     order: [
       ['isMain', 'DESC'],
       ['createdAt', 'ASC'],
+      ['id', 'ASC'],
     ],
   });
   await member.update({ ...profile, removedAt: null });
@@ -244,7 +245,11 @@ export async function removeCharacter(member: Member, characterId: string): Prom
     if (!hasMain) {
       const oldest = await Character.findOne({
         where: { memberId: member.id, removedAt: null },
-        order: [['createdAt', 'ASC']],
+        // UUID v7 IDs follow creation order, even within one millisecond.
+        order: [
+          ['createdAt', 'ASC'],
+          ['id', 'ASC'],
+        ],
       });
       await oldest?.update({ isMain: true });
     }
@@ -388,8 +393,12 @@ export async function removeMember(member: Member, guild: Guild): Promise<void> 
     throw new DomainError({ code: 'GUILD_MASTER_CANNOT_BE_REMOVED' });
   }
   await transaction(async () => {
-    // The same timestamp marks which characters to bring back if the member returns.
-    const removedAt = new Date();
+    // The same timestamp marks which characters to bring back if the member returns. It must
+    // differ from characters removed on their own, even within the same millisecond.
+    const lastRemoved = await Character.max<Date | null, Character>('removedAt', {
+      where: { memberId: member.id },
+    });
+    const removedAt = new Date(Math.max(Date.now(), (lastRemoved?.getTime() ?? 0) + 1));
     await member.update({ removedAt });
     await Character.update({ removedAt }, { where: { memberId: member.id, removedAt: null } });
   });

@@ -26,6 +26,7 @@ function rosterMember(
     rank,
     baseRank: 'raider',
     characters,
+    leftDiscordAt: null,
   } satisfies RosterMember;
 }
 
@@ -232,5 +233,17 @@ describe('RosterPage', () => {
     expect(
       await within(dialog).findByText('Another character already has this name.'),
     ).toBeInTheDocument();
+  });
+
+  it('flags members who left the Discord server, and can show only them', async () => {
+    const left = { ...roster[2]!, leftDiscordAt: '2026-10-19T12:00:00.000Z' };
+    mockApi({ [members]: () => Response.json([roster[0], roster[1], left]) });
+    const user = userEvent.setup();
+    renderRoute(rosterPath);
+
+    expect(await screen.findByText('Left Discord Oct 19, 2026')).toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: 'Left Discord only' }));
+
+    expect(rows().map((row) => row.textContent)).toEqual([expect.stringContaining('Varian')]);
   });
 });

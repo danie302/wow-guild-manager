@@ -34,6 +34,8 @@ export class Registration extends Model<
   /** Null when the reviewer's account no longer exists. */
   declare reviewedByUserId: CreationOptional<ForeignKey<User['id']> | null>;
   declare reviewedAt: CreationOptional<Date | null>;
+  /** When they left the guild's Discord server; null while they're in it (see domain/presence.ts). */
+  declare leftDiscordAt: CreationOptional<Date | null>;
 
   declare guild?: NonAttribute<Guild>;
 
@@ -51,6 +53,7 @@ export class Registration extends Model<
         status: { type: DataTypes.STRING(8), allowNull: false, defaultValue: 'pending' },
         reviewedByUserId: { type: DataTypes.UUID, allowNull: true },
         reviewedAt: { type: DataTypes.DATE, allowNull: true },
+        leftDiscordAt: { type: DataTypes.DATE, allowNull: true },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

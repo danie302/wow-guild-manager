@@ -30,6 +30,8 @@ export class Member extends Model<InferAttributes<Member>, InferCreationAttribut
   /** The language of their most recent interaction with the bot, used for DMs. */
   declare locale: CreationOptional<Locale | null>;
   declare removedAt: CreationOptional<Date | null>;
+  /** When they left the guild's Discord server; null while they're in it (see domain/presence.ts). */
+  declare leftDiscordAt: CreationOptional<Date | null>;
 
   declare guild?: NonAttribute<Guild>;
   declare characters?: NonAttribute<Character[]>;
@@ -47,6 +49,7 @@ export class Member extends Model<InferAttributes<Member>, InferCreationAttribut
         rank: { type: DataTypes.STRING(6), allowNull: false },
         locale: { type: DataTypes.STRING(5), allowNull: true },
         removedAt: { type: DataTypes.DATE, allowNull: true },
+        leftDiscordAt: { type: DataTypes.DATE, allowNull: true },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

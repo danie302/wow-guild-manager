@@ -164,6 +164,23 @@ describe('removeCharacter', () => {
     expect(back).toMatchObject({ name: 'zuljin', level: 59, removedAt: null, isMain: false });
   });
 
+  it("isn't brought back when the member is removed in the same millisecond", async () => {
+    const zuljin = (await named('Zuljin'))!;
+    await removeCharacter(member, zuljin.id);
+    // As if the member were removed in the same millisecond as the character.
+    const now = zuljin.reload().then(() => zuljin.removedAt!.getTime());
+    const realNow = Date.now;
+    Date.now = () => 0;
+    try {
+      await removeMember(member, guild);
+    } finally {
+      Date.now = realNow;
+    }
+
+    await member.reload();
+    expect(member.removedAt!.getTime()).toBe((await now) + 1);
+  });
+
   it("isn't brought back when the member is removed and added back", async () => {
     await removeCharacter(member, (await named('Zuljin'))!.id);
     await removeMember(member, guild);

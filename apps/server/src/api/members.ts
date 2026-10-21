@@ -296,6 +296,7 @@ function toRosterMember(member: Member, rank: Rank): RosterMember {
     rank,
     baseRank: member.rank,
     characters: characters.map(toRosterCharacter),
+    leftDiscordAt: member.leftDiscordAt?.toISOString() ?? null,
   };
 }
 
