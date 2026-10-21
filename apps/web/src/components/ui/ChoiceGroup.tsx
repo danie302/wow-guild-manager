@@ -16,6 +16,8 @@ export interface ChoiceGroupProps<Value extends string> {
   size?: 'small';
   value: Value;
   onChange: (value: Value) => void;
+  /** Shows the choice without letting it change, e.g. for someone who can't edit it. */
+  disabled?: boolean;
   children: ReactNode;
 }
 
@@ -33,6 +35,7 @@ function ChoiceGroupRoot<Value extends string>({
   size,
   value,
   onChange,
+  disabled,
   children,
 }: ChoiceGroupProps<Value>) {
   const labelId = useId();
@@ -44,6 +47,7 @@ function ChoiceGroupRoot<Value extends string>({
         </Box>
         <ToggleButtonGroup
           exclusive
+          disabled={disabled}
           aria-labelledby={labelId}
           value={value}
           // Clicking the picked option again would unpick it; keep one picked.
@@ -87,6 +91,8 @@ function Option({ value, children, ...groupProps }: ChoiceGroupOptionProps) {
         '&:hover': { bgcolor: token('sf2') },
         '&.Mui-selected, &.Mui-selected:hover': { bgcolor: token('ac'), color: token('ac-on') },
         '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}`, outlineOffset: 2 },
+        '&.Mui-disabled': { color: token('mt'), border: 0 },
+        '&.Mui-selected.Mui-disabled': { bgcolor: token('sf2'), color: token('tx') },
       }}
     >
       {children}

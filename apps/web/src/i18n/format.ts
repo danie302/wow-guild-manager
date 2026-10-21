@@ -42,6 +42,22 @@ export function formatters(locale: string, timeZone: string) {
       const amount = new Intl.NumberFormat(locale).format(Math.floor(seconds / size));
       return i18n.getFixedT(locale)('time.ago', { value: `${amount} ${unit}` });
     },
+    /** How far away, either way, as Discord's relative timestamps: "in 3 days", "hace 2 horas". */
+    fromNow: (value: Date | number, now = Date.now()) => {
+      const seconds = Math.round((Number(value) - now) / 1000);
+      const units: [Intl.RelativeTimeFormatUnit, number][] = [
+        ['year', 31_536_000],
+        ['month', 2_592_000],
+        ['day', 86_400],
+        ['hour', 3_600],
+        ['minute', 60],
+      ];
+      const [unit, size] = units.find(([, length]) => Math.abs(seconds) >= length) ?? ['second', 1];
+      return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(
+        Math.round(seconds / size),
+        unit,
+      );
+    },
     /** Only the given parts (e.g. `{ weekday: 'short' }`), in the user's time zone. */
     parts: (value: Date | number, options: Intl.DateTimeFormatOptions) =>
       new Intl.DateTimeFormat(locale, { timeZone, ...options }).format(value),

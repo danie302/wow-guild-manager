@@ -127,19 +127,40 @@ export async function updateSeries(
 
 /**
  * Stops a series: no more events are created, and its future events are removed. Its past
- * events stay. (Story 023 keeps future events that have sign-ups.)
+ * events stay. (Story 023 keeps future events that have sign-ups.) Resolves the Discord posts
+ * of the removed events, for the caller to delete.
  */
 export async function stopSeries(
   guild: Guild,
   seriesId: string,
   stoppedBy: User,
   now = new Date(),
-): Promise<EventSeries> {
+): Promise<{ series: EventSeries; removedPosts: { channelId: string; messageId: string }[] }> {
   return transaction(async () => {
     const series = await runningSeries(guild, seriesId);
-    await Event.destroy({ where: { seriesId: series.id, startsAt: { [Op.gt]: now } } });
-    return series.update({ stoppedAt: now, stoppedByUserId: stoppedBy.id });
+    const future = { seriesId: series.id, startsAt: { [Op.gt]: now } };
+    const posted = await Event.findAll({
+      attributes: ['discordChannelId', 'discordMessageId'],
+      where: { ...future, discordMessageId: { [Op.ne]: null } },
+    });
+    await Event.destroy({ where: future });
+    return {
+      series: await series.update({ stoppedAt: now, stoppedByUserId: stoppedBy.id }),
+      removedPosts: posted.map((event) => ({
+        channelId: event.discordChannelId!,
+        messageId: event.discordMessageId!,
+      })),
+    };
   });
+}
+
+/** The series' events that haven't started, for updating their Discord posts. */
+export async function futureEventIds(seriesId: string, now = new Date()): Promise<string[]> {
+  const events = await Event.findAll({
+    attributes: ['id'],
+    where: { seriesId, startsAt: { [Op.gt]: now } },
+  });
+  return events.map((event) => event.id);
 }
 
 async function runningSeries(guild: Guild, seriesId: string): Promise<EventSeries> {

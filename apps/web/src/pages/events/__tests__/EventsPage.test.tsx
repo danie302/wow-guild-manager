@@ -20,6 +20,7 @@ const mc: EventResponse = {
   createdBy: 'Anduin',
   cancelled: null,
   series: null,
+  discordPost: { url: null, error: null },
 };
 const wsg: EventResponse = {
   ...mc,

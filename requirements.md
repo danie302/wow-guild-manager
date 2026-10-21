@@ -239,6 +239,10 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - The post shows the name, description, date and time (in each reader's local time), and the slots per combat role.
 - The post updates in real time with who is signed up for each role and who is on the waitlist.
 - Editing or cancelling the event in the app updates the post.
+- Events are posted in the guild's events channel, chosen by the Guild Master. Only text channels where the bot can see, write, and post embeds can be chosen.
+- If the guild has no events channel yet, events are created without a post, and the event page says the channel is missing. Once the Guild Master chooses one, the bot posts every upcoming event.
+- Changing the events channel moves the posts of upcoming events: the bot posts them in the new channel and deletes the old posts.
+- If the bot can't post (e.g. it lost its permissions in the channel), the event page's Discord post tab shows the problem. The bot tries again as soon as the permissions change in Discord.
 
 ### Sign-ups
 - Members sign up with buttons on the post: they pick a combat role, a character, and a status.

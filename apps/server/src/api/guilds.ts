@@ -13,6 +13,8 @@ import type { Guild } from '../db/models/index.js';
 import { guildImageUrl, updateGuildSettings } from '../domain/guild-settings.js';
 import { createGuild } from '../domain/guilds.js';
 import { replaceGuildOfficers } from '../domain/officers.js';
+import { enqueueUpcomingEventPosts } from '../jobs/event-posts.js';
+import type { JobEnqueuer } from '../jobs/index.js';
 import { discordServerIconUrl, type DiscordDirectory } from '../integrations/discord/directory.js';
 import type { Logger } from '../logger.js';
 import type { FileStorage } from '../storage/file-storage.js';
@@ -56,7 +58,15 @@ const imageUpload: RequestHandler = (req, res, next) => {
   });
 };
 
-export function guildsRouter(discord: DiscordAccess | null, storage: FileStorage) {
+/**
+ * Changing the events channel or the Discord language asks the worker (`jobs`) to update the
+ * posts of upcoming events; without it (some tests), they don't change.
+ */
+export function guildsRouter(
+  discord: DiscordAccess | null,
+  storage: FileStorage,
+  jobs: JobEnqueuer | null,
+) {
   const router = express.Router();
 
   router.post('/guilds', requireUser, requireDiscord(discord), async (req, res) => {
@@ -95,15 +105,16 @@ export function guildsRouter(discord: DiscordAccess | null, storage: FileStorage
         return;
       }
       try {
-        const { officerRoleChanged } = await updateGuildSettings(
+        const { officerRoleChanged, eventPostsChanged } = await updateGuildSettings(
           currentUser(res),
           guild,
           access,
           input.data,
           req.file?.buffer,
-          { discord: discord?.directory ?? null, storage },
+          { discord, storage },
         );
         if (officerRoleChanged) await loadOfficers(guild, discord!.directory, req.log);
+        if (eventPostsChanged && jobs) await enqueueUpcomingEventPosts(jobs, guild.id);
       } catch (err) {
         if (err instanceof InvalidImageError) {
           sendError(res, 400, { code: 'INVALID_IMAGE' });
@@ -171,7 +182,27 @@ async function toGuildResponse(
       iconUrl: server ? discordServerIconUrl(server) : null,
     },
     officerRole: { id: guild.officerRoleId, name: role?.name ?? null },
+    eventsChannel: guild.eventsChannelId
+      ? { id: guild.eventsChannelId, name: await eventsChannelName(guild, discord, log) }
+      : null,
+    discordLocale: guild.discordLocale,
   };
+}
+
+/** The events channel's name, or null when there's none or Discord can't be read. */
+export async function eventsChannelName(
+  guild: Guild,
+  discord: DiscordAccess | null,
+  log: Logger,
+): Promise<string | null> {
+  if (!guild.eventsChannelId || !discord) return null;
+  try {
+    const channels = await discord.directory.channels(guild.discordServerId);
+    return channels.find((channel) => channel.id === guild.eventsChannelId)?.name ?? null;
+  } catch (err) {
+    log.warn({ err }, 'Could not read the Discord channels; showing the channel without its name');
+    return null;
+  }
 }
 
 async function serverOrNull(directory: DiscordDirectory, serverId: string, log: Logger) {

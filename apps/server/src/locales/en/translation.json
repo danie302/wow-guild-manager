@@ -54,5 +54,13 @@
       "approved": "Your request to join {{guild}} was approved. You're on the roster now.",
       "rejected": "An Officer of {{guild}} rejected your request to join."
     }
+  },
+  "eventPost": {
+    "date": "Date",
+    "waitlist": "Waitlist",
+    "waitlistEmpty": "Empty",
+    "signUps": "Sign-ups",
+    "tentativeCloses": "Tentative sign-ups close {{time}}.",
+    "cancelled": "This event has been cancelled."
   }
 }

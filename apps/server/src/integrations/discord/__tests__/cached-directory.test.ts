@@ -4,6 +4,7 @@ import { createClient } from 'redis';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  channel,
   FakeDiscordDirectory,
   MANAGE_GUILD,
   role,
@@ -74,6 +75,30 @@ describe('cachedDiscordDirectory', () => {
     expect(await cached.member('300000000000000001', '200000000000000001')).toMatchObject({
       roleIds: ['400000000000000001'],
     });
+  });
+
+  it("caches a server's channels, keeping their permission bits", async () => {
+    const { fake, cached } = setup();
+    const overwrite = { id: '400000000000000001', type: 'role', allow: 1n << 11n, deny: 1n << 14n };
+    fake.addChannels('300000000000000001', [
+      channel('500000000000000001', 'raids', { overwrites: [overwrite as never] }),
+    ]);
+
+    await cached.channels('300000000000000001');
+    const channels = await cached.channels('300000000000000001');
+
+    expect(channels[0]?.overwrites[0]).toEqual(overwrite);
+    expect(fake.calls).toBe(1);
+  });
+
+  it('reads the channels again after the bot says they changed', async () => {
+    const { fake, cached, invalidator } = setup();
+    await cached.channels('300000000000000001');
+
+    await invalidator.forgetChannels('300000000000000001');
+    await cached.channels('300000000000000001');
+
+    expect(fake.calls).toBe(2);
   });
 
   it('reads a server again after the bot says its roles changed', async () => {

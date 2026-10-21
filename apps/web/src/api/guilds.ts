@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateGuildInput,
+  DiscordChannelsResponse,
   DiscordRolesResponse,
   DiscordServersResponse,
   GuildDiscordInput,
   GuildResponse,
+  Locale,
 } from '@wgm/shared';
 
 import { apiRequest } from './client';
@@ -40,6 +42,16 @@ export function useDiscordRoles(serverId: string | null) {
   });
 }
 
+/** The text channels of a server where the bot can post events. */
+export function useDiscordChannels(serverId: string | null) {
+  return useQuery({
+    queryKey: ['discord', 'servers', serverId, 'channels'],
+    queryFn: () => apiRequest<DiscordChannelsResponse>(`/discord/servers/${serverId}/channels`),
+    enabled: serverId !== null,
+    refetchOnWindowFocus: 'always',
+  });
+}
+
 export function useCreateGuild() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -59,6 +71,8 @@ export interface GuildSettingsChanges {
   /** A new image file, or null to remove the image. */
   image?: File | null;
   discord?: GuildDiscordInput;
+  eventsChannelId?: string;
+  discordLocale?: Locale;
 }
 
 /** Saves every change in one request, so they all apply or none does. */
@@ -74,11 +88,15 @@ export function useSaveGuildSettings(guildId: string) {
         form.set('discordServerId', changes.discord.discordServerId);
         form.set('officerRoleId', changes.discord.officerRoleId);
       }
+      if (changes.eventsChannelId) form.set('eventsChannelId', changes.eventsChannelId);
+      if (changes.discordLocale) form.set('discordLocale', changes.discordLocale);
       return apiRequest<GuildResponse>(`/guilds/${guildId}`, { method: 'PATCH', body: form });
     },
     onSuccess: async (guild) => {
       queryClient.setQueryData(['guilds', guildId], guild);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
+      // Event pages preview the posts in the guild's channel and language.
+      await queryClient.invalidateQueries({ queryKey: ['guilds', guildId, 'events'] });
     },
   });
 }

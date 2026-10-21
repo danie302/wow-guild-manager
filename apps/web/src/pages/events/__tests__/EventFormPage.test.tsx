@@ -21,6 +21,7 @@ const saved: EventResponse = {
   createdBy: 'Thrall',
   cancelled: null,
   series: null,
+  discordPost: { url: null, error: null },
 };
 
 const me = { ...testUser, timeZone: 'America/Argentina/Buenos_Aires' };

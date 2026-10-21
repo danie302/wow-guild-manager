@@ -1,5 +1,6 @@
 import {
   DiscordUnavailableError,
+  type DiscordChannel,
   type DiscordDirectory,
   type DiscordMember,
   type DiscordRole,
@@ -8,6 +9,23 @@ import {
 
 export const MANAGE_GUILD = 1n << 5n;
 export const ADMINISTRATOR = 1n << 3n;
+export const VIEW_CHANNEL = 1n << 10n;
+export const SEND_MESSAGES = 1n << 11n;
+export const EMBED_LINKS = 1n << 14n;
+/** What the bot needs in the events channel. */
+export const POST_PERMISSIONS = VIEW_CHANNEL | SEND_MESSAGES | EMBED_LINKS;
+
+/** The bot's user ID in tests (Discord's application ID is the bot's user ID). */
+export const BOT_USER_ID = '100000000000000099';
+
+/** A text channel with no overwrites unless given. */
+export function channel(
+  id: string,
+  name: string,
+  extra: Partial<DiscordChannel> = {},
+): DiscordChannel {
+  return { id, name, type: 'text', position: 0, parentId: null, overwrites: [], ...extra };
+}
 
 /** A role for `server.roles`, with no permissions unless given. */
 export function role(id: string, name: string, extra: Partial<DiscordRole> = {}): DiscordRole {
@@ -30,6 +48,7 @@ export function server(id: string, name: string, extra: Partial<DiscordServer> =
 export class FakeDiscordDirectory implements DiscordDirectory {
   readonly servers = new Map<string, DiscordServer>();
   readonly members = new Map<string, DiscordMember>();
+  readonly serverChannels = new Map<string, DiscordChannel[]>();
   /** Set to make every call fail as if Discord were down. */
   down = false;
   calls = 0;
@@ -48,6 +67,28 @@ export class FakeDiscordDirectory implements DiscordDirectory {
       roleIds,
     });
     return this;
+  }
+
+  /**
+   * Gives the server these channels and adds the bot to it with a role that can post in every
+   * channel, unless `botRoleIds` says otherwise.
+   */
+  addChannels(serverId: string, channels: DiscordChannel[], botRoleIds?: string[]): this {
+    this.serverChannels.set(serverId, channels);
+    const server = this.servers.get(serverId);
+    if (server && !botRoleIds) {
+      const botRole = role(`${serverId.slice(0, -2)}99`, 'Guild Manager', {
+        managed: true,
+        permissions: POST_PERMISSIONS,
+      });
+      server.roles = [...server.roles.filter((r) => r.id !== botRole.id), botRole];
+      botRoleIds = [botRole.id];
+    }
+    return this.addMember(serverId, BOT_USER_ID, botRoleIds ?? [], 'Guild Manager');
+  }
+
+  channels(serverId: string) {
+    return this.answer(() => this.serverChannels.get(serverId) ?? []);
   }
 
   botServers() {

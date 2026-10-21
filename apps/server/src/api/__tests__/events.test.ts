@@ -1,8 +1,9 @@
-import type { EventResponse } from '@wgm/shared';
+import type { EventDiscordPostResponse, EventResponse } from '@wgm/shared';
 import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loginAs, testApp } from '../../../test/api-app.js';
+import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
 import { Event, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
@@ -34,11 +35,12 @@ beforeEach(async () => {
 });
 
 async function setup() {
-  const app = testApp();
+  const jobs = new FakeJobQueue();
+  const app = testApp(null, undefined, jobs);
   const agent = await loginAs(app, gm);
   const leader = (await User.findOne({ where: { discordId: gm } }))!;
   const guild = await createTestGuild(leader, { serverId: '300000000000000001' });
-  return { app, agent, base: `/api/guilds/${guild.id}/events`, guild };
+  return { app, agent, jobs, base: `/api/guilds/${guild.id}/events`, guild };
 }
 
 const event = (response: { body: unknown }) => response.body as EventResponse;
@@ -60,6 +62,7 @@ describe('events', () => {
       createdBy: 'User 0001',
       cancelled: null,
       series: null,
+      discordPost: { url: null, error: null },
     });
     expect((await agent.get(`${base}/${event(response).id}`)).body).toEqual(response.body);
   });
@@ -136,5 +139,56 @@ describe('events', () => {
 
     expect((await stranger.get(`${base}?scope=upcoming`)).status).toBe(403);
     expect((await agent.get(`${base}/not-an-id`)).status).toBe(404);
+  });
+});
+
+describe('Discord posts of events', () => {
+  it('asks for the post when an event is created, edited, or cancelled', async () => {
+    const { agent, jobs, base } = await setup();
+
+    const created = await agent.post(base).send({ ...raid, startsAt: inDays(3) });
+    const id = event(created).id;
+    const details = { name: 'Onyxia', size: raid.size, slots: raid.slots };
+    await agent.put(`${base}/${id}`).send({ ...details, startsAt: inDays(3) });
+    await agent.post(`${base}/${id}/cancel`);
+
+    expect(jobs.payloads('event-post')).toEqual([
+      { eventId: id },
+      { eventId: id },
+      { eventId: id },
+    ]);
+  });
+
+  it("links to the post once it's posted, and says why it failed", async () => {
+    const { agent, base, guild } = await setup();
+    const id = event(await agent.post(base).send({ ...raid, startsAt: inDays(3) })).id;
+
+    await Event.update(
+      {
+        discordChannelId: '500000000000000001',
+        discordMessageId: '600000000000000001',
+        discordPostError: 'missing_permissions',
+      },
+      { where: { id } },
+    );
+
+    expect(event(await agent.get(`${base}/${id}`)).discordPost).toEqual({
+      url: `https://discord.com/channels/${guild.discordServerId}/500000000000000001/600000000000000001`,
+      error: 'missing_permissions',
+    });
+  });
+
+  it('previews the post in the guild language', async () => {
+    const { agent, base, guild } = await setup();
+    await guild.update({ discordLocale: 'es' });
+    const id = event(await agent.post(base).send({ ...raid, startsAt: inDays(3) })).id;
+
+    const response = await agent.get(`${base}/${id}/discord-post`);
+    const preview = response.body as EventDiscordPostResponse;
+
+    expect(response.status).toBe(200);
+    expect(preview).toMatchObject({ channel: null, locale: 'es' });
+    expect(preview.embed.title).toBe('Molten Core');
+    expect(preview.embed.fields[0]?.name).toBe('Fecha');
   });
 });

@@ -252,6 +252,11 @@ function Setting({ title, description, children }: PageSettingProps) {
   );
 }
 
+/** Content kept closer together than the page's sections, e.g. a note over a preview. */
+function Stack({ children }: { children: ReactNode }) {
+  return <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{children}</Box>;
+}
+
 /** A muted line of explanation. */
 function Text({ children }: { children: ReactNode }) {
   return <Box sx={{ fontSize: 13, color: token('mt') }}>{children}</Box>;
@@ -265,6 +270,7 @@ export const Page = Object.assign(PageRoot, {
   Section,
   Setting,
   Text,
+  Stack,
   Muted,
   Footer,
   Lead,

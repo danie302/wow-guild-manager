@@ -1,14 +1,18 @@
 import {
+  ChannelType,
   DiscordAPIError,
+  OverwriteType,
   REST,
   Routes,
   type APIGuild,
+  type APIOverwrite,
   type APIGuildMember,
   type RESTGetAPICurrentUserGuildsResult,
 } from 'discord.js';
 
 import {
   DiscordUnavailableError,
+  type DiscordChannel,
   type DiscordDirectory,
   type DiscordMember,
   type DiscordMemberProfile,
@@ -61,6 +65,12 @@ export function createRestDiscordDirectory(botToken: string): DiscordDirectory {
       return members.map(toProfile);
     },
 
+    async channels(serverId) {
+      const channels = (await callOrNull(() => rest.get(Routes.guildChannels(serverId)))) as
+        RawChannel[] | null;
+      return (channels ?? []).map(toChannel);
+    },
+
     async membersWithRole(serverId, roleId) {
       const ids: string[] = [];
       let after = '0';
@@ -87,6 +97,38 @@ function toProfile(member: APIGuildMember): DiscordMemberProfile {
 
 function memberId(member: APIGuildMember): string {
   return member.user.id;
+}
+
+const CHANNEL_TYPES: Partial<Record<ChannelType, DiscordChannel['type']>> = {
+  [ChannelType.GuildText]: 'text',
+  [ChannelType.GuildAnnouncement]: 'announcement',
+  [ChannelType.GuildCategory]: 'category',
+};
+
+/** The fields we read from each of a server's channels (their shape depends on the type). */
+interface RawChannel {
+  id: string;
+  name: string;
+  type: ChannelType;
+  position?: number;
+  parent_id?: string | null;
+  permission_overwrites?: APIOverwrite[];
+}
+
+function toChannel(channel: RawChannel): DiscordChannel {
+  return {
+    id: channel.id,
+    name: channel.name,
+    type: CHANNEL_TYPES[channel.type] ?? 'other',
+    position: channel.position ?? 0,
+    parentId: channel.parent_id ?? null,
+    overwrites: (channel.permission_overwrites ?? []).map((overwrite) => ({
+      id: overwrite.id,
+      type: overwrite.type === OverwriteType.Member ? 'member' : 'role',
+      allow: BigInt(overwrite.allow),
+      deny: BigInt(overwrite.deny),
+    })),
+  };
 }
 
 function toServer(guild: APIGuild): DiscordServer {

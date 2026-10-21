@@ -1,4 +1,4 @@
-import type { Faction } from '@wgm/shared';
+import type { Faction, Locale } from '@wgm/shared';
 import {
   DataTypes,
   literal,
@@ -27,6 +27,10 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   declare guildMasterUserId: ForeignKey<User['id']>;
   /** The image's key in file storage, or null when the guild has none. */
   declare imageKey: CreationOptional<string | null>;
+  /** The Discord channel where the bot posts events; null until the Guild Master chooses one. */
+  declare eventsChannelId: CreationOptional<string | null>;
+  /** The language of the guild's public Discord messages (event posts and alerts). */
+  declare discordLocale: CreationOptional<Locale>;
 
   declare guildMaster?: NonAttribute<User>;
 
@@ -42,6 +46,8 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
         discordServerId: { type: DataTypes.STRING(20), allowNull: false, unique: true },
         officerRoleId: { type: DataTypes.STRING(20), allowNull: false },
         imageKey: { type: DataTypes.STRING(100), allowNull: true },
+        eventsChannelId: { type: DataTypes.STRING(20), allowNull: true },
+        discordLocale: { type: DataTypes.STRING(2), allowNull: false, defaultValue: 'en' },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

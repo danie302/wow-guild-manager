@@ -1,4 +1,4 @@
-import type { EventType } from '@wgm/shared';
+import type { DiscordPostError, EventType } from '@wgm/shared';
 import {
   DataTypes,
   literal,
@@ -34,7 +34,13 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare cancelledByUserId: CreationOptional<ForeignKey<User['id']> | null>;
   /** The weekly series it belongs to, if any. */
   declare seriesId: CreationOptional<ForeignKey<EventSeries['id']> | null>;
+  /** Its Discord post; null until the worker posts it (jobs/handlers/event-posts.ts). */
+  declare discordChannelId: CreationOptional<string | null>;
+  declare discordMessageId: CreationOptional<string | null>;
+  /** Why the worker couldn't post or update it last time; null when it could. */
+  declare discordPostError: CreationOptional<DiscordPostError | null>;
 
+  declare guild?: NonAttribute<Guild>;
   declare createdBy?: NonAttribute<User | null>;
   declare cancelledBy?: NonAttribute<User | null>;
   declare series?: NonAttribute<EventSeries | null>;
@@ -58,6 +64,9 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
         cancelledAt: { type: DataTypes.DATE, allowNull: true },
         cancelledByUserId: { type: DataTypes.UUID, allowNull: true },
         seriesId: { type: DataTypes.UUID, allowNull: true },
+        discordChannelId: { type: DataTypes.STRING(20), allowNull: true },
+        discordMessageId: { type: DataTypes.STRING(20), allowNull: true },
+        discordPostError: { type: DataTypes.STRING(30), allowNull: true },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

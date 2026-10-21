@@ -10,7 +10,9 @@ import { Guild, Member, RankChange, type User } from '../db/models/index.js';
 import {
   canManageServer,
   discordServerIconUrl,
+  eventChannelOptions,
   officerRoleOptions,
+  type DiscordChannel,
   type DiscordDirectory,
   type DiscordRole,
   type DiscordServer,
@@ -107,6 +109,33 @@ export async function discordOfficerRoleOptions(
     throw new DomainError({ code: 'FORBIDDEN' });
   }
   return officerRoleOptions(server);
+}
+
+/** The text channels of a server `user` manages where the bot can post events. */
+export async function discordEventChannelOptions(
+  user: User,
+  serverId: string,
+  discord: DiscordDirectory,
+  botUserId: string,
+): Promise<{ channel: DiscordChannel; category: DiscordChannel | null }[]> {
+  const server = await manageableServer(user, serverId, discord);
+  if (!server) {
+    throw new DomainError({ code: 'FORBIDDEN' });
+  }
+  return postableChannels(server, discord, botUserId);
+}
+
+/** The server's channels where the bot can post events (none when the bot isn't in it). */
+export async function postableChannels(
+  server: DiscordServer,
+  discord: DiscordDirectory,
+  botUserId: string,
+): Promise<{ channel: DiscordChannel; category: DiscordChannel | null }[]> {
+  const [channels, bot] = await Promise.all([
+    discord.channels(server.id),
+    discord.member(server.id, botUserId),
+  ]);
+  return bot ? eventChannelOptions(server, channels, bot) : [];
 }
 
 /** The server, if the bot is in it and `user` can manage it. */

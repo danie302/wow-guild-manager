@@ -11,6 +11,7 @@ import {
   MANAGE_GUILD,
   role,
   server,
+  BOT_USER_ID,
 } from '../../../test/fake-discord-directory.js';
 import { Guild, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
@@ -63,7 +64,7 @@ function discord() {
     .addMember(ember, gm, [emberOfficers])
     .addMember(notManaged, gm)
     .addMember(ashen, other, [officers]);
-  return { directory, botInviteUrl: 'https://discord.test/invite' };
+  return { directory, botInviteUrl: 'https://discord.test/invite', botUserId: BOT_USER_ID };
 }
 
 const newGuild = {
@@ -195,6 +196,8 @@ describe('POST /api/guilds', () => {
         iconUrl: `https://cdn.discordapp.com/icons/${ashen}/abc.png?size=64`,
       },
       officerRole: { id: officers, name: 'Officers' },
+      eventsChannel: null,
+      discordLocale: 'en',
     });
     const me = await agent.get('/api/me');
     expect(body(me).guilds).toEqual([

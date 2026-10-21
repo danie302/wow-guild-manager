@@ -5,7 +5,7 @@ import type { Logger } from '../logger.js';
 
 /**
  * Keeps the API's cached Discord data in step with Discord. When a member's roles change (or
- * they join or leave), or a server's roles change, the cached entry is dropped, so the next
+ * they join or leave), or a server's roles or channels change, the cached entry is dropped, so the next
  * request re-reads it: removing the Officer role removes app access right away.
  */
 export function watchDiscordChanges(
@@ -40,5 +40,16 @@ export function watchDiscordChanges(
   });
   client.on(Events.GuildDelete, (server) => {
     forget(cache.forgetServer(server.id));
+    forget(cache.forgetChannels(server.id));
+  });
+  // The events channel picker lists channels by the bot's permissions in them.
+  client.on(Events.ChannelCreate, (channel) => {
+    forget(cache.forgetChannels(channel.guild.id));
+  });
+  client.on(Events.ChannelUpdate, (_old, channel) => {
+    if (!channel.isDMBased()) forget(cache.forgetChannels(channel.guild.id));
+  });
+  client.on(Events.ChannelDelete, (channel) => {
+    if (!channel.isDMBased()) forget(cache.forgetChannels(channel.guild.id));
   });
 }

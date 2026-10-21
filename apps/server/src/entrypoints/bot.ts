@@ -3,11 +3,13 @@ import { createClient } from 'redis';
 import { watchDiscordChanges } from '../bot/cache-events.js';
 import { createBotClient, describeLoginError } from '../bot/client.js';
 import { syncMemberProfiles } from '../bot/member-profiles.js';
+import { retryFailedPosts } from '../bot/post-retries.js';
 import { syncServerMembers } from '../bot/server-sync.js';
 import { commands } from '../bot/commands/index.js';
 import { botConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { discordCacheInvalidator } from '../integrations/discord/cached-directory.js';
+import { JobQueue, redisConnection } from '../jobs/index.js';
 import { createLogger } from '../logger.js';
 
 const config = loadConfigOrExit(botConfigSchema);
@@ -21,15 +23,19 @@ const redis = createClient({ url: config.REDIS_URL, disableOfflineQueue: true })
 redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis client error'));
 await redis.connect();
 
+// Retries of failed event posts go to the worker through the job queue.
+const jobs = new JobQueue({ connection: redisConnection(config.REDIS_URL) });
+
 const client = createBotClient({ logger, commands });
 watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
 syncServerMembers(client, logger);
 syncMemberProfiles(client, logger);
+retryFailedPosts(client, jobs, logger);
 
 process.on('SIGTERM', () => {
   logger.info('Disconnecting from Discord');
-  void Promise.allSettled([client.destroy(), redis.close(), sequelize.close()]).then(() =>
-    process.exit(0),
+  void Promise.allSettled([client.destroy(), redis.close(), jobs.close(), sequelize.close()]).then(
+    () => process.exit(0),
   );
 });
 

@@ -49,6 +49,8 @@ export interface RepeatSchedule {
 /** Adding a job to run as soon as possible: what routes and bot commands need. Tests use a fake. */
 export interface JobEnqueuer {
   enqueue<Name extends JobName>(name: Name, data: JobPayloads[Name]): Promise<void>;
+  /** Adds many jobs of one kind in a single round trip to Redis. */
+  enqueueMany<Name extends JobName>(name: Name, data: JobPayloads[Name][]): Promise<void>;
 }
 
 /**
@@ -68,6 +70,10 @@ export class JobQueue implements JobEnqueuer {
   /** Runs a job as soon as a worker is free. */
   async enqueue<Name extends JobName>(name: Name, data: JobPayloads[Name]): Promise<void> {
     await this.queue.add(name, data);
+  }
+
+  async enqueueMany<Name extends JobName>(name: Name, data: JobPayloads[Name][]): Promise<void> {
+    if (data.length > 0) await this.queue.addBulk(data.map((payload) => ({ name, data: payload })));
   }
 
   /**

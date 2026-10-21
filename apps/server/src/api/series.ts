@@ -4,13 +4,18 @@ import { Op } from 'sequelize';
 
 import { Event, EventSeries, User } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
-import { createSeries, stopSeries, updateSeries } from '../domain/series.js';
+import { createSeries, futureEventIds, stopSeries, updateSeries } from '../domain/series.js';
+import { enqueueEventPosts } from '../jobs/event-posts.js';
+import type { JobEnqueuer } from '../jobs/index.js';
 import { eventId as seriesId } from './events.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
 
-/** Weekly series of events, such as "MC every Tuesday". */
-export function seriesRouter() {
+/**
+ * Weekly series of events, such as "MC every Tuesday". Changes ask the worker (`jobs`) to
+ * update the events' Discord posts; without it (some tests), the posts don't change.
+ */
+export function seriesRouter(jobs: JobEnqueuer | null) {
   const router = express.Router();
   const base = '/guilds/:guildId/series';
 
@@ -30,6 +35,7 @@ export function seriesRouter() {
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
     const { guild } = currentGuild(res);
     const series = await createSeries(guild, req.body as CreateEventInput, currentUser(res));
+    if (jobs) await enqueueEventPosts(jobs, await futureEventIds(series.id));
     res.status(201).json(await seriesResponse(series.id));
   });
 
@@ -59,6 +65,7 @@ export function seriesRouter() {
         seriesId(req.params.seriesId),
         req.body as UpdateEventInput,
       );
+      if (jobs) await enqueueEventPosts(jobs, await futureEventIds(series.id));
       res.json(await seriesResponse(series.id));
     },
   );
@@ -69,7 +76,12 @@ export function seriesRouter() {
     requireGuildPermission('manageEvents'),
     async (req, res) => {
       const { guild } = currentGuild(res);
-      const series = await stopSeries(guild, seriesId(req.params.seriesId), currentUser(res));
+      const { series, removedPosts } = await stopSeries(
+        guild,
+        seriesId(req.params.seriesId),
+        currentUser(res),
+      );
+      for (const post of removedPosts) await jobs?.enqueue('event-post-delete', post);
       res.json(await seriesResponse(series.id));
     },
   );

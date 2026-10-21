@@ -18,4 +18,12 @@ describe('relative times', () => {
   it('follows the language', () => {
     expect(formatters('es', 'UTC').relative(now - 3 * 60 * 60 * 1000, now)).toBe('hace 3 h');
   });
+
+  it('says how far away a time is, either way, as Discord does', () => {
+    const day = 24 * 60 * 60 * 1000;
+
+    expect(formatters('en', 'UTC').fromNow(now + 3 * day, now)).toBe('in 3 days');
+    expect(formatters('en', 'UTC').fromNow(now + day, now)).toBe('tomorrow');
+    expect(formatters('es', 'UTC').fromNow(now - 2 * 60 * 60 * 1000, now)).toBe('hace 2 horas');
+  });
 });

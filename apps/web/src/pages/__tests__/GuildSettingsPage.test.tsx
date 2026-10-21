@@ -14,6 +14,13 @@ const roles = {
   ],
 };
 
+const channels = {
+  channels: [
+    { id: '500000000000000001', name: 'raid-signups', category: 'Raiding' },
+    { id: '500000000000000002', name: 'announcements', category: null },
+  ],
+};
+
 /** A fake API that keeps the guild and applies the settings save to it, like the server. */
 function mockSettingsApi(start: GuildResponse = testGuild) {
   let guild = start;
@@ -24,15 +31,20 @@ function mockSettingsApi(start: GuildResponse = testGuild) {
       const name = form.get('name');
       const roleId = form.get('officerRoleId');
       const role = roles.roles.find((option) => option.id === roleId);
+      const channel = channels.channels.find((option) => option.id === form.get('eventsChannelId'));
+      const discordLocale = form.get('discordLocale');
       guild = {
         ...guild,
         ...(typeof name === 'string' && { name }),
         ...(form.get('image') && { imageUrl: `/api/guilds/${ashenId}/image?v=2` }),
         ...(role && { officerRole: { id: role.id, name: role.name } }),
+        ...(channel && { eventsChannel: { id: channel.id, name: channel.name } }),
+        ...((discordLocale === 'en' || discordLocale === 'es') && { discordLocale }),
       };
       return Response.json(guild);
     },
     '/api/discord/servers/300000000000000001/roles': () => Response.json(roles),
+    '/api/discord/servers/300000000000000001/channels': () => Response.json(channels),
     [`/api/guilds/${ashenId}/members`]: () => Response.json([]),
   });
 }
@@ -164,6 +176,36 @@ describe('GuildSettingsPage', () => {
     ]);
   });
 
+  it('changes the events channel and the Discord language', async () => {
+    const fetchMock = mockSettingsApi();
+    const user = userEvent.setup();
+    renderRoute(settingsPath);
+
+    const channel = await screen.findByRole('combobox', { name: 'Events channel' });
+    await waitFor(() => expect(channel).toBeEnabled());
+    expect(channel).toHaveValue('#raid-signups · Raiding');
+    await user.click(channel);
+    await user.click(await screen.findByRole('option', { name: '#announcements' }));
+    await user.click(screen.getByRole('button', { name: 'Español' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await screen.findByText('All changes saved');
+    expect([...savesSent(fetchMock)[0]!.entries()]).toEqual([
+      ['eventsChannelId', '500000000000000002'],
+      ['discordLocale', 'es'],
+    ]);
+    expect(screen.getByRole('combobox', { name: 'Events channel' })).toHaveValue('#announcements');
+  });
+
+  it('says events are not posted until a channel is chosen', async () => {
+    mockSettingsApi({ ...testGuild, eventsChannel: null });
+    renderRoute(settingsPath);
+
+    expect(
+      await screen.findByText("Events aren't posted in Discord until you choose a channel."),
+    ).toBeInTheDocument();
+  });
+
   it('asks before leaving with unsaved changes', async () => {
     mockSettingsApi();
     const user = userEvent.setup();
@@ -199,5 +241,7 @@ describe('GuildSettingsPage', () => {
     expect(screen.getByRole('combobox', { name: 'Discord role that grants Officer' })).toHaveValue(
       'Officers',
     );
+    expect(screen.getByRole('combobox', { name: 'Events channel' })).toHaveValue('#raid-signups');
+    expect(screen.getByRole('button', { name: 'English' })).toBeDisabled();
   });
 });

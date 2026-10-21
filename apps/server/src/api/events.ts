@@ -2,24 +2,34 @@ import {
   eventListQuerySchema,
   uuidSchema,
   type CreateEventInput,
+  type EventDiscordPostResponse,
   type EventResponse,
   type UpdateEventInput,
 } from '@wgm/shared';
 import express from 'express';
 import { Op, type WhereOptions } from 'sequelize';
 
-import { Event, EventSeries, User } from '../db/models/index.js';
+import { Event, EventSeries, User, type Guild } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
+import { eventPostEmbed } from '../domain/event-post.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
+import { enqueueEventPosts } from '../jobs/event-posts.js';
+import type { JobEnqueuer } from '../jobs/index.js';
+import type { DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
+import { eventsChannelName } from './guilds.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
 
 /** How many past events the list shows. */
 const PAST_EVENTS_LIMIT = 100;
 
-/** The guild's events. Times are UTC; the web app shows them in each user's time zone. */
-export function eventsRouter() {
+/**
+ * The guild's events. Times are UTC; the web app shows them in each user's time zone. Changes
+ * ask the worker (`jobs`) to update the event's Discord post; without it (some tests), the
+ * post doesn't change.
+ */
+export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | null) {
   const router = express.Router();
   const base = '/guilds/:guildId/events';
 
@@ -45,14 +55,15 @@ export function eventsRouter() {
       ],
       ...('scope' in query && query.scope === 'past' && { limit: PAST_EVENTS_LIMIT }),
     });
-    res.json(events.map(toEventResponse));
+    res.json(events.map((event) => toEventResponse(event, guild)));
   });
 
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
     const { guild } = currentGuild(res);
     // createEvent checks the event (and answers with its issues).
     const event = await createEvent(guild, req.body as CreateEventInput, currentUser(res));
-    res.status(201).json(await eventResponse(event.id));
+    if (jobs) await enqueueEventPosts(jobs, [event.id]);
+    res.status(201).json(await eventResponse(event.id, guild));
   });
 
   router.get(
@@ -66,7 +77,31 @@ export function eventsRouter() {
         include: people,
       });
       if (!event) throw new DomainError({ code: 'NOT_FOUND' });
-      res.json(toEventResponse(event));
+      res.json(toEventResponse(event, guild));
+    },
+  );
+
+  // The message the bot posts for the event, for the event page's preview.
+  router.get(
+    `${base}/:eventId/discord-post`,
+    requireUser,
+    requireGuildPermission('manageEvents'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const event = await Event.findOne({
+        where: { id: eventId(req.params.eventId), guildId: guild.id },
+      });
+      if (!event) throw new DomainError({ code: 'NOT_FOUND' });
+      res.json({
+        channel: guild.eventsChannelId
+          ? {
+              id: guild.eventsChannelId,
+              name: await eventsChannelName(guild, discord, req.log),
+            }
+          : null,
+        locale: guild.discordLocale,
+        embed: eventPostEmbed(event, guild.discordLocale),
+      } satisfies EventDiscordPostResponse);
     },
   );
 
@@ -81,7 +116,8 @@ export function eventsRouter() {
         eventId(req.params.eventId),
         req.body as UpdateEventInput,
       );
-      res.json(await eventResponse(event.id));
+      if (jobs) await enqueueEventPosts(jobs, [event.id]);
+      res.json(await eventResponse(event.id, guild));
     },
   );
 
@@ -92,7 +128,8 @@ export function eventsRouter() {
     async (req, res) => {
       const { guild } = currentGuild(res);
       const event = await cancelEvent(guild, eventId(req.params.eventId), currentUser(res));
-      res.json(await eventResponse(event.id));
+      if (jobs) await enqueueEventPosts(jobs, [event.id]);
+      res.json(await eventResponse(event.id, guild));
     },
   );
 
@@ -110,11 +147,11 @@ export function eventId(id: unknown): string {
   return id as string;
 }
 
-async function eventResponse(id: string): Promise<EventResponse> {
-  return toEventResponse((await Event.findByPk(id, { include: people }))!);
+async function eventResponse(id: string, guild: Guild): Promise<EventResponse> {
+  return toEventResponse((await Event.findByPk(id, { include: people }))!, guild);
 }
 
-function toEventResponse(event: Event): EventResponse {
+function toEventResponse(event: Event, guild: Guild): EventResponse {
   return {
     id: event.id,
     type: event.type,
@@ -128,5 +165,11 @@ function toEventResponse(event: Event): EventResponse {
       ? { at: event.cancelledAt.toISOString(), by: event.cancelledBy?.name ?? null }
       : null,
     series: event.series ? { id: event.series.id, name: event.series.name } : null,
+    discordPost: {
+      url: event.discordMessageId
+        ? `https://discord.com/channels/${guild.discordServerId}/${event.discordChannelId}/${event.discordMessageId}`
+        : null,
+      error: event.discordPostError,
+    },
   };
 }

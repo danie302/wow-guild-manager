@@ -27,6 +27,8 @@ export const testGuild: GuildResponse = {
   access: 'guild_master',
   discordServer: { id: '300000000000000001', name: 'Ashen Vanguard Discord', iconUrl: null },
   officerRole: { id: '400000000000000001', name: 'Officers' },
+  eventsChannel: { id: '500000000000000001', name: 'raid-signups' },
+  discordLocale: 'en',
 };
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>;

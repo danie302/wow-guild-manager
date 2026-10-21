@@ -14,6 +14,10 @@ export const PERMISSIONS = {
   connectDiscordServer: ['guild_master'],
   /** Choose the Discord role that grants Officer. */
   chooseOfficerRole: ['guild_master'],
+  /** Choose the Discord channel where the bot posts events. */
+  chooseEventsChannel: ['guild_master'],
+  /** Choose the language of the guild's public Discord messages. */
+  chooseDiscordLanguage: ['guild_master'],
   /** See the roster and each member's page. */
   viewRoster: ['guild_master', 'officer'],
   /** Add members and characters by hand, and approve requests to join (/register). */

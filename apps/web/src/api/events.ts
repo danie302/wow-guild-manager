@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateEventInput,
+  EventDiscordPostResponse,
   EventResponse,
   SeriesResponse,
   UpdateEventInput,
@@ -32,6 +33,15 @@ export function useEvent(guildId: string, eventId: string) {
   });
 }
 
+/** The message the bot posts for the event, built by the same code as the real post. */
+export function useEventDiscordPost(guildId: string, eventId: string) {
+  return useQuery({
+    queryKey: [...eventKey(guildId, eventId), 'discord-post'],
+    queryFn: () =>
+      apiRequest<EventDiscordPostResponse>(`/guilds/${guildId}/events/${eventId}/discord-post`),
+  });
+}
+
 /** Every change answers with the event, which replaces the cached one; the lists reload. */
 function useEventMutation<Input>(
   guildId: string,
@@ -43,6 +53,9 @@ function useEventMutation<Input>(
     onSuccess: async (event) => {
       queryClient.setQueryData(eventKey(guildId, event.id), event);
       await queryClient.invalidateQueries({ queryKey: [...eventsKey(guildId), 'list'] });
+      await queryClient.invalidateQueries({
+        queryKey: [...eventKey(guildId, event.id), 'discord-post'],
+      });
     },
   });
 }

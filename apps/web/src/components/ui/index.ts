@@ -32,6 +32,8 @@ export type { DetailHeaderProps } from './DetailHeader';
 export { DetailList } from './DetailList';
 export type { DetailListItemProps } from './DetailList';
 export { Dialog } from './Dialog';
+export { DiscordMessage } from './DiscordMessage';
+export type { DiscordMessageProps } from './DiscordMessage';
 export type { DialogProps } from './Dialog';
 export { FilterChips } from './FilterChips';
 export type { FilterChipOption, FilterChipsProps } from './FilterChips';

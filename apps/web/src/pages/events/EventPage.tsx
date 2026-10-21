@@ -8,13 +8,14 @@ import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import { Button, ConfirmDialog, DetailHeader, Loading, Notice, Page } from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
+import { DiscordPostTab } from './DiscordPostTab';
 import { everyWeekText, whenText } from './eventText';
 import { SignUpSections } from './SignUpSections';
 
 /**
- * One event: when it is, its description, how full each role is, and editing or cancelling
- * it while it's upcoming. Sign-ups fill the roles from story 023; the gear check, attendance,
- * and Discord post tabs come with their stories.
+ * One event: when it is, its description, how full each role is, its Discord post, and
+ * editing or cancelling it while it's upcoming. Sign-ups fill the roles from story 023; the
+ * gear check and attendance tabs come with their stories.
  */
 export function EventPage() {
   const { t } = useTranslation();
@@ -90,7 +91,16 @@ export function EventPage() {
         </Notice>
       )}
 
-      <SignUpSections slots={data.slots} />
+      <SignUpSections
+        slots={data.slots}
+        tabs={[
+          {
+            value: 'post',
+            label: t('eventPage.post.tab'),
+            content: <DiscordPostTab guildId={guildId} event={data} />,
+          },
+        ]}
+      />
 
       <ConfirmDialog
         open={confirming}

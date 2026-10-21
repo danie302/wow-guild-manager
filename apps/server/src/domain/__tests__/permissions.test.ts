@@ -8,6 +8,8 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   editGuildProfile: { guildMaster: true, officer: false },
   connectDiscordServer: { guildMaster: true, officer: false },
   chooseOfficerRole: { guildMaster: true, officer: false },
+  chooseEventsChannel: { guildMaster: true, officer: false },
+  chooseDiscordLanguage: { guildMaster: true, officer: false },
   viewRoster: { guildMaster: true, officer: true },
   addCharacters: { guildMaster: true, officer: true },
   changeMemberRank: { guildMaster: true, officer: true },

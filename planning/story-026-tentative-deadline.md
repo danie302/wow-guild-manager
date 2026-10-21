@@ -32,6 +32,7 @@ Remind Tentative participants to confirm, and replace them with waitlisted chara
 ## Notes
 
 - Decided: the reminder time is configurable per guild, and only the deadline can be overridden per event.
+- Story 022's Discord post shows the deadline from `tentativeDeadline()` (`apps/server/src/domain/events.ts`, 24 hours before the event). Make it use the guild's and event's deadline, and enqueue `event-post` for the affected events when the deadline settings change.
 - Design reference: the Sign-ups section in Guild settings and the Tentative deadline field in the event form, in `docs/design/`.
 
 ## Technical debt

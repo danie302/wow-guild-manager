@@ -58,10 +58,10 @@ export function createApp({
     api.use(authRouter(auth.oauth));
     api.use(meRouter());
     api.use(discordRouter(discord));
-    api.use(guildsRouter(discord, storage));
+    api.use(guildsRouter(discord, storage, jobs ?? null));
     api.use(membersRouter(discord));
-    api.use(eventsRouter());
-    api.use(seriesRouter());
+    api.use(eventsRouter(jobs ?? null, discord));
+    api.use(seriesRouter(jobs ?? null));
     if (jobs) api.use(registrationsRouter(jobs));
   }
   app.use('/api', api);

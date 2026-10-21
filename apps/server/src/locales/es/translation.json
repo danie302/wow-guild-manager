@@ -54,5 +54,13 @@
       "approved": "Tu solicitud para entrar en {{guild}} fue aprobada. Ya estás en la plantilla.",
       "rejected": "Un Officer de {{guild}} rechazó tu solicitud para entrar."
     }
+  },
+  "eventPost": {
+    "date": "Fecha",
+    "waitlist": "Lista de espera",
+    "waitlistEmpty": "Vacía",
+    "signUps": "Inscripciones",
+    "tentativeCloses": "Las inscripciones provisionales cierran el {{time}}.",
+    "cancelled": "Este evento se ha cancelado."
   }
 }

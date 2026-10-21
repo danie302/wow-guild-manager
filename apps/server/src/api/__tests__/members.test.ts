@@ -9,6 +9,7 @@ import {
   MANAGE_GUILD,
   role,
   server,
+  BOT_USER_ID,
 } from '../../../test/fake-discord-directory.js';
 import { User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
@@ -50,7 +51,11 @@ async function setup() {
     .addMember(serverId, officer, [officers], 'Saurfang')
     .addMember(serverId, thrall, [], 'Thrall')
     .addMember(serverId, jaina, [], 'Jaina');
-  const app = testApp({ directory, botInviteUrl: 'https://discord.test/invite' });
+  const app = testApp({
+    directory,
+    botInviteUrl: 'https://discord.test/invite',
+    botUserId: BOT_USER_ID,
+  });
   const gmAgent = await loginAs(app, gm);
   const created = await gmAgent.post('/api/guilds').send({
     name: 'Horde',

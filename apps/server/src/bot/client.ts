@@ -7,6 +7,7 @@ import {
   type Interaction,
 } from 'discord.js';
 
+import { Guild as GuildModel } from '../db/models/index.js';
 import { translator } from '../i18n/index.js';
 import type { Logger } from '../logger.js';
 import type { SlashCommand } from './commands/index.js';
@@ -85,11 +86,22 @@ export async function handleInteraction(
     return;
   }
 
-  // No guild language until story 022, so unsupported Discord languages get English.
-  const locale = replyLocale({ interactionLocale: interaction.locale });
-  const t = translator(locale);
-
+  // Until the guild's language is read, errors use the member's language or English.
+  let t = translator(replyLocale({ interactionLocale: interaction.locale }));
   try {
+    // Members whose Discord language we don't support get the guild's language.
+    const guild = interaction.guildId
+      ? await GuildModel.findOne({
+          attributes: ['discordLocale'],
+          where: { discordServerId: interaction.guildId },
+        })
+      : null;
+    const locale = replyLocale({
+      interactionLocale: interaction.locale,
+      guildLocale: guild?.discordLocale,
+    });
+    t = translator(locale);
+
     if (interaction.isButton()) {
       await command.button?.(interaction, { locale, t });
     } else {

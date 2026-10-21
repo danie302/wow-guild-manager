@@ -25,7 +25,10 @@ export function registrationHandlers({ logger, messenger }: RegistrationJobDepen
       }
 
       const t = translator(
-        directMessageLocale({ lastUsedLocale: registration.locale ?? undefined }),
+        directMessageLocale({
+          lastUsedLocale: registration.locale ?? undefined,
+          guildLocale: registration.guild!.discordLocale,
+        }),
       );
       const guild = registration.guild!.name;
       const content =

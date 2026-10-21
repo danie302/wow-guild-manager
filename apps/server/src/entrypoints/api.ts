@@ -50,6 +50,8 @@ const discord =
           redis,
         }),
         botInviteUrl: botInviteUrl(config.DISCORD_CLIENT_ID),
+        // A bot's user ID is its application's client ID.
+        botUserId: config.DISCORD_CLIENT_ID,
       }
     : null;
 if (!discord) {

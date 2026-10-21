@@ -1,11 +1,16 @@
 import {
   discordIdSchema,
+  type DiscordChannelsResponse,
   type DiscordRolesResponse,
   type DiscordServersResponse,
 } from '@wgm/shared';
 import express, { type RequestHandler } from 'express';
 
-import { discordOfficerRoleOptions, discordServerOptions } from '../domain/guilds.js';
+import {
+  discordEventChannelOptions,
+  discordOfficerRoleOptions,
+  discordServerOptions,
+} from '../domain/guilds.js';
 import { discordRoleColor, type DiscordDirectory } from '../integrations/discord/directory.js';
 import { sendError } from './errors.js';
 import { currentUser, requireUser } from './me.js';
@@ -14,6 +19,8 @@ import { currentUser, requireUser } from './me.js';
 export interface DiscordAccess {
   directory: DiscordDirectory;
   botInviteUrl: string;
+  /** The bot's Discord user ID (its application's client ID), to check its permissions. */
+  botUserId: string;
 }
 
 /** Answers 503 when the API can't read Discord. */
@@ -27,7 +34,7 @@ export function requireDiscord(discord: DiscordAccess | null): RequestHandler {
   };
 }
 
-/** Discord servers and roles for the guild setup and settings. */
+/** Discord servers, roles, and channels for the guild setup and settings. */
 export function discordRouter(discord: DiscordAccess | null) {
   const router = express.Router();
   router.use('/discord', requireUser, requireDiscord(discord));
@@ -52,6 +59,27 @@ export function discordRouter(discord: DiscordAccess | null) {
     res.json({
       roles: roles.map((role) => ({ id: role.id, name: role.name, color: discordRoleColor(role) })),
     } satisfies DiscordRolesResponse);
+  });
+
+  router.get('/discord/servers/:serverId/channels', async (req, res) => {
+    const serverId = discordIdSchema.safeParse(req.params.serverId);
+    if (!serverId.success) {
+      sendError(res, 404, { code: 'NOT_FOUND' });
+      return;
+    }
+    const options = await discordEventChannelOptions(
+      currentUser(res),
+      serverId.data,
+      discord!.directory,
+      discord!.botUserId,
+    );
+    res.json({
+      channels: options.map(({ channel, category }) => ({
+        id: channel.id,
+        name: channel.name,
+        category: category?.name ?? null,
+      })),
+    } satisfies DiscordChannelsResponse);
   });
 
   return router;

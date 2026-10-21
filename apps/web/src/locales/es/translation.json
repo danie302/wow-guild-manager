@@ -85,7 +85,8 @@
     "INVALID_RAID_SIZE": "Una banda tiene 10, 20 o 40 jugadores.",
     "DUNGEON_SLOTS_FIXED": "Una mazmorra siempre tiene el grupo estándar de 5 jugadores, y sus slots no se pueden cambiar.",
     "SLOTS_DONT_ADD_UP": "Los slots de los tres roles de combate deben sumar el tamaño.",
-    "EVENT_STARTS_IN_PAST": "Elige una fecha y hora en el futuro."
+    "EVENT_STARTS_IN_PAST": "Elige una fecha y hora en el futuro.",
+    "EVENTS_CHANNEL_NOT_USABLE": "El bot no puede ver, escribir o publicar embeds en este canal. Elige otro o corrige sus permisos en Discord."
   },
   "auth": {
     "checking": "Comprobando tu sesión",
@@ -189,7 +190,7 @@
     "chooseImage": "Subir imagen",
     "removeImage": "Quitar imagen",
     "discord": "Discord",
-    "discordHelp": "El servidor donde publica el bot y el rol que convierte a los miembros en Officers.",
+    "discordHelp": "El servidor donde publica el bot, el rol que convierte a los miembros en Officers, y dónde y en qué idioma se publican los eventos.",
     "server": "Servidor de Discord",
     "changeServer": "Cambiar de servidor",
     "serverUnavailable": "No se puede leer de Discord en este momento",
@@ -206,7 +207,14 @@
     "leaveBody": "Se perderán tus cambios en los ajustes de la hermandad.",
     "leave": "Salir",
     "stay": "Seguir editando",
-    "loading": "Cargando los ajustes de la hermandad"
+    "loading": "Cargando los ajustes de la hermandad",
+    "eventsChannel": "Canal de eventos",
+    "eventsChannelHelp": "Solo aparecen los canales donde el bot puede ver, escribir y publicar embeds. Si lo cambias, los mensajes de los próximos eventos se mueven.",
+    "chooseChannel": "Los eventos no se publican en Discord hasta que elijas un canal.",
+    "noChannel": "Sin canal",
+    "noChannelMatch": "Ningún canal coincide. El bot necesita ver, escribir y publicar embeds en él.",
+    "discordLanguage": "Idioma de los mensajes de Discord",
+    "discordLanguageHelp": "Los mensajes de eventos y los avisos de roles sin cubrir usan este idioma."
   },
   "roster": {
     "title": "Plantilla",
@@ -398,19 +406,35 @@
     "cancel": "Cancelar evento",
     "keep": "Mantener evento",
     "cancelTitle": "¿Cancelar {{name}}?",
-    "cancelBody": "Seguirá en la lista como cancelado, con quién lo canceló y cuándo. Las inscripciones se cierran. No se puede deshacer.",
+    "cancelBody": "Sigue en la lista como cancelado, con quién lo canceló y cuándo. Las inscripciones se cierran y el mensaje de Discord se marca como cancelado. No se puede deshacer.",
     "started": "Este evento ya empezó, así que no se puede editar ni cancelar.",
     "cancelFailed": "No se pudo cancelar el evento.",
     "slots": "Slots",
     "series": "Serie semanal: {{name}}",
-    "cancelledText": "Cancelado el {{date}} por {{name}}. Las inscripciones están cerradas.",
+    "cancelledText": "Cancelado el {{date}} por {{name}}. Las inscripciones están cerradas y el mensaje de Discord muestra el evento como cancelado.",
     "missing": "Faltan {{count}}",
     "full": "Completo",
     "filled": "{{filled}}/{{slots}} cubiertos",
     "openSlot": "Plaza libre",
     "sections": "Secciones del evento",
     "signUps": "Inscripciones",
-    "noWaitlist": "Nadie en la lista de espera"
+    "noWaitlist": "Nadie en la lista de espera",
+    "post": {
+      "tab": "Mensaje de Discord",
+      "loading": "Cargando el mensaje de Discord",
+      "loadFailed": "No se pudo cargar el mensaje de Discord.",
+      "note": "Vista previa del mensaje que el bot publica en {{channel}}, en {{language}}. Se actualiza con cada inscripción.",
+      "noChannel": "Todavía no hay canal de eventos",
+      "noChannelHelp": "El bot publica los eventos cuando el Guild Master elige un canal de eventos en los ajustes de la hermandad.",
+      "chooseChannel": "Elegir el canal",
+      "failed": "El bot no pudo publicar este evento",
+      "errors": {
+        "missing_permissions": "El bot necesita ver, escribir y publicar embeds en {{channel}}. Corrige sus permisos en Discord y lo vuelve a intentar enseguida.",
+        "channel_not_found": "{{channel}} ya no existe. Elige otro canal de eventos en los ajustes de la hermandad."
+      },
+      "open": "Abrir en Discord",
+      "app": "APP"
+    }
   },
   "series": {
     "title": "Eventos recurrentes",
@@ -435,5 +459,9 @@
   },
   "time": {
     "ago": "hace {{value}}"
+  },
+  "languages": {
+    "en": "inglés",
+    "es": "español"
   }
 }

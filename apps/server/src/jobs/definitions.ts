@@ -12,6 +12,14 @@ export interface JobPayloads {
   'extend-series': Record<string, never>;
   /** Tells someone by direct message that their request to join was approved or rejected. */
   'registration-reviewed': { registrationId: string };
+  /**
+   * Brings an event's Discord post up to date: posts it, edits it, or moves it to the guild's
+   * events channel (jobs/handlers/event-posts.ts). Enqueued after every change to the event
+   * or to the guild's Discord settings; runs for one event never overlap.
+   */
+  'event-post': { eventId: string };
+  /** Deletes the post of an event that no longer exists (a stopped series' future events). */
+  'event-post-delete': { channelId: string; messageId: string };
 }
 
 export type JobName = keyof JobPayloads;

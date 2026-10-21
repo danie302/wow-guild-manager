@@ -1,5 +1,5 @@
 import { COMBAT_ROLE_PLURAL_NAMES, COMBAT_ROLES, type CombatRole } from '@wgm/shared';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SlotGroup, StatStrip, Tabs } from '../../components/ui';
@@ -7,12 +7,22 @@ import { roleColor } from './eventText';
 
 type Slots = Record<CombatRole, number>;
 
+export interface SignUpSectionsProps {
+  slots: Slots;
+  /** Goes under the tabs, on the Sign-ups tab. */
+  notice?: ReactNode;
+  /** More tabs after Sign-ups, e.g. the event's Discord post. */
+  tabs?: { value: string; label: string; content: ReactNode }[];
+}
+
 /**
  * How full each role is, and the Sign-ups tab with each role's slots. Nobody can sign up yet
- * (story 023), so every slot is open; `notice` goes under the tabs.
+ * (story 023), so every slot is open.
  */
-export function SignUpSections({ slots, notice }: { slots: Slots; notice?: ReactNode }) {
+export function SignUpSections({ slots, notice, tabs = [] }: SignUpSectionsProps) {
   const { t } = useTranslation();
+  const [tab, setTab] = useState('signUps');
+  const other = tabs.find((candidate) => candidate.value === tab);
   const filled: Slots = { tank: 0, healer: 0, dps: 0 };
   const roles = COMBAT_ROLES.filter((role) => slots[role] > 0);
   const missing = (role: CombatRole) => slots[role] - filled[role];
@@ -35,10 +45,33 @@ export function SignUpSections({ slots, notice }: { slots: Slots; notice?: React
       />
       <Tabs
         label={t('eventPage.sections')}
-        value="signUps"
-        onChange={() => undefined}
-        tabs={[{ value: 'signUps', label: t('eventPage.signUps') }]}
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { value: 'signUps', label: t('eventPage.signUps') },
+          ...tabs.map(({ value, label }) => ({ value, label })),
+        ]}
       />
+      {other ? other.content : <SignUpTab {...{ slots, filled, roles, notice }} />}
+    </>
+  );
+}
+
+function SignUpTab({
+  slots,
+  filled,
+  roles,
+  notice,
+}: {
+  slots: Slots;
+  filled: Slots;
+  roles: CombatRole[];
+  notice?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const missing = (role: CombatRole) => slots[role] - filled[role];
+  return (
+    <>
       {notice}
       {roles.map((role) => (
         <SlotGroup

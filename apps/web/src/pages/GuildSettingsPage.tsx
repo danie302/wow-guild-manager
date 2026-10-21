@@ -3,8 +3,10 @@ import {
   GUILD_IMAGE_TYPES,
   GUILD_NAME_MAX_LENGTH,
   guildNameSchema,
+  SUPPORTED_LOCALES,
   toValidationIssues,
   type GuildResponse,
+  type Locale,
 } from '@wgm/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +14,7 @@ import { useBlocker } from 'react-router';
 
 import { ApiRequestError } from '../api/client';
 import {
+  useDiscordChannels,
   useDiscordRoles,
   useDiscordServers,
   useGuild,
@@ -21,6 +24,7 @@ import {
 import { useGuildIdParam } from '../app/guildSelection';
 import {
   Button,
+  ChoiceGroup,
   ComboBox,
   ConfirmDialog,
   ImagePicker,
@@ -31,6 +35,7 @@ import {
   SaveBar,
   TextField,
 } from '../components/ui';
+import { LOCALE_NAMES } from '../i18n';
 import { apiErrorMessage, validationIssueMessage } from '../i18n/api-errors';
 
 /** The form's values. `image` is kept, replaced by a chosen file, or removed. */
@@ -39,6 +44,9 @@ interface Form {
   image: { kind: 'keep' } | { kind: 'new'; file: File; previewUrl: string } | { kind: 'remove' };
   serverId: string;
   roleId: string | null;
+  /** Null until one is chosen; a new server starts without one. */
+  channelId: string | null;
+  discordLocale: Locale;
 }
 
 function formFrom(guild: GuildResponse): Form {
@@ -47,6 +55,8 @@ function formFrom(guild: GuildResponse): Form {
     image: { kind: 'keep' },
     serverId: guild.discordServer.id,
     roleId: guild.officerRole.id,
+    channelId: guild.eventsChannel?.id ?? null,
+    discordLocale: guild.discordLocale,
   };
 }
 
@@ -101,6 +111,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
 
   const servers = useDiscordServers(isGuildMaster && changingServer);
   const roles = useDiscordRoles(isGuildMaster ? form.serverId : null);
+  const channels = useDiscordChannels(isGuildMaster ? form.serverId : null);
 
   const nameResult = guildNameSchema.safeParse(form.name);
   const nameIssue = nameResult.success
@@ -108,6 +119,8 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
     : toValidationIssues(nameResult.error, form.name)[0];
   const serverChanged = form.serverId !== guild.discordServer.id;
   const roleChanged = form.roleId !== guild.officerRole.id;
+  const channelChanged = form.channelId !== (guild.eventsChannel?.id ?? null);
+  const localeChanged = form.discordLocale !== guild.discordLocale;
 
   const changes: GuildSettingsChanges = {};
   if (nameResult.success && nameResult.data !== guild.name) changes.name = nameResult.data;
@@ -116,9 +129,17 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   if ((serverChanged || roleChanged) && form.roleId) {
     changes.discord = { discordServerId: form.serverId, officerRoleId: form.roleId };
   }
+  // A new server without a channel leaves the guild without one.
+  if (channelChanged && form.channelId) changes.eventsChannelId = form.channelId;
+  if (localeChanged) changes.discordLocale = form.discordLocale;
 
   const dirty =
-    form.name !== guild.name || form.image.kind !== 'keep' || serverChanged || roleChanged;
+    form.name !== guild.name ||
+    form.image.kind !== 'keep' ||
+    serverChanged ||
+    roleChanged ||
+    channelChanged ||
+    localeChanged;
   const valid = nameResult.success && form.roleId !== null;
 
   const blocker = useBlocker(dirty && !save.isPending);
@@ -221,12 +242,14 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
               <RadioList
                 label={t('guildSettings.server')}
                 value={form.serverId}
-                onChange={(serverId) =>
+                onChange={(serverId) => {
+                  const saved = serverId === guild.discordServer.id;
                   update({
                     serverId,
-                    roleId: serverId === guild.discordServer.id ? guild.officerRole.id : null,
-                  })
-                }
+                    roleId: saved ? guild.officerRole.id : null,
+                    channelId: saved ? (guild.eventsChannel?.id ?? null) : null,
+                  });
+                }}
               >
                 {serverList.map((server) => (
                   <RadioList.Option
@@ -263,6 +286,54 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
             disabled={!isGuildMaster || roles.isPending}
           />
         )}
+
+        {isGuildMaster && channels.isError ? (
+          <DiscordError error={channels.error} />
+        ) : (
+          <ComboBox
+            label={t('guildSettings.eventsChannel')}
+            value={form.channelId ?? ''}
+            options={
+              isGuildMaster
+                ? (channels.data?.channels ?? []).map((channel) => ({
+                    value: channel.id,
+                    label: `#${channel.name}`,
+                    ...(channel.category && { group: channel.category }),
+                  }))
+                : guild.eventsChannel
+                  ? [
+                      {
+                        value: guild.eventsChannel.id,
+                        label: `#${guild.eventsChannel.name ?? guild.eventsChannel.id}`,
+                      },
+                    ]
+                  : []
+            }
+            onChange={(channelId) => update({ channelId })}
+            noOptionsText={t('guildSettings.noChannelMatch')}
+            placeholder={t('guildSettings.noChannel')}
+            hint={
+              form.channelId === null
+                ? t('guildSettings.chooseChannel')
+                : t('guildSettings.eventsChannelHelp')
+            }
+            disabled={!isGuildMaster || channels.isPending}
+          />
+        )}
+
+        <ChoiceGroup
+          label={t('guildSettings.discordLanguage')}
+          value={form.discordLocale}
+          onChange={(discordLocale: Locale) => update({ discordLocale })}
+          disabled={!isGuildMaster}
+        >
+          {SUPPORTED_LOCALES.map((locale) => (
+            <ChoiceGroup.Option key={locale} value={locale}>
+              <span lang={locale}>{LOCALE_NAMES[locale]}</span>
+            </ChoiceGroup.Option>
+          ))}
+        </ChoiceGroup>
+        <Page.Text>{t('guildSettings.discordLanguageHelp')}</Page.Text>
       </Page.Setting>
 
       {save.isError && <SaveError error={save.error} />}

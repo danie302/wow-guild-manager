@@ -317,6 +317,21 @@ The gear checks (and, later, registering characters from Discord) read character
 - `/main` changes the member's main right away. Its option suggests their characters with Discord autocomplete: a command can have an `autocomplete` handler, which reads the database only (no Discord REST).
 - Buttons on a command's replies (from story 038, e.g. `/character remove`'s Confirm and Cancel) are handled by the command's `button` handler. Their custom IDs start with the command name and `:` and carry what the click needs (e.g. `character:remove:<character ID>`), and the handler checks everything again on click: who clicked, and whether the data still allows it.
 
+### Event posts
+
+**Status:** Accepted (story 022)
+
+- The worker publishes, edits, and deletes event posts with Discord's REST API and the bot token, not the bot process. The API and the bot don't need a channel between them, Discord REST calls stay off the request path, and BullMQ retries when Discord fails.
+- An `event-post` job (payload: the event ID) is enqueued after every change: an event is created, edited, or cancelled, a series is created or edited (for each of its future events), or the guild's events channel or Discord language changes (for every upcoming event that isn't cancelled). The handler reads the event again and brings the post up to date, so it doesn't matter how many changes one run covers.
+- Jobs aren't deduplicated by a fixed ID, because BullMQ ignores a job whose ID is already running, and that change would be lost. Instead, runs for the same event take turns on a PostgreSQL advisory lock (`pg_advisory_xact_lock`), so two runs never post the same event twice. It's an advisory lock rather than the event row's lock, so sign-ups (which lock the row) never wait for Discord.
+- The event stores the post's channel and message IDs. If the message no longer exists, the handler posts it again. If the events channel changed, it posts in the new one and deletes the old message. A cancelled event's post stays where it is, marked as cancelled, and a cancelled event that was never posted isn't posted.
+- Stopping a series deletes the posts of the future events it removes, with an `event-post-delete` job that carries the channel and message IDs (the event no longer exists).
+- If Discord refuses for a reason retrying won't fix (missing permissions, the channel is gone), the handler stores the reason on the event (shown in the Discord post tab) and doesn't retry. Other failures are retried by BullMQ. Failed posts are retried only when something may have fixed them, never on a timer: a refusal nobody fixes would be retried forever, and Discord blocks a bot that gets too many refused requests (10,000 in 10 minutes), which would take it down for every guild. The bot retries them as soon as the permissions may be back: on the Gateway events for a channel or role change in the server, or a new role for the bot, it enqueues `event-post` for that guild's upcoming events with an error, and on each connect for every server it's in, in case it missed events while down (`src/bot/post-retries.ts`, no Discord API calls). Editing the event, or changing the guild's events channel or language, retries it too.
+- The worker's hourly job (the same run that extends recurring series) enqueues the upcoming events that were never posted: the new events of series, and any whose job was lost. Two partial indexes (events without a post, and events with a failed post) keep both searches to the few events in that state, however many events there are, and the jobs are added in bulk.
+- The post is a Discord embed built by `eventPostEmbed` (`src/domain/event-post.ts`) in the guild's language, with Discord timestamps so each reader sees their own time. The API's preview endpoint returns the same embed, and the web app renders it, so the preview matches the real post.
+- The API needs the bot's user ID to check its permissions; it's the application's `DISCORD_CLIENT_ID`.
+- The events channel picker lists the server's text channels through `DiscordDirectory` (cached like the roles), showing only the ones where the bot can see, write, and post embeds.
+
 ## IDs: UUID v7
 
 **Status:** Accepted

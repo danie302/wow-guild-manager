@@ -159,6 +159,21 @@ export interface DiscordRolesResponse {
   roles: DiscordRoleOption[];
 }
 
+export interface DiscordChannelOption {
+  id: string;
+  name: string;
+  /** The category it's in, or null when it's in none. */
+  category: string | null;
+}
+
+/**
+ * `GET /api/discord/servers/:serverId/channels`: text channels where the bot can see, write,
+ * and post embeds, in Discord's order.
+ */
+export interface DiscordChannelsResponse {
+  channels: DiscordChannelOption[];
+}
+
 export interface GuildResponse {
   id: string;
   name: string;
@@ -170,6 +185,10 @@ export interface GuildResponse {
   /** `name` is null when Discord can't be read right now; the page still shows. */
   discordServer: { id: string; name: string | null; iconUrl: string | null };
   officerRole: { id: string; name: string | null };
+  /** Where the bot posts events; null until the Guild Master chooses one. */
+  eventsChannel: { id: string; name: string | null } | null;
+  /** The language of the guild's public Discord messages. */
+  discordLocale: Locale;
 }
 
 /** An IANA time zone name, normalized to the runtime's spelling. */
@@ -278,6 +297,40 @@ export interface EventResponse {
   cancelled: { at: string; by: string | null } | null;
   /** The weekly series it belongs to, if any. */
   series: { id: string; name: string } | null;
+  /**
+   * Its Discord post: `url` is null until the bot posts it, and `error` says why the last
+   * attempt failed, if it did.
+   */
+  discordPost: { url: string | null; error: DiscordPostError | null };
+}
+
+/** Why the bot couldn't post or update an event's Discord post. */
+export const DISCORD_POST_ERRORS = ['missing_permissions', 'channel_not_found'] as const;
+
+export type DiscordPostError = (typeof DISCORD_POST_ERRORS)[number];
+
+/**
+ * A Discord embed, as the bot sends it. Text may use Discord markdown (`**bold**`,
+ * `~~struck~~`) and timestamps (`<t:1700000000:F>`), which Discord shows in each reader's
+ * time zone.
+ */
+export interface DiscordEmbed {
+  title: string;
+  description?: string;
+  /** RGB as a number. */
+  color: number;
+  fields: { name: string; value: string; inline?: boolean }[];
+}
+
+/**
+ * `GET /api/guilds/:guildId/events/:eventId/discord-post`: the message the bot posts for the
+ * event, built by the same code the bot uses, so the preview matches it.
+ */
+export interface EventDiscordPostResponse {
+  /** Null until the Guild Master chooses an events channel. */
+  channel: { id: string; name: string | null } | null;
+  locale: Locale;
+  embed: DiscordEmbed;
 }
 
 /**

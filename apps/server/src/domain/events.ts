@@ -14,6 +14,17 @@ import { Event, type Guild, type User } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
 import { DomainError, DomainValidationError } from './errors.js';
 
+/**
+ * How many hours before an event Tentative sign-ups close, until story 026 makes it a guild
+ * setting with a per-event override.
+ */
+export const DEFAULT_TENTATIVE_DEADLINE_HOURS = 24;
+
+/** When Tentative participants must have confirmed. */
+export function tentativeDeadline(event: Pick<Event, 'startsAt'>): Date {
+  return new Date(event.startsAt.getTime() - DEFAULT_TENTATIVE_DEADLINE_HOURS * 60 * 60 * 1000);
+}
+
 /** Creates an event. It must start in the future. */
 export async function createEvent(
   guild: Guild,

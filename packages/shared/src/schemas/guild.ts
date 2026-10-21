@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { FACTIONS } from '../game.js';
+import { SUPPORTED_LOCALES } from '../locales.js';
 import { hasOffensiveWords } from '../offensive-words.js';
 
 export const GUILD_NAME_MAX_LENGTH = 50;
@@ -10,6 +11,8 @@ export const GUILD_ERROR_CODES = {
   nameNotAllowed: 'NAME_NOT_ALLOWED',
   discordServerNotManageable: 'DISCORD_SERVER_NOT_MANAGEABLE',
   officerRoleNotFound: 'OFFICER_ROLE_NOT_FOUND',
+  /** The bot can't see, write, or post embeds in the channel, or it isn't a text channel. */
+  eventsChannelNotUsable: 'EVENTS_CHANNEL_NOT_USABLE',
 } as const;
 
 export const guildNameSchema = z
@@ -49,6 +52,10 @@ export const updateGuildSchema = z
     name: guildNameSchema,
     discordServerId: discordIdSchema,
     officerRoleId: discordIdSchema,
+    /** The channel where the bot posts events. A new server needs its own channel. */
+    eventsChannelId: discordIdSchema,
+    /** The language of the guild's public Discord messages. */
+    discordLocale: z.enum(SUPPORTED_LOCALES),
     /** "true" removes the guild image. */
     removeImage: z.literal('true'),
   })

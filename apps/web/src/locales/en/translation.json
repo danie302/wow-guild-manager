@@ -85,7 +85,8 @@
     "INVALID_RAID_SIZE": "A raid has 10, 20, or 40 players.",
     "DUNGEON_SLOTS_FIXED": "A dungeon always has the standard 5-player group, and its slots can't change.",
     "SLOTS_DONT_ADD_UP": "The slots of the three combat roles must add up to the size.",
-    "EVENT_STARTS_IN_PAST": "Pick a date and time in the future."
+    "EVENT_STARTS_IN_PAST": "Pick a date and time in the future.",
+    "EVENTS_CHANNEL_NOT_USABLE": "The bot can't see, write, or post embeds in this channel. Choose another one or fix its permissions in Discord."
   },
   "auth": {
     "checking": "Checking your session",
@@ -189,7 +190,7 @@
     "chooseImage": "Upload image",
     "removeImage": "Remove image",
     "discord": "Discord",
-    "discordHelp": "The server the bot posts in, and the role that makes members Officers.",
+    "discordHelp": "The server the bot posts in, the role that makes members Officers, and where and in which language events are posted.",
     "server": "Discord server",
     "changeServer": "Change server",
     "serverUnavailable": "Can't be read from Discord right now",
@@ -206,7 +207,14 @@
     "leaveBody": "Your changes to the guild settings will be lost.",
     "leave": "Leave",
     "stay": "Keep editing",
-    "loading": "Loading the guild settings"
+    "loading": "Loading the guild settings",
+    "eventsChannel": "Events channel",
+    "eventsChannelHelp": "Only channels where the bot can see, write, and post embeds are listed. Changing it moves the posts of upcoming events.",
+    "chooseChannel": "Events aren't posted in Discord until you choose a channel.",
+    "noChannel": "No channel",
+    "noChannelMatch": "No channel matches. The bot needs to see, write, and post embeds in it.",
+    "discordLanguage": "Language for Discord messages",
+    "discordLanguageHelp": "Event posts and missing-role alerts use this language."
   },
   "roster": {
     "title": "Roster",
@@ -398,19 +406,35 @@
     "cancel": "Cancel event",
     "keep": "Keep event",
     "cancelTitle": "Cancel {{name}}?",
-    "cancelBody": "It stays listed as cancelled, with who cancelled it and when. Sign-ups close. This can't be undone.",
+    "cancelBody": "It stays listed as cancelled, with who cancelled it and when. Sign-ups close and the Discord post is marked as cancelled. This can't be undone.",
     "started": "This event has started, so it can't be edited or cancelled.",
     "cancelFailed": "Couldn't cancel the event.",
     "slots": "Slots",
     "series": "Weekly series: {{name}}",
-    "cancelledText": "Cancelled on {{date}} by {{name}}. Sign-ups are closed.",
+    "cancelledText": "Cancelled on {{date}} by {{name}}. Sign-ups are closed and the Discord post shows the event as cancelled.",
     "missing": "Missing {{count}}",
     "full": "Full",
     "filled": "{{filled}}/{{slots}} filled",
     "openSlot": "Open slot",
     "sections": "Event sections",
     "signUps": "Sign-ups",
-    "noWaitlist": "No one on the waitlist"
+    "noWaitlist": "No one on the waitlist",
+    "post": {
+      "tab": "Discord post",
+      "loading": "Loading the Discord post",
+      "loadFailed": "Couldn't load the Discord post.",
+      "note": "Preview of the message the bot posts in {{channel}}, in {{language}}. It updates as people sign up.",
+      "noChannel": "No events channel yet",
+      "noChannelHelp": "The bot posts events once the Guild Master chooses an events channel in the guild settings.",
+      "chooseChannel": "Choose the channel",
+      "failed": "The bot couldn't post this event",
+      "errors": {
+        "missing_permissions": "The bot needs to see, write, and post embeds in {{channel}}. Fix its permissions in Discord and it tries again right away.",
+        "channel_not_found": "{{channel}} no longer exists. Choose another events channel in the guild settings."
+      },
+      "open": "Open in Discord",
+      "app": "APP"
+    }
   },
   "series": {
     "title": "Recurring events",
@@ -435,5 +459,9 @@
   },
   "time": {
     "ago": "{{value}} ago"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Spanish"
   }
 }

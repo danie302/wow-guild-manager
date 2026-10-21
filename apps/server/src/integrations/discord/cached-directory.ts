@@ -1,6 +1,7 @@
 import type { RedisClientType } from 'redis';
 
 import type {
+  DiscordChannel,
   DiscordDirectory,
   DiscordMember,
   DiscordMemberProfile,
@@ -67,6 +68,30 @@ export function cachedDiscordDirectory(
           },
       ),
 
+    channels: (serverId) =>
+      cached(
+        channelsKey(serverId),
+        () => directory.channels(serverId),
+        (channels) =>
+          channels.map((channel) => ({
+            ...channel,
+            overwrites: channel.overwrites.map((overwrite) => ({
+              ...overwrite,
+              allow: String(overwrite.allow),
+              deny: String(overwrite.deny),
+            })),
+          })),
+        (json: CachedChannel[]): DiscordChannel[] =>
+          json.map((channel) => ({
+            ...channel,
+            overwrites: channel.overwrites.map((overwrite) => ({
+              ...overwrite,
+              allow: BigInt(overwrite.allow),
+              deny: BigInt(overwrite.deny),
+            })),
+          })),
+      ),
+
     member: (serverId, userId) =>
       cached(
         memberKey(serverId, userId),
@@ -79,12 +104,15 @@ export function cachedDiscordDirectory(
 
 const serverKey = (serverId: string) => `server:${serverId}`;
 const memberKey = (serverId: string, userId: string) => `member:${serverId}:${userId}`;
+const channelsKey = (serverId: string) => `channels:${serverId}`;
 
 export interface DiscordCacheInvalidator {
   /** After a member's roles change, or they join or leave the server. */
   forgetMember(serverId: string, userId: string): Promise<void>;
   /** After the server's roles or owner change, or the bot leaves it. */
   forgetServer(serverId: string): Promise<void>;
+  /** After a channel is created, changed (including its permissions), or deleted. */
+  forgetChannels(serverId: string): Promise<void>;
 }
 
 /** Drops cached entries, so the next read sees the change. The bot calls it on Discord events. */
@@ -102,9 +130,19 @@ export function discordCacheInvalidator({
     forgetServer: async (serverId) => {
       await redis.del(prefix + serverKey(serverId));
     },
+    forgetChannels: async (serverId) => {
+      await redis.del(prefix + channelsKey(serverId));
+    },
   };
 }
 
 type CachedServer = Omit<DiscordServer, 'roles'> & {
   roles: (Omit<DiscordServer['roles'][number], 'permissions'> & { permissions: string })[];
+};
+
+type CachedChannel = Omit<DiscordChannel, 'overwrites'> & {
+  overwrites: (Omit<DiscordChannel['overwrites'][number], 'allow' | 'deny'> & {
+    allow: string;
+    deny: string;
+  })[];
 };

@@ -10,6 +10,11 @@ export class FakeJobQueue implements JobEnqueuer {
     return Promise.resolve();
   }
 
+  enqueueMany<Name extends JobName>(name: Name, data: JobPayloads[Name][]): Promise<void> {
+    for (const payload of data) this.jobs.push({ name, data: payload });
+    return Promise.resolve();
+  }
+
   /** The payloads of the jobs with this name. */
   payloads<Name extends JobName>(name: Name): JobPayloads[Name][] {
     return this.jobs.filter((job) => job.name === name).map((job) => job.data as JobPayloads[Name]);

@@ -3,8 +3,9 @@ import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loginAs, testApp } from '../../../test/api-app.js';
+import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
-import { User } from '../../db/models/index.js';
+import { Event, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
 
 const gm = '200000000000000001';
@@ -27,11 +28,12 @@ beforeEach(async () => {
 });
 
 async function setup() {
-  const app = testApp();
+  const jobs = new FakeJobQueue();
+  const app = testApp(null, undefined, jobs);
   const agent = await loginAs(app, gm);
   const leader = (await User.findOne({ where: { discordId: gm } }))!;
   const guild = await createTestGuild(leader, { serverId: '300000000000000001' });
-  return { agent, base: `/api/guilds/${guild.id}` };
+  return { agent, jobs, base: `/api/guilds/${guild.id}` };
 }
 
 describe('series', () => {
@@ -92,5 +94,40 @@ describe('series', () => {
     expect((await agent.get(`${base}/events?scope=upcoming`)).body).toEqual([]);
     expect((await agent.get(`${base}/series`)).body).toEqual([]);
     expect((await agent.post(`${base}/series/${series.id}/stop`)).status).toBe(409);
+  });
+});
+
+describe('Discord posts of a series', () => {
+  it('asks for the posts of its events when it is created or edited', async () => {
+    const { agent, jobs, base } = await setup();
+
+    const created = await agent
+      .post(`${base}/series`)
+      .send({ type: 'raid', ...details, startsAt: inDays(1) });
+    const ids = ((await agent.get(`${base}/events?scope=upcoming`)).body as EventResponse[]).map(
+      (event) => ({ eventId: event.id }),
+    );
+    expect(jobs.payloads('event-post')).toEqual(ids);
+
+    jobs.jobs.length = 0;
+    await agent
+      .put(`${base}/series/${(created.body as SeriesResponse).id}`)
+      .send({ ...details, name: 'Blackwing Lair', startsAt: inDays(2) });
+    expect(jobs.payloads('event-post')).toEqual(ids);
+  });
+
+  it('deletes the posts of the events it removes when stopped', async () => {
+    const { agent, jobs, base } = await setup();
+    const created = await agent
+      .post(`${base}/series`)
+      .send({ type: 'raid', ...details, startsAt: inDays(1) });
+    const [first] = await Event.findAll({ order: [['startsAt', 'ASC']] });
+    await first!.update({ discordChannelId: '500000000000000001', discordMessageId: '600' });
+
+    await agent.post(`${base}/series/${(created.body as SeriesResponse).id}/stop`);
+
+    expect(jobs.payloads('event-post-delete')).toEqual([
+      { channelId: '500000000000000001', messageId: '600' },
+    ]);
   });
 });

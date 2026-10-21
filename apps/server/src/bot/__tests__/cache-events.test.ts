@@ -11,6 +11,7 @@ function setup() {
   const cache = {
     forgetMember: vi.fn(() => Promise.resolve()),
     forgetServer: vi.fn(() => Promise.resolve()),
+    forgetChannels: vi.fn(() => Promise.resolve()),
   };
   watchDiscordChanges(client as unknown as Client, cache, createTestLogger().logger);
   return { client, cache };
@@ -18,6 +19,11 @@ function setup() {
 
 const member = { id: '200000000000000001', guild: { id: '300000000000000001' } };
 const role = { id: '400000000000000001', guild: { id: '300000000000000001' } };
+const channel = {
+  id: '500000000000000001',
+  guild: { id: '300000000000000001' },
+  isDMBased: () => false,
+};
 
 describe('watchDiscordChanges', () => {
   it.each([
@@ -46,12 +52,29 @@ describe('watchDiscordChanges', () => {
     expect(cache.forgetServer).toHaveBeenCalledWith('300000000000000001');
   });
 
+  it.each([
+    ['a channel is created', Events.ChannelCreate, [channel]],
+    ['a channel changes', Events.ChannelUpdate, [{}, channel]],
+    ['a channel is deleted', Events.ChannelDelete, [channel]],
+    ['the bot leaves', Events.GuildDelete, [{ id: '300000000000000001' }]],
+  ])("forgets the server's cached channels when %s", (_case, event, args) => {
+    const { client, cache } = setup();
+
+    client.emit(event, ...args);
+
+    expect(cache.forgetChannels).toHaveBeenCalledWith('300000000000000001');
+  });
+
   it('logs instead of crashing when Redis is down', async () => {
     const client = new EventEmitter();
     const { logger, lines } = createTestLogger();
     watchDiscordChanges(
       client as unknown as Client,
-      { forgetMember: () => Promise.reject(new Error('down')), forgetServer: vi.fn() },
+      {
+        forgetMember: () => Promise.reject(new Error('down')),
+        forgetServer: vi.fn(),
+        forgetChannels: vi.fn(),
+      },
       logger,
     );
 
