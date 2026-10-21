@@ -8,7 +8,8 @@
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:migration:create": "sequelize-cli migration:generate",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "discord:emojis": "tsx src/scripts/upload-emojis.ts"
   },
   "dependencies": {
     "@wgm/shared": "workspace:*",

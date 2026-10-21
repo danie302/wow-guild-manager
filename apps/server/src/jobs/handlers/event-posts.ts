@@ -1,6 +1,8 @@
-import { Event, Guild } from '../../db/models/index.js';
+import { Event, Guild, User } from '../../db/models/index.js';
 import { transaction } from '../../db/transaction.js';
-import { eventPostEmbed } from '../../domain/event-post.js';
+import { eventPostEmbed, NO_EMOJIS, type PostEmojis } from '../../domain/event-post.js';
+import { eventSignUps } from '../../domain/sign-ups.js';
+import { eventPostButtons } from '../../bot/sign-up.js';
 import {
   ChannelMessageError,
   type ChannelMessage,
@@ -13,16 +15,22 @@ export interface EventPostJobDependencies {
   logger: Logger;
   /** Null when the worker has no bot token: posts aren't sent then. */
   channelMessages: ChannelMessages | null;
+  /** The class and role icons; without it, the fallback ones. */
+  emojis?: () => Promise<PostEmojis>;
 }
 
-export function eventPostHandlers({ logger, channelMessages }: EventPostJobDependencies) {
+export function eventPostHandlers({
+  logger,
+  channelMessages,
+  emojis = () => Promise.resolve(NO_EMOJIS),
+}: EventPostJobDependencies) {
   return {
     'event-post': async ({ eventId }: JobPayloads['event-post']) => {
       if (!channelMessages) {
         logger.warn({ eventId }, 'No bot token, so the event is not posted');
         return;
       }
-      await syncEventPost(eventId, channelMessages, logger);
+      await syncEventPost(eventId, channelMessages, logger, await emojis());
     },
 
     'event-post-delete': async ({ channelId, messageId }: JobPayloads['event-post-delete']) => {
@@ -42,6 +50,7 @@ export async function syncEventPost(
   eventId: string,
   channelMessages: ChannelMessages,
   logger: Logger,
+  emojis: PostEmojis = NO_EMOJIS,
 ): Promise<void> {
   await transaction(async () => {
     // Runs for one event take turns, so two of them never post it twice. An advisory lock
@@ -49,7 +58,12 @@ export async function syncEventPost(
     await Event.sequelize!.query('SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))', {
       replacements: { key: `event-post-${eventId}` },
     });
-    const event = await Event.findByPk(eventId, { include: [{ model: Guild, as: 'guild' }] });
+    const event = await Event.findByPk(eventId, {
+      include: [
+        { model: Guild, as: 'guild' },
+        { model: User, as: 'createdBy', attributes: ['name'] },
+      ],
+    });
     if (!event) return;
     const guild = event.guild!;
     const channelId = event.cancelledAt ? event.discordChannelId : guild.eventsChannelId;
@@ -63,7 +77,17 @@ export async function syncEventPost(
       return;
     }
 
-    const message: ChannelMessage = { embeds: [eventPostEmbed(event, guild.discordLocale)] };
+    const message: ChannelMessage = {
+      embeds: [
+        eventPostEmbed(event, guild.discordLocale, {
+          signUps: await eventSignUps(event.id),
+          leader: event.createdBy?.name ?? null,
+          emojis,
+        }),
+      ],
+      // A cancelled event's post has no buttons.
+      components: event.cancelledAt ? [] : [eventPostButtons(event.id, guild.discordLocale)],
+    };
     try {
       if (event.discordMessageId && (await editOrMissing(channelMessages, event, message))) {
         await event.update({ discordPostError: null });

@@ -96,3 +96,11 @@ export const eventListQuerySchema = z.union([
     .object({ from: z.iso.datetime({ offset: true }), to: z.iso.datetime({ offset: true }) })
     .strict(),
 ]);
+
+/** A sign-up's status. Declined releases the spot. */
+export const SIGN_UP_STATUSES = ['confirmed', 'tentative', 'declined'] as const;
+export type SignUpStatus = (typeof SIGN_UP_STATUSES)[number];
+
+/** Where a sign-up that isn't Declined stands: in one of the role's slots, or on its waitlist. */
+export const SIGN_UP_PLACEMENTS = ['slot', 'waitlist'] as const;
+export type SignUpPlacement = (typeof SIGN_UP_PLACEMENTS)[number];

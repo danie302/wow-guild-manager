@@ -1,5 +1,6 @@
 import { extendAllSeries } from '../../domain/series.js';
 import type { CharacterLookup } from '../../integrations/character-lookup/character-lookup.js';
+import type { PostEmojis } from '../../domain/event-post.js';
 import type { ChannelMessages } from '../../integrations/discord/channel-messages.js';
 import type { DirectMessenger } from '../../integrations/discord/direct-messages.js';
 import type { Logger } from '../../logger.js';
@@ -20,6 +21,8 @@ export interface JobDependencies {
   channelMessages: ChannelMessages | null;
   /** For jobs that add other jobs. */
   jobs: JobEnqueuer;
+  /** The class and role icons of event posts; without it, the fallback ones. */
+  emojis?: () => Promise<PostEmojis>;
 }
 
 export function createJobHandlers(dependencies: JobDependencies): JobHandlers {

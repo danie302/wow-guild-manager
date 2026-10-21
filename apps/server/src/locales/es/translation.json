@@ -61,6 +61,40 @@
     "waitlistEmpty": "Vacía",
     "signUps": "Inscripciones",
     "tentativeCloses": "Las inscripciones provisionales cierran el {{time}}.",
-    "cancelled": "Este evento se ha cancelado."
+    "cancelled": "Este evento se ha cancelado.",
+    "tentative": "provisional",
+    "more_one": "…y {{count}} más",
+    "more_other": "…y {{count}} más",
+    "signUp": "Inscribirse",
+    "declined": "Rechazado",
+    "declinedList": "Rechazados"
+  },
+  "signUp": {
+    "status": {
+      "confirmed": "Confirmado",
+      "tentative": "Provisional",
+      "declined": "Rechazado"
+    },
+    "form": {
+      "title": "Inscripción en **{{event}}** ({{time}}).",
+      "current": "Estás inscrito con {{character}} como {{role}} ({{status}}). Si cambias solo el estado o el personaje, conservas tu lugar.",
+      "character": "Elige un personaje",
+      "role": "Elige un rol",
+      "main": "{{class}} · main"
+    },
+    "inSlot": "Estás dentro: {{character}} como {{role}} en {{event}} ({{status}}).",
+    "onWaitlist": "No quedan plazas de {{role}} en {{event}}, así que {{character}} está en la lista de espera ({{status}}). Obtienes una plaza si se libera.",
+    "withdrawn": "Te has retirado de {{event}}. Tu plaza queda libre para otra persona.",
+    "declined": "Anotado: no vas a {{event}}.",
+    "noGuild": "Este servidor de Discord no está conectado a ninguna hermandad.",
+    "notOnRoster": "No estás en el roster de {{guild}}. Usa /register para pedir unirte.",
+    "leftDiscord": "Según el roster saliste de este servidor de Discord. Pide a un Officer que revise tu membresía.",
+    "eventNotFound": "Este evento ya no existe.",
+    "cancelled": "{{event}} se canceló, así que las inscripciones están cerradas.",
+    "started": "{{event}} ya empezó, así que las inscripciones están cerradas.",
+    "notEligible": "Tu rango no puede inscribirse en {{event}}. Las raids son para Raiders, Officers y el Guild Master.",
+    "noCharacters": "Todavía no tienes personajes en el roster. Pide a un Officer que añada los tuyos.",
+    "notYourCharacter": "Ese personaje ya no está en tu roster. Vuelve a pulsar Inscribirse en el evento.",
+    "roleNotAllowed": "La clase de ese personaje no puede jugar ese rol."
   }
 }

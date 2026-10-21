@@ -11,8 +11,9 @@ import { Op, type WhereOptions } from 'sequelize';
 
 import { Event, EventSeries, User, type Guild } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
-import { eventPostEmbed } from '../domain/event-post.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
+import { eventSignUps } from '../domain/sign-ups.js';
+import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import type { DiscordAccess } from './discord.js';
@@ -90,6 +91,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       const { guild } = currentGuild(res);
       const event = await Event.findOne({
         where: { id: eventId(req.params.eventId), guildId: guild.id },
+        include: people,
       });
       if (!event) throw new DomainError({ code: 'NOT_FOUND' });
       res.json({
@@ -100,7 +102,12 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
             }
           : null,
         locale: guild.discordLocale,
-        embed: eventPostEmbed(event, guild.discordLocale),
+        embed: eventPostEmbed(event, guild.discordLocale, {
+          signUps: await eventSignUps(event.id),
+          leader: event.createdBy?.name ?? null,
+          emojis: discord?.emojis ? await discord.emojis() : NO_EMOJIS,
+        }),
+        buttons: event.cancelledAt ? [] : eventPostButtonLabels(guild.discordLocale),
       } satisfies EventDiscordPostResponse);
     },
   );

@@ -13,6 +13,7 @@ import {
 
 import { EventSeries } from './event-series.js';
 import { Guild } from './guild.js';
+import type { SignUp } from './sign-up.js';
 import { User } from './user.js';
 
 /** A raid, dungeon, or PvP event of a guild (see domain/events.ts). Times are UTC. */
@@ -44,6 +45,7 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare createdBy?: NonAttribute<User | null>;
   declare cancelledBy?: NonAttribute<User | null>;
   declare series?: NonAttribute<EventSeries | null>;
+  declare signUps?: NonAttribute<SignUp[]>;
 
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;

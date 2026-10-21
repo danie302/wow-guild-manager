@@ -8,7 +8,12 @@ import { Event, User, type Guild } from '../../../db/models/index.js';
 import { createSequelize } from '../../../db/sequelize.js';
 import { cancelEvent, createEvent } from '../../../domain/events.js';
 import { createTestLogger } from '../../../test-logger.js';
-import { enqueueMissingEventPosts, enqueueUpcomingEventPosts } from '../../event-posts.js';
+import {
+  enqueueMissingEventPosts,
+  enqueueUpcomingEventPosts,
+  POST_EDIT_WINDOW_MS,
+  scheduleEventPostUpdate,
+} from '../../event-posts.js';
 import { eventPostHandlers } from '../event-posts.js';
 
 const raidsChannel = '500000000000000001';
@@ -102,6 +107,18 @@ describe('event-post', () => {
     expect(onlyPost(raidsChannel).title).toBe('Molten Core');
   });
 
+  it('puts Sign up and Declined buttons under the post', async () => {
+    const event = await raid();
+
+    await sync(event);
+
+    const [message] = [...discord.messages(raidsChannel).values()];
+    expect(message!.components[0]!.components).toMatchObject([
+      { custom_id: `signup:open:${event.id}`, label: 'Sign up' },
+      { custom_id: `signup:decline:${event.id}`, label: 'Declined' },
+    ]);
+  });
+
   it('marks the post of a cancelled event as cancelled', async () => {
     const event = await raid();
     await sync(event);
@@ -113,6 +130,7 @@ describe('event-post', () => {
       title: '~~Molten Core~~',
       description: '**This event has been cancelled.**\n\nFire resistance gear.',
     });
+    expect([...discord.messages(raidsChannel).values()][0]!.components).toEqual([]);
   });
 
   it("doesn't post a cancelled event that was never posted", async () => {
@@ -162,7 +180,7 @@ describe('event-post', () => {
 
     await sync(event);
 
-    expect(onlyPost(raidsChannel).fields[0]?.name).toBe('Fecha');
+    expect(onlyPost(raidsChannel).fields.at(-1)?.name).toBe('Inscripciones');
   });
 
   it('stores why Discord refused, and clears it once the post works', async () => {
@@ -207,7 +225,7 @@ describe('event-post', () => {
 
 describe('event-post-delete', () => {
   it('deletes the post, and ignores one that is already gone', async () => {
-    const messageId = await discord.post(raidsChannel, { embeds: [] });
+    const messageId = await discord.post(raidsChannel, { embeds: [], components: [] });
 
     await handlers['event-post-delete']({ channelId: raidsChannel, messageId });
     await handlers['event-post-delete']({ channelId: raidsChannel, messageId });
@@ -249,5 +267,24 @@ describe('enqueueing posts', () => {
     await enqueueMissingEventPosts(jobs);
 
     expect(jobs.jobs).toEqual([]);
+  });
+});
+
+describe('scheduleEventPostUpdate', () => {
+  it('gathers the sign-ups of one window into one edit, and starts a new one after', async () => {
+    const jobs = new FakeJobQueue();
+    const start = 1_800_000_000_000;
+
+    for (let ms = 0; ms < POST_EDIT_WINDOW_MS; ms += 100) {
+      await scheduleEventPostUpdate(jobs, 'event-1', start + ms);
+    }
+    await scheduleEventPostUpdate(jobs, 'event-1', start + POST_EDIT_WINDOW_MS);
+    await scheduleEventPostUpdate(jobs, 'event-2', start);
+
+    expect(jobs.jobs.map(({ data, runAt }) => [data, runAt!.getTime() - start])).toEqual([
+      [{ eventId: 'event-1' }, POST_EDIT_WINDOW_MS],
+      [{ eventId: 'event-1' }, 2 * POST_EDIT_WINDOW_MS],
+      [{ eventId: 'event-2' }, POST_EDIT_WINDOW_MS],
+    ]);
   });
 });

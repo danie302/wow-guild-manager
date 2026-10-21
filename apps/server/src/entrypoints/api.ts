@@ -8,6 +8,7 @@ import { apiConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { JobQueue, redisConnection } from '../jobs/index.js';
 import { cachedDiscordDirectory } from '../integrations/discord/cached-directory.js';
+import { createRestAppEmojis, postEmojiSource } from '../integrations/discord/app-emojis.js';
 import { botInviteUrl } from '../integrations/discord/invite.js';
 import { createRestDiscordDirectory } from '../integrations/discord/rest-directory.js';
 import { createLogger } from '../logger.js';
@@ -52,6 +53,7 @@ const discord =
         botInviteUrl: botInviteUrl(config.DISCORD_CLIENT_ID),
         // A bot's user ID is its application's client ID.
         botUserId: config.DISCORD_CLIENT_ID,
+        emojis: postEmojiSource(createRestAppEmojis(config.DISCORD_BOT_TOKEN), logger),
       }
     : null;
 if (!discord) {

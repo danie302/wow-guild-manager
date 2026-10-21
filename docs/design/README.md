@@ -52,7 +52,8 @@ The tokens below are implemented in `apps/web/src/components/ui/tokens.ts` (stor
 
 ## Differences from the requirements
 
-None known. Every earlier difference was fixed in the design.
+- **Event detail, Discord post tab (09)** shows Tank, Healer, DPS, Tentative, and Declined buttons on the post. The app has **Sign up** and **Declined** buttons instead: Sign up opens a message only the member sees, with a character select, a combat role select, and Confirmed and Tentative buttons (story 023, decided on 2026-10-21).
+- **The event post's layout (09)** lists each role as numbered lines ("1. Name"). The app lays it out like Raid-Helper instead: a header with the leader, sign-up count, date, time, and time left, then a column per role with class icons, sign-up numbers across the event, and names (story 023, decided on 2026-10-21).
 
 ### Notes for implementation
 - **Buttons and inputs have rounded corners (6px)**, unlike the prototype's square ones (decided on 2026-10-21): buttons, segmented controls, filter chips, the − / + steppers, text fields, dropdowns and their menus, and searchable lists. It's `controlRadius` in `src/components/ui/tokens.ts`. Cards, panels, tags, and notices stay square.

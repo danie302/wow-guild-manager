@@ -11,6 +11,29 @@ export async function enqueueEventPosts(jobs: JobEnqueuer, eventIds: string[]): 
   );
 }
 
+/** How long sign-ups are gathered into one edit of an event's post. */
+export const POST_EDIT_WINDOW_MS = 3000;
+
+/**
+ * After a sign-up: updates the event's post at the end of the current window. Every sign-up in
+ * the window lands on the same job (its ID has the window), which reads the final state, so a
+ * burst of sign-ups edits the post once per window instead of once each. The window is in the
+ * ID because BullMQ ignores a job whose ID is running: a sign-up during the edit is in the next
+ * window and gets its own job.
+ */
+export async function scheduleEventPostUpdate(
+  jobs: JobEnqueuer,
+  eventId: string,
+  now = Date.now(),
+): Promise<void> {
+  const window = Math.floor(now / POST_EDIT_WINDOW_MS) + 1;
+  await jobs.enqueueOnce(
+    'event-post',
+    { eventId },
+    { jobId: `event-post-${eventId}-${window}`, runAt: new Date(window * POST_EDIT_WINDOW_MS) },
+  );
+}
+
 /**
  * After the guild's events channel or Discord language changes: every upcoming event that
  * isn't cancelled is posted again in the new channel, or in the new language.

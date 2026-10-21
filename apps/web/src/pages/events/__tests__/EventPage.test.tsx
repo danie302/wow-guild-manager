@@ -90,9 +90,14 @@ describe('EventPage', () => {
         color: 0x80848e,
         fields: [
           { name: 'Date', value: `<t:${startsAt}:F>` },
-          { name: 'Tank (0/4)', value: '—', inline: true },
+          {
+            name: '\u200b',
+            value: '__**Tank**__ (1/4)\n<:wgm_warrior:123> `1` **Grommash**',
+            inline: true,
+          },
         ],
       },
+      buttons: [{ label: 'Inscribirse', style: 'primary' }],
     };
     mockApi({
       '/api/me': () => Response.json(me),
@@ -116,7 +121,13 @@ describe('EventPage', () => {
     expect(screen.getByText('Molten Core', { selector: 's' })).toBeInTheDocument();
     expect(screen.getByText('This event has been cancelled.').tagName).toBe('STRONG');
     expect(screen.getByText(/November 10, \d{4} at 4:00 PM/)).toBeInTheDocument();
-    expect(screen.getByText('Tank (0/4)')).toBeInTheDocument();
+    expect(screen.getByText('Tank', { selector: 'strong' }).parentElement?.tagName).toBe('U');
+    expect(screen.getByText('1', { selector: 'code' })).toBeInTheDocument();
+    expect(screen.getByAltText(':wgm_warrior:')).toHaveAttribute(
+      'src',
+      'https://cdn.discordapp.com/emojis/123.webp?size=44',
+    );
+    expect(screen.getByText('Inscribirse')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open in Discord/ })).toHaveAttribute(
       'href',
       'https://discord.com/channels/3/5/6',
@@ -124,7 +135,11 @@ describe('EventPage', () => {
   });
 
   it("says why the bot couldn't post, and when there's no channel", async () => {
-    const preview = { locale: 'en', embed: { title: 'Molten Core', color: 0, fields: [] } };
+    const preview = {
+      locale: 'en',
+      embed: { title: 'Molten Core', color: 0, fields: [] },
+      buttons: [],
+    };
     mockApi({
       [`${api}/${eventId}`]: () =>
         Response.json({ ...saved, discordPost: { url: null, error: 'missing_permissions' } }),

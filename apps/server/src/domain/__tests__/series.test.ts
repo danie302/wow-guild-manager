@@ -3,7 +3,15 @@ import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { createTestGuild } from '../../../test/test-guild.js';
-import { Event, User, type EventSeries, type Guild } from '../../db/models/index.js';
+import {
+  Character,
+  Event,
+  Member,
+  SignUp,
+  User,
+  type EventSeries,
+  type Guild,
+} from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
 import { createTestLogger } from '../../test-logger.js';
 import { DomainError } from '../errors.js';
@@ -173,5 +181,51 @@ describe('stopSeries', () => {
     await expect(stopSeries(guild, series.id, gm, later)).rejects.toEqual(
       new DomainError({ code: 'SERIES_STOPPED' }),
     );
+  });
+
+  it('keeps the future events that have sign-ups, other than Declined ones', async () => {
+    const series = await createSeries(guild, mc, gm, now);
+    const [first, second] = await Event.findAll({
+      where: { seriesId: series.id },
+      order: [['startsAt', 'ASC']],
+    });
+    const member = await Member.create({
+      guildId: guild.id,
+      discordUserId: '200000000000000050',
+      discordName: 'Thrall',
+      discordAvatar: null,
+      rank: 'raider',
+    });
+    const character = await Character.create({
+      memberId: member.id,
+      name: 'Thrall',
+      faction: 'horde',
+      race: 'orc',
+      characterClass: 'shaman',
+      level: 60,
+      professions: [],
+      isMain: true,
+    });
+    const signUp = { memberId: member.id, characterId: character.id, signedUpAt: now };
+    await SignUp.create({
+      ...signUp,
+      eventId: first!.id,
+      role: 'healer',
+      status: 'confirmed',
+      placement: 'slot',
+    });
+    await SignUp.create({
+      ...signUp,
+      eventId: second!.id,
+      role: null,
+      status: 'declined',
+      placement: null,
+    });
+
+    await stopSeries(guild, series.id, gm, new Date(first!.startsAt.getTime() - 1000));
+
+    expect((await Event.findAll({ where: { seriesId: series.id } })).map((e) => e.id)).toEqual([
+      first!.id,
+    ]);
   });
 });

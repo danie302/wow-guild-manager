@@ -1,6 +1,7 @@
 import { loadConfigOrExit, workerConfigSchema } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { createCharacterLookup } from '../integrations/character-lookup/character-lookup.js';
+import { createRestAppEmojis, postEmojiSource } from '../integrations/discord/app-emojis.js';
 import { createRestChannelMessages } from '../integrations/discord/channel-messages.js';
 import { createRestDirectMessenger } from '../integrations/discord/direct-messages.js';
 import { createJobHandlers } from '../jobs/handlers/index.js';
@@ -33,6 +34,10 @@ const worker = createJobWorker({
       ? createRestChannelMessages(config.DISCORD_BOT_TOKEN)
       : null,
     jobs,
+    emojis: postEmojiSource(
+      config.DISCORD_BOT_TOKEN ? createRestAppEmojis(config.DISCORD_BOT_TOKEN) : null,
+      logger,
+    ),
   }),
   logger,
 });

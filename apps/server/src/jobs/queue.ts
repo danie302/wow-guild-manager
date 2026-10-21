@@ -51,6 +51,15 @@ export interface JobEnqueuer {
   enqueue<Name extends JobName>(name: Name, data: JobPayloads[Name]): Promise<void>;
   /** Adds many jobs of one kind in a single round trip to Redis. */
   enqueueMany<Name extends JobName>(name: Name, data: JobPayloads[Name][]): Promise<void>;
+  /**
+   * Runs a job at `runAt` under `jobId`, unless a job with that ID is already queued or running,
+   * in which case nothing is added. For coalescing many requests into one run.
+   */
+  enqueueOnce<Name extends JobName>(
+    name: Name,
+    data: JobPayloads[Name],
+    options: { jobId: string; runAt: Date },
+  ): Promise<void>;
 }
 
 /**
@@ -74,6 +83,15 @@ export class JobQueue implements JobEnqueuer {
 
   async enqueueMany<Name extends JobName>(name: Name, data: JobPayloads[Name][]): Promise<void> {
     if (data.length > 0) await this.queue.addBulk(data.map((payload) => ({ name, data: payload })));
+  }
+
+  async enqueueOnce<Name extends JobName>(
+    name: Name,
+    data: JobPayloads[Name],
+    { jobId, runAt }: { jobId: string; runAt: Date },
+  ): Promise<void> {
+    // BullMQ ignores a job whose ID already exists.
+    await this.queue.add(name, data, { jobId, delay: Math.max(0, runAt.getTime() - Date.now()) });
   }
 
   /**

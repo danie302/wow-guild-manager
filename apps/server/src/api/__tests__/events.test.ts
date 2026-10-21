@@ -189,6 +189,7 @@ describe('Discord posts of events', () => {
     expect(response.status).toBe(200);
     expect(preview).toMatchObject({ channel: null, locale: 'es' });
     expect(preview.embed.title).toBe('Molten Core');
-    expect(preview.embed.fields[0]?.name).toBe('Fecha');
+    expect(preview.embed.fields.at(-1)?.name).toBe('Inscripciones');
+    expect(preview.buttons.map((button) => button.label)).toEqual(['Inscribirse', 'Rechazado']);
   });
 });

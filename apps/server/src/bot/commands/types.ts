@@ -4,6 +4,7 @@ import type {
   ButtonInteraction,
   ChatInputCommandInteraction,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
+  StringSelectMenuInteraction,
 } from 'discord.js';
 
 import type { Translate } from '../../i18n/index.js';
@@ -24,4 +25,14 @@ export interface SlashCommand {
    * command name and ":" (e.g. "character:remove:<id>"), and carry what the click needs.
    */
   button?(interaction: ButtonInteraction, context: CommandContext): Promise<void>;
+}
+
+/**
+ * Buttons and select menus that aren't a command's replies, such as the ones on event posts.
+ * Their custom IDs start with `name` and ":".
+ */
+export interface ComponentHandler {
+  name: string;
+  button?(interaction: ButtonInteraction, context: CommandContext): Promise<void>;
+  select?(interaction: StringSelectMenuInteraction, context: CommandContext): Promise<void>;
 }

@@ -8,7 +8,7 @@ import {
 } from '@wgm/shared';
 import { Op, Transaction } from 'sequelize';
 
-import { Event, EventSeries, type Guild, type User } from '../db/models/index.js';
+import { Event, EventSeries, SignUp, type Guild, type User } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
 import type { Logger } from '../logger.js';
 import { DomainError, DomainValidationError } from './errors.js';
@@ -126,9 +126,9 @@ export async function updateSeries(
 }
 
 /**
- * Stops a series: no more events are created, and its future events are removed. Its past
- * events stay. (Story 023 keeps future events that have sign-ups.) Resolves the Discord posts
- * of the removed events, for the caller to delete.
+ * Stops a series: no more events are created, and its future events are removed, except those
+ * with sign-ups (other than Declined), which stay as events of their own. Its past events
+ * stay. Resolves the Discord posts of the removed events, for the caller to delete.
  */
 export async function stopSeries(
   guild: Guild,
@@ -138,18 +138,28 @@ export async function stopSeries(
 ): Promise<{ series: EventSeries; removedPosts: { channelId: string; messageId: string }[] }> {
   return transaction(async () => {
     const series = await runningSeries(guild, seriesId);
-    const future = { seriesId: series.id, startsAt: { [Op.gt]: now } };
-    const posted = await Event.findAll({
-      attributes: ['discordChannelId', 'discordMessageId'],
-      where: { ...future, discordMessageId: { [Op.ne]: null } },
+    const future = await Event.findAll({
+      where: { seriesId: series.id, startsAt: { [Op.gt]: now } },
+      include: [
+        {
+          model: SignUp,
+          as: 'signUps',
+          attributes: ['id'],
+          where: { status: { [Op.ne]: 'declined' } },
+          required: false,
+        },
+      ],
     });
-    await Event.destroy({ where: future });
+    const removed = future.filter((event) => event.signUps!.length === 0);
+    await Event.destroy({ where: { id: removed.map((event) => event.id) } });
     return {
       series: await series.update({ stoppedAt: now, stoppedByUserId: stoppedBy.id }),
-      removedPosts: posted.map((event) => ({
-        channelId: event.discordChannelId!,
-        messageId: event.discordMessageId!,
-      })),
+      removedPosts: removed
+        .filter((event) => event.discordMessageId)
+        .map((event) => ({
+          channelId: event.discordChannelId!,
+          messageId: event.discordMessageId!,
+        })),
     };
   });
 }

@@ -245,7 +245,10 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - If the bot can't post (e.g. it lost its permissions in the channel), the event page's Discord post tab shows the problem. The bot tries again as soon as the permissions change in Discord.
 
 ### Sign-ups
-- Members sign up with buttons on the post: they pick a combat role, a character, and a status.
+- Members sign up from the post. Its **Sign up** button opens a message only they see, with their characters (their main picked first), the combat roles the chosen character's class can fill, and **Confirmed** and **Tentative** buttons. The post's **Declined** button declines in one click.
+- **Declined** changes the member's sign-up to Declined, which releases their spot. If they weren't signed up, it records a Declined sign-up with their main, so the Guild Master knows they let them know.
+- Sign-ups close when the event starts, or when it's cancelled.
+- Changing only the status, or only the character within the same combat role, keeps the member's spot or their place on the waitlist. Changing the combat role counts as a new sign-up for that role.
 - A member can sign up for an event with only one character. Changing role or character replaces their sign-up, and they lose their spot if the new role is full.
 - Only members on the roster with an eligible rank can sign up (see [Who can join events](#who-can-join-events)).
 - A character can only pick a combat role their class can fill.

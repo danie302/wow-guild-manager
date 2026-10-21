@@ -9,6 +9,7 @@ import { Member } from './member.js';
 import { OfficerNote } from './officer-note.js';
 import { RankChange } from './rank-change.js';
 import { Registration } from './registration.js';
+import { SignUp } from './sign-up.js';
 import { User } from './user.js';
 
 export {
@@ -21,6 +22,7 @@ export {
   OfficerNote,
   RankChange,
   Registration,
+  SignUp,
   User,
 };
 
@@ -39,6 +41,7 @@ export function initModels(sequelize: Sequelize): void {
   Registration.initModel(sequelize);
   Event.initModel(sequelize);
   EventSeries.initModel(sequelize);
+  SignUp.initModel(sequelize);
 
   Guild.associate();
   GuildOfficer.associate();
@@ -49,4 +52,5 @@ export function initModels(sequelize: Sequelize): void {
   Registration.associate();
   Event.associate();
   EventSeries.associate();
+  SignUp.associate();
 }

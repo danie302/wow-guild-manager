@@ -83,7 +83,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [020](story-020-event-creation.md) | Event creation | Done with debt | 011, 014 |
 | [021](story-021-recurring-events.md) | Recurring events | Done | 009, 020 |
 | [022](story-022-discord-event-post.md) | Event posts in Discord | Done with debt | 008, 020 |
-| [023](story-023-discord-sign-up.md) | Sign-up from Discord | Not started | 015, 022 |
+| [023](story-023-discord-sign-up.md) | Sign-up from Discord | Done with debt | 015, 022 |
 | [024](story-024-withdraw-and-waitlist.md) | Withdrawals and waitlist promotion | Not started | 023 |
 | [025](story-025-manage-participants.md) | Managing participants from the web app | Not started | 024 |
 | [026](story-026-tentative-deadline.md) | Tentative deadline and reminders | Not started | 009, 024 |

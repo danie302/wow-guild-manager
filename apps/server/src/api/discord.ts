@@ -11,6 +11,7 @@ import {
   discordOfficerRoleOptions,
   discordServerOptions,
 } from '../domain/guilds.js';
+import type { PostEmojis } from '../domain/event-post.js';
 import { discordRoleColor, type DiscordDirectory } from '../integrations/discord/directory.js';
 import { sendError } from './errors.js';
 import { currentUser, requireUser } from './me.js';
@@ -21,6 +22,8 @@ export interface DiscordAccess {
   botInviteUrl: string;
   /** The bot's Discord user ID (its application's client ID), to check its permissions. */
   botUserId: string;
+  /** The class and role icons of event posts, for their preview; without it, the fallback ones. */
+  emojis?: () => Promise<PostEmojis>;
 }
 
 /** Answers 503 when the API can't read Discord. */

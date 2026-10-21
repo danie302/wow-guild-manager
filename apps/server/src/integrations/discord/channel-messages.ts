@@ -1,5 +1,12 @@
 import type { DiscordEmbed } from '@wgm/shared';
-import { DiscordAPIError, REST, Routes, type APIMessage } from 'discord.js';
+import {
+  DiscordAPIError,
+  REST,
+  Routes,
+  type APIActionRowComponent,
+  type APIComponentInMessageActionRow,
+  type APIMessage,
+} from 'discord.js';
 
 /** Discord's error codes that retrying won't fix. */
 const UNKNOWN_CHANNEL = 10003;
@@ -7,9 +14,10 @@ const UNKNOWN_MESSAGE = 10008;
 const MISSING_ACCESS = 50001;
 const MISSING_PERMISSIONS = 50013;
 
-/** A message the bot posts in a channel. Story 023 adds the sign-up buttons. */
+/** A message the bot posts in a channel: embeds, and rows of buttons. */
 export interface ChannelMessage {
   embeds: DiscordEmbed[];
+  components: APIActionRowComponent<APIComponentInMessageActionRow>[];
 }
 
 export type ChannelMessageFailure =

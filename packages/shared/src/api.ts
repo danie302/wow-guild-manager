@@ -331,6 +331,8 @@ export interface EventDiscordPostResponse {
   channel: { id: string; name: string | null } | null;
   locale: Locale;
   embed: DiscordEmbed;
+  /** The buttons under the post (none once the event is cancelled). */
+  buttons: { label: string; style: 'primary' | 'secondary' }[];
 }
 
 /**

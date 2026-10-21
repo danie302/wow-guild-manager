@@ -4,6 +4,7 @@ import { watchDiscordChanges } from '../bot/cache-events.js';
 import { createBotClient, describeLoginError } from '../bot/client.js';
 import { syncMemberProfiles } from '../bot/member-profiles.js';
 import { retryFailedPosts } from '../bot/post-retries.js';
+import { signUpHandler } from '../bot/sign-up.js';
 import { syncServerMembers } from '../bot/server-sync.js';
 import { commands } from '../bot/commands/index.js';
 import { botConfigSchema, loadConfigOrExit } from '../config.js';
@@ -23,10 +24,10 @@ const redis = createClient({ url: config.REDIS_URL, disableOfflineQueue: true })
 redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis client error'));
 await redis.connect();
 
-// Retries of failed event posts go to the worker through the job queue.
+// Post updates after sign-ups, and retries of failed posts, go to the worker through the queue.
 const jobs = new JobQueue({ connection: redisConnection(config.REDIS_URL) });
 
-const client = createBotClient({ logger, commands });
+const client = createBotClient({ logger, commands, components: [signUpHandler(jobs)] });
 watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
 syncServerMembers(client, logger);
 syncMemberProfiles(client, logger);

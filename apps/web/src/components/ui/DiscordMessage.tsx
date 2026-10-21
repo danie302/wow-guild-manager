@@ -11,6 +11,10 @@ const discord = {
   text: '#dbdee1',
   heading: '#f2f3f5',
   badge: '#5865f2',
+  primary: '#5865f2',
+  secondary: '#4e5058',
+  code: '#1e1f22',
+  codeBorder: '#3f4147',
 };
 
 export interface DiscordMessageProps {
@@ -26,10 +30,12 @@ export interface DiscordMessageProps {
     /** Inline fields sit side by side; the others take a full row. */
     fields: { name: ReactNode; value: ReactNode; inline?: boolean }[];
   };
+  /** The buttons under the message. */
+  buttons?: { label: string; style: 'primary' | 'secondary' }[];
 }
 
 /** A preview of a message with an embed, as Discord shows it. */
-export function DiscordMessage({ author, appLabel, embed }: DiscordMessageProps) {
+export function DiscordMessage({ author, appLabel, embed, buttons = [] }: DiscordMessageProps) {
   return (
     <Box
       sx={{
@@ -137,7 +143,58 @@ export function DiscordMessage({ author, appLabel, embed }: DiscordMessageProps)
             </Box>
           </Box>
         </Box>
+        {buttons.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', pt: '4px' }}>
+            {buttons.map((button) => (
+              <Box
+                key={button.label}
+                component="span"
+                sx={{
+                  p: '7px 16px',
+                  borderRadius: '3px',
+                  bgcolor: discord[button.style],
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                {button.label}
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
     </Box>
   );
 }
+
+/** Inline code, e.g. a sign-up's number. */
+DiscordMessage.Code = function DiscordMessageCode({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      component="code"
+      sx={{
+        fontFamily: 'ui-monospace, Consolas, monospace',
+        fontSize: '0.85em',
+        p: '1px 4px',
+        bgcolor: discord.code,
+        border: `1px solid ${discord.codeBorder}`,
+        borderRadius: '4px',
+      }}
+    >
+      {children}
+    </Box>
+  );
+};
+
+/** One of the bot application's emojis, from Discord's CDN. */
+DiscordMessage.Emoji = function DiscordMessageEmoji({ id, name }: { id: string; name: string }) {
+  return (
+    <Box
+      component="img"
+      src={`https://cdn.discordapp.com/emojis/${id}.webp?size=44`}
+      alt={`:${name}:`}
+      sx={{ width: '1.375em', height: '1.375em', verticalAlign: 'bottom', objectFit: 'contain' }}
+    />
+  );
+};

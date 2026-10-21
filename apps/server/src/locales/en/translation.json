@@ -61,6 +61,40 @@
     "waitlistEmpty": "Empty",
     "signUps": "Sign-ups",
     "tentativeCloses": "Tentative sign-ups close {{time}}.",
-    "cancelled": "This event has been cancelled."
+    "cancelled": "This event has been cancelled.",
+    "tentative": "tentative",
+    "more_one": "…and {{count}} more",
+    "more_other": "…and {{count}} more",
+    "signUp": "Sign up",
+    "declined": "Declined",
+    "declinedList": "Declined"
+  },
+  "signUp": {
+    "status": {
+      "confirmed": "Confirmed",
+      "tentative": "Tentative",
+      "declined": "Declined"
+    },
+    "form": {
+      "title": "Sign up for **{{event}}** ({{time}}).",
+      "current": "You are signed up with {{character}} as {{role}} ({{status}}). Changing only the status or the character keeps your spot.",
+      "character": "Choose a character",
+      "role": "Choose a role",
+      "main": "{{class}} · main"
+    },
+    "inSlot": "You're in: {{character}} as {{role}} for {{event}} ({{status}}).",
+    "onWaitlist": "{{role}} is full for {{event}}, so {{character}} is on the waitlist ({{status}}). You get a spot if one opens.",
+    "withdrawn": "You've withdrawn from {{event}}. Your spot is free for someone else.",
+    "declined": "Noted: you won't be at {{event}}.",
+    "noGuild": "This Discord server isn't connected to a guild.",
+    "notOnRoster": "You're not on the {{guild}} roster. Use /register to ask to join.",
+    "leftDiscord": "The roster says you left this Discord server. Ask an Officer to check your membership.",
+    "eventNotFound": "This event no longer exists.",
+    "cancelled": "{{event}} was cancelled, so sign-ups are closed.",
+    "started": "{{event}} has started, so sign-ups are closed.",
+    "notEligible": "Your rank can't sign up for {{event}}. Raids are for Raiders, Officers, and the Guild Master.",
+    "noCharacters": "You have no characters on the roster yet. Ask an Officer to add yours.",
+    "notYourCharacter": "That character isn't on your roster any more. Press Sign up on the event again.",
+    "roleNotAllowed": "That character's class can't play that role."
   }
 }

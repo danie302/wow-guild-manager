@@ -14,6 +14,7 @@ function fakeCommandInteraction(commandName: string, locale = 'en-US') {
     deferred: false,
     isAutocomplete: () => false,
     isButton: () => false,
+    isStringSelectMenu: () => false,
     isChatInputCommand: () => true,
     reply: vi.fn(() => Promise.resolve()),
   };
@@ -73,6 +74,7 @@ describe('handleInteraction', () => {
       asInteraction({
         isAutocomplete: () => false,
         isButton: () => false,
+        isStringSelectMenu: () => false,
         isChatInputCommand: () => false,
       }),
       [command],

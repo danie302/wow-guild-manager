@@ -11,14 +11,17 @@ import { Guild as GuildModel } from '../db/models/index.js';
 import { translator } from '../i18n/index.js';
 import type { Logger } from '../logger.js';
 import type { SlashCommand } from './commands/index.js';
+import type { ComponentHandler } from './commands/types.js';
 import { replyLocale } from './locale.js';
 
 export interface BotDependencies {
   logger: Logger;
   commands: readonly SlashCommand[];
+  /** Buttons and selects outside commands, e.g. on event posts. */
+  components?: readonly ComponentHandler[];
 }
 
-export function createBotClient({ logger, commands }: BotDependencies): Client {
+export function createBotClient({ logger, commands, components = [] }: BotDependencies): Client {
   const client = new Client({
     // GuildMembers is privileged: it must be enabled in the Discord Developer Portal (see README).
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -37,7 +40,7 @@ export function createBotClient({ logger, commands }: BotDependencies): Client {
   });
 
   client.on(Events.InteractionCreate, (interaction) => {
-    void handleInteraction(interaction, commands, logger);
+    void handleInteraction(interaction, commands, logger, components);
   });
 
   return client;
@@ -64,6 +67,7 @@ export async function handleInteraction(
   interaction: Interaction,
   commands: readonly SlashCommand[],
   logger: Logger,
+  components: readonly ComponentHandler[] = [],
 ): Promise<void> {
   if (interaction.isAutocomplete()) {
     const command = commands.find((c) => c.definition.name === interaction.commandName);
@@ -73,15 +77,15 @@ export async function handleInteraction(
     });
     return;
   }
-  if (!interaction.isChatInputCommand() && !interaction.isButton()) {
+  const isComponent = interaction.isButton() || interaction.isStringSelectMenu();
+  if (!interaction.isChatInputCommand() && !isComponent) {
     return;
   }
 
-  const name = interaction.isButton()
-    ? interaction.customId.split(':')[0]
-    : interaction.commandName;
+  const name = isComponent ? interaction.customId.split(':')[0] : interaction.commandName;
   const command = commands.find((candidate) => candidate.definition.name === name);
-  if (!command) {
+  const component = components.find((candidate) => candidate.name === name);
+  if (!command && !component) {
     logger.warn({ command: name }, 'Unknown slash command');
     return;
   }
@@ -102,10 +106,13 @@ export async function handleInteraction(
     });
     t = translator(locale);
 
+    const context = { locale, t };
     if (interaction.isButton()) {
-      await command.button?.(interaction, { locale, t });
+      await (component ?? command)?.button?.(interaction, context);
+    } else if (interaction.isStringSelectMenu()) {
+      await component?.select?.(interaction, context);
     } else {
-      await command.execute(interaction, { locale, t });
+      await command?.execute(interaction, context);
     }
   } catch (err) {
     logger.error({ err, command: name }, 'Slash command failed');

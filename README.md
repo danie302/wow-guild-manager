@@ -58,6 +58,8 @@ The bot and the web app's login share one Discord application, and you need a Di
 
 Without `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`, the API still runs, but the login page says that login isn't set up. The API also uses `DISCORD_BOT_TOKEN` (with `DISCORD_CLIENT_ID`) to read your servers and roles during guild setup; without them, guild setup says Discord isn't set up. The worker uses `DISCORD_BOT_TOKEN` to send direct messages (e.g. when a `/register` registration is approved or rejected) and to post events in the guild's events channel, chosen in the guild settings; without it, it runs and skips them. Only servers where the bot is and you have the **Manage Server** permission (the server owner always does) can be connected. `SESSION_SECRET` comes with a value for local development in `.env.example`; an `.env` made before the login existed needs it added.
 
+Optionally, give the event posts class and role icons: put the images in `apps/server/assets/emojis/` and run `docker compose exec api pnpm --filter @wgm/server discord:emojis` (details in that folder's `README.md`). Without them, posts show no class icons and plain role icons.
+
 The bot registers its commands on every server it's in when it connects, and on new servers as soon as it's invited, so they appear right away.
 
 ### Run the stack with Docker
