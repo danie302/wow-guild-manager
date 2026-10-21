@@ -1,4 +1,5 @@
 import { baseConfigSchema, loadConfigOrExit } from '../config.js';
+import { createCharacterLookup } from '../integrations/character-lookup/character-lookup.js';
 import { createJobHandlers } from '../jobs/handlers/index.js';
 import { createJobWorker, redisConnection } from '../jobs/index.js';
 import { createLogger } from '../logger.js';
@@ -8,7 +9,7 @@ const logger = createLogger(config);
 
 const worker = createJobWorker({
   connection: redisConnection(config.REDIS_URL),
-  handlers: createJobHandlers(logger),
+  handlers: createJobHandlers({ logger, characterLookup: createCharacterLookup() }),
   logger,
 });
 

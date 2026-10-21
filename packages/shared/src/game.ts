@@ -57,6 +57,30 @@ export const MAX_PRIMARY_PROFESSIONS = 2;
 export const MIN_LEVEL = 1;
 export const MAX_LEVEL = 60;
 
+/** Equipment slots, in the order the game shows them. Shirt and tabard have no stats. */
+export const EQUIPMENT_SLOTS = [
+  'head',
+  'neck',
+  'shoulder',
+  'back',
+  'chest',
+  'shirt',
+  'tabard',
+  'wrist',
+  'hands',
+  'waist',
+  'legs',
+  'feet',
+  'finger_1',
+  'finger_2',
+  'trinket_1',
+  'trinket_2',
+  'main_hand',
+  'off_hand',
+  'ranged',
+] as const;
+export type EquipmentSlot = (typeof EQUIPMENT_SLOTS)[number];
+
 /**
  * Races by faction, and classes by race. Skyborne exists in both factions with different
  * classes, so the classes depend on the faction too. Differs from Classic: Dwarves can be

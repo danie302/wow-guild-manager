@@ -292,6 +292,19 @@ A user is an Officer of a guild while they have its Officer role in its Discord 
 - `src/domain/access.ts` works out a user's access (Guild Master from the guild, Officer from the table), `src/domain/permissions.ts` maps each action to the ranks allowed, and `requireGuildPermission(action)` guards each guild route.
 - Checking Discord on every request (with a short cache) was tried first and replaced: its Discord API usage grows with the number of users.
 
+## Character lookup: an interface until Battle.net supports Forever
+
+**Status:** Accepted (story 017)
+
+`/register` and the gear checks read characters from the game. Blizzard hasn't published a Battle.net API for World of Warcraft: Forever, so the app reads them through a `CharacterLookup` interface in `src/integrations/character-lookup/`, and the real Battle.net client is story 037.
+
+- A lookup returns a typed result: `found` (with the data and when it was fetched), `not_found`, or `unavailable` (`not_configured` or `error`). Callers handle each one; lookups don't throw for these cases.
+- Until story 037, `createCharacterLookup()` returns the "unavailable" implementation, so callers fall back to data entered by hand. No Battle.net environment variables exist yet; story 037 adds them and returns the real client when they're set.
+- A character is looked up by name only, because Forever has no realms. Story 037 adds whatever else Blizzard's API needs.
+- Lookups run in the worker (the job handlers receive the lookup), never in page requests or bot interactions.
+- Tests use `FakeCharacterLookup` (`apps/server/test/fake-character-lookup.ts`).
+- Equipment slots are a game table in `packages/shared` (`EQUIPMENT_SLOTS`), since the web app needs them for the gear check and the guild's enchant settings.
+
 ## IDs: UUID v7
 
 **Status:** Accepted

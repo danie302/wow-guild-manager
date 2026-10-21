@@ -1,6 +1,6 @@
 # Story 017: Character lookup interface
 
-**Status:** Not started  
+**Status:** Done  
 **Phase:** Roster  
 **Depends on:** [Story 009](story-009-worker-skeleton.md)
 
@@ -20,14 +20,16 @@ Define how the app looks characters up in the game, behind an interface that wor
 
 ## Acceptance criteria
 
-- [ ] Callers use only the `CharacterLookup` interface, so the real client can replace the "unavailable" one without changing them.
-- [ ] The "unavailable" implementation is used when no Battle.net credentials are configured, and the app works normally with it.
-- [ ] "Not found" and "unavailable" are typed results, not exceptions.
-- [ ] Tests use the fake implementation.
+- [x] Callers use only the `CharacterLookup` interface, so the real client can replace the "unavailable" one without changing them.
+- [x] The "unavailable" implementation is used when no Battle.net credentials are configured, and the app works normally with it.
+- [x] "Not found" and "unavailable" are typed results, not exceptions.
+- [x] Tests use the fake implementation.
 
 ## Notes
 
 - Split on 2026-10-20: Blizzard hasn't published a Battle.net API for Forever (releasing November 5th), so the real client moved to story 037 and the rest of the MVP goes ahead without it. See "Battle.net plan" in `planning/README.md`.
+
+- Decided on 2026-10-20: the Battle.net environment variables wait for story 037. Until then `createCharacterLookup()` always returns the "unavailable" implementation, which is the case "no credentials configured". Nothing calls the lookup yet: story 018 is the first caller, from the worker.
 
 ## Technical debt
 

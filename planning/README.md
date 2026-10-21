@@ -71,7 +71,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 |---|---|---|---|
 | [015](story-015-roster-data-model.md) | Roster data model | Done | 007, 012 |
 | [016](story-016-roster-management.md) | Roster page and management | Done with debt | 014, 015 |
-| [017](story-017-character-lookup.md) | Character lookup interface | Not started | 009 |
+| [017](story-017-character-lookup.md) | Character lookup interface | Done | 009 |
 | [018](story-018-register-command.md) | Character registration with /register | Not started | 008, 016, 017 |
 | [019](story-019-member-left-discord.md) | Members who leave the Discord server | Not started | 008, 016 |
 
