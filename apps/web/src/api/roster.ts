@@ -87,6 +87,25 @@ export function useAddCharacter(guildId: string, memberId: string) {
   );
 }
 
+export function useUpdateCharacter(guildId: string, memberId: string) {
+  return useMemberMutation(
+    guildId,
+    ({ id, character }: { id: string; character: CharacterInput }) =>
+      apiRequest<MemberDetailResponse>(`/guilds/${guildId}/members/${memberId}/characters/${id}`, {
+        method: 'PUT',
+        body: character,
+      }),
+  );
+}
+
+export function useRemoveCharacter(guildId: string, memberId: string) {
+  return useMemberMutation(guildId, (id: string) =>
+    apiRequest<MemberDetailResponse>(`/guilds/${guildId}/members/${memberId}/characters/${id}`, {
+      method: 'DELETE',
+    }),
+  );
+}
+
 export function useSetMainCharacter(guildId: string, memberId: string) {
   return useMemberMutation(guildId, (characterId: string) =>
     apiRequest<MemberDetailResponse>(`/guilds/${guildId}/members/${memberId}/main`, {

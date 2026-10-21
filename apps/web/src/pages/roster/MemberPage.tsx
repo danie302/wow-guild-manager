@@ -8,6 +8,7 @@ import {
   type GuildAccess,
   type MemberDetailResponse,
   type RankHistoryEntry,
+  type RosterCharacter,
 } from '@wgm/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,8 +21,10 @@ import {
   useAddOfficerNote,
   useChangeRank,
   useMember,
+  useRemoveCharacter,
   useRemoveMember,
   useSetMainCharacter,
+  useUpdateCharacter,
 } from '../../api/roster';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import {
@@ -43,7 +46,9 @@ import {
   CharacterFields,
   characterIssues,
   emptyCharacter,
+  toCharacterDraft,
   toCharacterInput,
+  type CharacterDraft,
 } from './CharacterFields';
 
 /** One member: characters, rank, rank history, and officer notes. */
@@ -85,11 +90,16 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
   const setMain = useSetMainCharacter(guildId, member.id);
   const addNote = useAddOfficerNote(guildId, member.id);
   const addCharacter = useAddCharacter(guildId, member.id);
+  const updateCharacter = useUpdateCharacter(guildId, member.id);
+  const removeCharacter = useRemoveCharacter(guildId, member.id);
   const removeMember = useRemoveMember(guildId, member.id);
   const [note, setNote] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(false);
-  const [newCharacter, setNewCharacter] = useState<typeof emptyCharacter | null>(null);
+  // The character being added (id null) or edited.
+  const [form, setForm] = useState<{ id: string | null; draft: CharacterDraft } | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [removingCharacter, setRemovingCharacter] = useState<RosterCharacter | null>(null);
+  const saveCharacter = form?.id ? updateCharacter : addCharacter;
 
   // Officers can change the rank of, or remove, only Raiders and Members.
   const isGuildMaster = member.rank === 'guild_master';
@@ -108,7 +118,9 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
       ? t('member.cannotRemoveOfficer')
       : undefined;
 
-  const failed = [changeRank, setMain, addNote, removeMember].find((action) => action.error)?.error;
+  const failed = [changeRank, setMain, addNote, removeMember, removeCharacter].find(
+    (action) => action.error,
+  )?.error;
   const historyText = (entry: RankHistoryEntry) =>
     entry.fromRank
       ? t('member.changed', { from: RANK_NAMES[entry.fromRank], to: RANK_NAMES[entry.toRank] })
@@ -118,10 +130,24 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
     (entry.source === 'discord' ? t('member.fromDiscord') : t('member.unknownUser'));
 
   const characterError =
-    addCharacter.error instanceof ApiRequestError &&
-    addCharacter.error.error.code === 'VALIDATION_ERROR'
-      ? addCharacter.error.error.issues
+    saveCharacter.error instanceof ApiRequestError &&
+    saveCharacter.error.error.code === 'VALIDATION_ERROR'
+      ? saveCharacter.error.error.issues
       : [];
+  const openForm = (id: string | null, draft: CharacterDraft) => {
+    setSubmitted(false);
+    addCharacter.reset();
+    updateCharacter.reset();
+    setForm({ id, draft });
+  };
+  const submitForm = () => {
+    setSubmitted(true);
+    if (!form || characterIssues(form.draft, faction).length > 0) return;
+    const character = toCharacterInput(form.draft, faction);
+    const done = { onSuccess: () => setForm(null) };
+    if (form.id) updateCharacter.mutate({ id: form.id, character }, done);
+    else addCharacter.mutate(character, done);
+  };
 
   return (
     <Page>
@@ -175,19 +201,20 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
                 <Button onClick={() => setMain.mutate(character.id)} disabled={setMain.isPending}>
                   {t('member.makeMain')}
                 </Button>
-              )}
+              )}{' '}
+              <Button onClick={() => openForm(character.id, toCharacterDraft(character))}>
+                {t('member.editCharacter')}
+              </Button>{' '}
+              <Button
+                onClick={() => setRemovingCharacter(character)}
+                disabled={removeCharacter.isPending}
+              >
+                {t('member.removeCharacter')}
+              </Button>
             </DetailList.Item>
           ))}
         </DetailList>
-        <Button
-          onClick={() => {
-            setSubmitted(false);
-            addCharacter.reset();
-            setNewCharacter(emptyCharacter);
-          }}
-        >
-          {t('member.addCharacter')}
-        </Button>
+        <Button onClick={() => openForm(null, emptyCharacter)}>{t('member.addCharacter')}</Button>
       </Page.Section>
 
       <Page.Section title={t('member.history')}>
@@ -252,43 +279,50 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
         {t('member.removeBody')}
       </ConfirmDialog>
 
+      <ConfirmDialog
+        open={removingCharacter !== null}
+        title={t('member.removeCharacterTitle', { name: removingCharacter?.name })}
+        confirmLabel={t('member.removeCharacter')}
+        cancelLabel={t('member.keep')}
+        onCancel={() => setRemovingCharacter(null)}
+        onConfirm={() => {
+          removeCharacter.mutate(removingCharacter!.id);
+          setRemovingCharacter(null);
+        }}
+      >
+        {removingCharacter?.isMain ? t('member.removeMainBody') : t('member.removeCharacterBody')}
+      </ConfirmDialog>
+
       <Dialog
-        open={newCharacter !== null}
-        onClose={() => setNewCharacter(null)}
-        title={t('member.addCharacterTitle', { name: member.discordName })}
+        open={form !== null}
+        onClose={() => setForm(null)}
+        title={
+          form?.id
+            ? t('member.editCharacterTitle', {
+                name: member.characters.find((character) => character.id === form.id)?.name,
+              })
+            : t('member.addCharacterTitle', { name: member.discordName })
+        }
         actions={
           <>
-            <Button
-              variant="primary"
-              disabled={addCharacter.isPending}
-              onClick={() => {
-                setSubmitted(true);
-                if (!newCharacter || characterIssues(newCharacter, faction).length > 0) return;
-                addCharacter.mutate(toCharacterInput(newCharacter, faction), {
-                  onSuccess: () => setNewCharacter(null),
-                });
-              }}
-            >
-              {t('member.addCharacter')}
+            <Button variant="primary" disabled={saveCharacter.isPending} onClick={submitForm}>
+              {form?.id ? t('member.saveCharacter') : t('member.addCharacter')}
             </Button>
-            <Button onClick={() => setNewCharacter(null)}>{t('addMember.cancel')}</Button>
+            <Button onClick={() => setForm(null)}>{t('addMember.cancel')}</Button>
           </>
         }
       >
-        {newCharacter && (
+        {form && (
           <CharacterFields
-            value={newCharacter}
-            onChange={setNewCharacter}
+            value={form.draft}
+            onChange={(draft) => setForm({ ...form, draft })}
             faction={faction}
-            issues={[
-              ...(submitted ? characterIssues(newCharacter, faction) : []),
-              ...characterError,
-            ]}
+            issues={[...(submitted ? characterIssues(form.draft, faction) : []), ...characterError]}
           />
         )}
-        {addCharacter.error && characterError.length === 0 && (
+        {saveCharacter.error && characterError.length === 0 && (
           <Notice tone="bad" title={t('member.actionFailed')}>
-            {apiErrorText(t, addCharacter.error)}
+            {apiErrorText(t, saveCharacter.error)}
           </Notice>
         )}
       </Dialog>

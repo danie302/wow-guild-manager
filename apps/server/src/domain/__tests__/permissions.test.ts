@@ -15,6 +15,7 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   removeRaidersAndMembers: { guildMaster: true, officer: true },
   officerNotes: { guildMaster: true, officer: true },
   changeMainCharacter: { guildMaster: true, officer: true },
+  editCharacters: { guildMaster: true, officer: true },
 };
 
 describe('permissions', () => {

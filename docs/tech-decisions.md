@@ -315,6 +315,7 @@ The gear checks (and, later, registering characters from Discord) read character
 - A direct message is written in the language the person used `/register` in.
 - Approving adds the member, or restores a removed one with their characters, through `addMember` inside the approval's transaction. Domain functions use `transaction()` from `src/db/transaction.ts`, which joins the current transaction when there is one, so they can be combined.
 - `/main` changes the member's main right away. Its option suggests their characters with Discord autocomplete: a command can have an `autocomplete` handler, which reads the database only (no Discord REST).
+- Buttons on a command's replies (from story 038, e.g. `/character remove`'s Confirm and Cancel) are handled by the command's `button` handler. Their custom IDs start with the command name and `:` and carry what the click needs (e.g. `character:remove:<character ID>`), and the handler checks everything again on click: who clicked, and whether the data still allows it.
 
 ## IDs: UUID v7
 

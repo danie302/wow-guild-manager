@@ -1,6 +1,6 @@
 # Story 038: Editing and removing characters
 
-**Status:** Not started  
+**Status:** Done  
 **Phase:** Roster  
 **Depends on:** [Story 016](story-016-roster-management.md), [Story 018](story-018-register-command.md)
 
@@ -22,13 +22,13 @@ Let the Guild Master and Officers edit and remove a member's characters in the w
 
 ## Acceptance criteria
 
-- [ ] The Guild Master and Officers can edit a character's name, race, class, level, and professions, with the same rules as when adding one: race by the guild's faction, class by race, and a name no other active character has. The faction can't change.
-- [ ] The Guild Master and Officers can remove any character on the member page, after confirming.
-- [ ] A member can remove one of their own characters with `/character remove`, which suggests their characters and asks to confirm with Confirm and Cancel buttons. Only they see the replies.
-- [ ] Removing a character keeps its record (marked as removed), so its past sign-ups and attendance stay, and frees its name.
-- [ ] Removing the main makes the member's oldest remaining character the main. A member can be left without characters and stays on the roster.
-- [ ] Adding a character to the same member with the name of one they had removed restores its record, with the new details from the form, instead of creating a new one.
-- [ ] Removing a member and adding them back doesn't bring back characters that were removed on their own before.
+- [x] The Guild Master and Officers can edit a character's name, race, class, level, and professions, with the same rules as when adding one: race by the guild's faction, class by race, and a name no other active character has. The faction can't change.
+- [x] The Guild Master and Officers can remove any character on the member page, after confirming.
+- [x] A member can remove one of their own characters with `/character remove`, which suggests their characters and asks to confirm with Confirm and Cancel buttons. Only they see the replies.
+- [x] Removing a character keeps its record (marked as removed), so its past sign-ups and attendance stay, and frees its name.
+- [x] Removing the main makes the member's oldest remaining character the main. A member can be left without characters and stays on the roster.
+- [x] Adding a character to the same member with the name of one they had removed restores its record, with the new details from the form, instead of creating a new one.
+- [x] Removing a member and adding them back doesn't bring back characters that were removed on their own before.
 
 ## Notes
 

@@ -285,7 +285,14 @@
     "noNotes": "No notes yet.",
     "loading": "Loading the member",
     "notFound": "This member isn't on the roster.",
-    "actionFailed": "The change couldn't be saved"
+    "actionFailed": "The change couldn't be saved",
+    "editCharacter": "Edit",
+    "editCharacterTitle": "Edit {{name}}",
+    "saveCharacter": "Save",
+    "removeCharacter": "Remove",
+    "removeCharacterTitle": "Remove the character {{name}}?",
+    "removeCharacterBody": "Its past sign-ups and attendance are kept, and its name becomes free. Adding it back to this member restores it.",
+    "removeMainBody": "It's the main, so the member's oldest other character becomes the main. Its past sign-ups and attendance are kept, and its name becomes free."
   },
   "registrations": {
     "title": "Requests to join",

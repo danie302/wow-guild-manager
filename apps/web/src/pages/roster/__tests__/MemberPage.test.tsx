@@ -10,6 +10,9 @@ const memberId = '019a0c3e-5b1e-7c2a-9f3d-000000000100';
 const memberPath = `/guilds/${ashenId}/roster/${memberId}`;
 const memberApi = `/api/guilds/${ashenId}/members/${memberId}`;
 
+const jainaCharacterId = '019a0c3e-5b1e-7c2a-9f3d-000000000201';
+const proudmooreId = '019a0c3e-5b1e-7c2a-9f3d-000000000202';
+
 const jaina: MemberDetailResponse = {
   id: memberId,
   discordUserId: '200000000000000004',
@@ -100,6 +103,21 @@ function mockMemberApi(start: MemberDetailResponse = jaina, me?: MeResponse) {
       member = { ...member, officerNotes: [note, ...member.officerNotes] };
       return Response.json(member);
     },
+    [`PUT ${memberApi}/characters/${proudmooreId}`]: (init) => {
+      const { class: characterClass, ...details } = body(init);
+      member = {
+        ...member,
+        characters: member.characters.map((c) =>
+          c.id === proudmooreId ? ({ ...c, ...details, class: characterClass } as typeof c) : c,
+        ),
+      };
+      return Response.json(member);
+    },
+    [`DELETE ${memberApi}/characters/${jainaCharacterId}`]: () => {
+      const rest = member.characters.filter((c) => c.id !== jainaCharacterId);
+      member = { ...member, characters: rest.map((c, i) => ({ ...c, isMain: i === 0 })) };
+      return Response.json(member);
+    },
     [`DELETE ${memberApi}`]: () => new Response(null, { status: 204 }),
     [`/api/guilds/${ashenId}/members`]: () => Response.json([]),
   });
@@ -138,6 +156,50 @@ describe('MemberPage', () => {
       `PUT ${memberApi}/main`,
       `POST ${memberApi}/notes`,
     ]);
+  });
+
+  it('edits a character with the same form as adding one', async () => {
+    const fetchMock = mockMemberApi();
+    const user = userEvent.setup();
+    renderRoute(memberPath);
+
+    // The alt's row: Proudmoore is the second character.
+    await screen.findByText('Proudmoore');
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[1]!);
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Proudmoore' });
+    expect(within(dialog).getByLabelText('Character name')).toHaveValue('Proudmoore');
+    await user.clear(within(dialog).getByLabelText('Level'));
+    await user.type(within(dialog).getByLabelText('Level'), '50');
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText(/Human Priest · 50/)).toBeInTheDocument();
+    const [, init] = fetchMock.mock.calls.find(
+      ([url, request]) =>
+        url === `${memberApi}/characters/${proudmooreId}` && request?.method === 'PUT',
+    )!;
+    expect(JSON.parse(init!.body as string)).toEqual({
+      name: 'Proudmoore',
+      faction: 'alliance',
+      race: 'human',
+      class: 'priest',
+      level: 50,
+      professions: [],
+    });
+  });
+
+  it('removes a character after asking, saying when it is the main', async () => {
+    mockMemberApi();
+    const user = userEvent.setup();
+    renderRoute(memberPath);
+
+    await screen.findByText('Proudmoore');
+    await user.click(screen.getAllByRole('button', { name: 'Remove' })[0]!);
+    const dialog = await screen.findByRole('dialog', { name: 'Remove the character Jaina?' });
+    expect(dialog).toHaveTextContent("It's the main");
+    await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
+
+    expect(await screen.findByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Edit' })).toHaveLength(1);
   });
 
   it('removes the member after asking, and goes back to the roster', async () => {

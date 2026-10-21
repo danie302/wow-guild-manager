@@ -46,6 +46,23 @@ export function toCharacterInput(draft: CharacterDraft, faction: Faction): Chara
   };
 }
 
+/** A draft with a saved character's details, to edit it. */
+export function toCharacterDraft(character: {
+  name: string;
+  race: string;
+  class: string;
+  level: number;
+  professions: readonly string[];
+}): CharacterDraft {
+  return {
+    name: character.name,
+    race: character.race,
+    class: character.class,
+    level: String(character.level),
+    professions: [...character.professions],
+  };
+}
+
 /** The draft's problems by field ("race", "professions"…), checked with the shared schema. */
 export function characterIssues(draft: CharacterDraft, faction: Faction): ValidationIssue[] {
   const input = toCharacterInput(draft, faction);

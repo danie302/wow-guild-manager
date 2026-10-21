@@ -72,15 +72,16 @@ export async function handleInteraction(
     });
     return;
   }
-  if (!interaction.isChatInputCommand()) {
+  if (!interaction.isChatInputCommand() && !interaction.isButton()) {
     return;
   }
 
-  const command = commands.find(
-    (candidate) => candidate.definition.name === interaction.commandName,
-  );
+  const name = interaction.isButton()
+    ? interaction.customId.split(':')[0]
+    : interaction.commandName;
+  const command = commands.find((candidate) => candidate.definition.name === name);
   if (!command) {
-    logger.warn({ command: interaction.commandName }, 'Unknown slash command');
+    logger.warn({ command: name }, 'Unknown slash command');
     return;
   }
 
@@ -89,9 +90,13 @@ export async function handleInteraction(
   const t = translator(locale);
 
   try {
-    await command.execute(interaction, { locale, t });
+    if (interaction.isButton()) {
+      await command.button?.(interaction, { locale, t });
+    } else {
+      await command.execute(interaction, { locale, t });
+    }
   } catch (err) {
-    logger.error({ err, command: interaction.commandName }, 'Slash command failed');
+    logger.error({ err, command: name }, 'Slash command failed');
     if (!interaction.replied && !interaction.deferred) {
       await interaction
         .reply({ content: t('errors.generic'), flags: MessageFlags.Ephemeral })

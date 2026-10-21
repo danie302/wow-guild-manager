@@ -22,6 +22,28 @@
       "noGuild": "Este servidor de Discord todavía no está conectado a una hermandad.",
       "notOnRoster": "No estás en la plantilla de {{guild}}. Usa /register para solicitar entrar.",
       "notYourCharacter": "No tienes un personaje llamado **{{name}}** en la plantilla. Un Officer puede añadirlo en la aplicación web."
+    },
+    "character": {
+      "description": "Gestiona tus personajes en la plantilla de la hermandad de este servidor",
+      "characterOption": {
+        "name": "personaje",
+        "description": "Uno de tus personajes en la plantilla"
+      },
+      "remove": {
+        "name": "quitar",
+        "description": "Quita uno de tus personajes de la plantilla",
+        "confirm": "¿Quitar a **{{name}}** de la plantilla? Se conservan sus inscripciones y su asistencia pasadas.",
+        "confirmMain": "¿Quitar a **{{name}}**, tu principal, de la plantilla? Tu personaje más antiguo pasará a ser el principal. Se conservan sus inscripciones y su asistencia pasadas.",
+        "confirmButton": "Quitar",
+        "cancelButton": "Cancelar",
+        "cancelled": "No se quitó nada.",
+        "removed": "**{{name}}** se quitó de la plantilla.",
+        "removedNewMain": "**{{name}}** se quitó de la plantilla. **{{main}}** es ahora tu principal.",
+        "gone": "Ese personaje ya no es uno de los tuyos en la plantilla."
+      },
+      "noGuild": "Este servidor de Discord todavía no está conectado a una hermandad.",
+      "notOnRoster": "No estás en la plantilla de {{guild}}. Usa /register para solicitar entrar.",
+      "notYourCharacter": "No tienes un personaje llamado **{{name}}** en la plantilla."
     }
   },
   "errors": {

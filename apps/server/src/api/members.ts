@@ -32,8 +32,10 @@ import {
   addMember,
   addOfficerNote,
   changeRank,
+  removeCharacter,
   removeMember,
   setMainCharacter,
+  updateCharacter,
 } from '../domain/roster.js';
 import { requireDiscord, type DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
@@ -152,6 +154,37 @@ export function membersRouter(discord: DiscordAccess | null) {
     },
   );
 
+  // Edits a character: name, race, class, level, and professions (the faction stays).
+  router.put(
+    `${base}/:memberId/characters/:characterId`,
+    requireUser,
+    requireGuildPermission('editCharacters'),
+    requireMember,
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      // updateCharacter checks the character (and answers with its issues).
+      await updateCharacter(
+        currentMember(res),
+        guild,
+        characterId(req.params.characterId),
+        req.body as CharacterInput,
+      );
+      res.json(await memberDetail(currentMember(res), guild));
+    },
+  );
+
+  router.delete(
+    `${base}/:memberId/characters/:characterId`,
+    requireUser,
+    requireGuildPermission('editCharacters'),
+    requireMember,
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      await removeCharacter(currentMember(res), characterId(req.params.characterId));
+      res.json(await memberDetail(currentMember(res), guild));
+    },
+  );
+
   router.put(
     `${base}/:memberId/main`,
     requireUser,
@@ -218,6 +251,11 @@ export function membersRouter(discord: DiscordAccess | null) {
 }
 
 /** Loads the active member from `:memberId` in the current guild, or answers 404. */
+function characterId(id: unknown): string {
+  if (!uuidSchema.safeParse(id).success) throw new DomainError({ code: 'NOT_FOUND' });
+  return id as string;
+}
+
 const requireMember: RequestHandler = async (req, res, next) => {
   const { guild } = currentGuild(res);
   const id = req.params.memberId;

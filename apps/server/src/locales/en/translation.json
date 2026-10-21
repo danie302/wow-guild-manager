@@ -22,6 +22,28 @@
       "noGuild": "This Discord server isn't connected to a guild yet.",
       "notOnRoster": "You aren't on the roster of {{guild}}. Use /register to ask to join.",
       "notYourCharacter": "You don't have a character called **{{name}}** on the roster. An Officer can add it in the web app."
+    },
+    "character": {
+      "description": "Manage your characters on this server's guild roster",
+      "characterOption": {
+        "name": "character",
+        "description": "One of your characters on the roster"
+      },
+      "remove": {
+        "name": "remove",
+        "description": "Remove one of your characters from the roster",
+        "confirm": "Remove **{{name}}** from the roster? Its past sign-ups and attendance are kept.",
+        "confirmMain": "Remove **{{name}}**, your main, from the roster? Your oldest other character becomes your main. Its past sign-ups and attendance are kept.",
+        "confirmButton": "Remove",
+        "cancelButton": "Cancel",
+        "cancelled": "Nothing was removed.",
+        "removed": "**{{name}}** was removed from the roster.",
+        "removedNewMain": "**{{name}}** was removed from the roster. **{{main}}** is now your main.",
+        "gone": "That character isn't one of yours on the roster anymore."
+      },
+      "noGuild": "This Discord server isn't connected to a guild yet.",
+      "notOnRoster": "You aren't on the roster of {{guild}}. Use /register to ask to join.",
+      "notYourCharacter": "You don't have a character called **{{name}}** on the roster."
     }
   },
   "errors": {

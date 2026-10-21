@@ -28,6 +28,8 @@ export const PERMISSIONS = {
   officerNotes: ['guild_master', 'officer'],
   /** Change a member's main character. */
   changeMainCharacter: ['guild_master', 'officer'],
+  /** Edit and remove any member's characters (members remove their own from Discord). */
+  editCharacters: ['guild_master', 'officer'],
 } as const satisfies Record<string, readonly GuildAccess[]>;
 
 export type GuildAction = keyof typeof PERMISSIONS;

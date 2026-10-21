@@ -300,6 +300,52 @@ describe('managing a member', () => {
   });
 });
 
+describe('editing and removing characters', () => {
+  it('edits a character and answers with the member page', async () => {
+    const { officerAgent, base } = await setup();
+    const member = await addThrall(officerAgent, base);
+    const zuljin = member.characters.find((character) => character.name === 'Zuljin')!;
+
+    const response = await officerAgent
+      .put(`${base}/${member.id}/characters/${zuljin.id}`)
+      .send({ ...shaman, name: 'Zuljin', race: 'troll', class: 'priest', level: 41 });
+
+    expect(response.status).toBe(200);
+    expect(detail(response).characters.find((c) => c.id === zuljin.id)).toMatchObject({
+      level: 41,
+      class: 'priest',
+    });
+  });
+
+  it('answers with the issues of an invalid edit', async () => {
+    const { officerAgent, base } = await setup();
+    const member = await addThrall(officerAgent, base);
+    const zuljin = member.characters.find((character) => character.name === 'Zuljin')!;
+
+    const response = await officerAgent
+      .put(`${base}/${member.id}/characters/${zuljin.id}`)
+      .send({ ...shaman, name: 'Saurfang', race: 'troll', class: 'priest' });
+
+    expect(response.status).toBe(400);
+    expect((response.body as Body).error.issues).toEqual([
+      { field: 'name', code: 'CHARACTER_NAME_TAKEN' },
+    ]);
+  });
+
+  it('removes a character, and the next one becomes the main', async () => {
+    const { officerAgent, base } = await setup();
+    const member = await addThrall(officerAgent, base);
+    const main = member.characters.find((character) => character.isMain)!;
+
+    const response = await officerAgent.delete(`${base}/${member.id}/characters/${main.id}`);
+    const again = await officerAgent.delete(`${base}/${member.id}/characters/${main.id}`);
+
+    expect(response.status).toBe(200);
+    expect(detail(response).characters.map((c) => [c.name, c.isMain])).toEqual([['Zuljin', true]]);
+    expect(again.status).toBe(404);
+  });
+});
+
 describe('searching the Discord server', () => {
   it('finds server members by name, marking who is already on the roster', async () => {
     const { gmAgent, guildId } = await setup();

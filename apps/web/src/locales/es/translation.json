@@ -285,7 +285,14 @@
     "noNotes": "Aún no hay notas.",
     "loading": "Cargando el miembro",
     "notFound": "Este miembro no está en la plantilla.",
-    "actionFailed": "No se pudo guardar el cambio"
+    "actionFailed": "No se pudo guardar el cambio",
+    "editCharacter": "Editar",
+    "editCharacterTitle": "Editar a {{name}}",
+    "saveCharacter": "Guardar",
+    "removeCharacter": "Quitar",
+    "removeCharacterTitle": "¿Quitar el personaje {{name}}?",
+    "removeCharacterBody": "Se conservan sus inscripciones y su asistencia pasadas, y su nombre queda libre. Si se vuelve a añadir a este miembro, se restaura.",
+    "removeMainBody": "Es el principal, así que el personaje más antiguo del miembro pasa a ser el principal. Se conservan sus inscripciones y su asistencia pasadas, y su nombre queda libre."
   },
   "registrations": {
     "title": "Solicitudes para entrar",

@@ -73,7 +73,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [016](story-016-roster-management.md) | Roster page and management | Done with debt | 014, 015 |
 | [017](story-017-character-lookup.md) | Character lookup interface | Done | 009 |
 | [018](story-018-register-command.md) | Requests to join with /register, and /main | Done with debt | 008, 016, 017 |
-| [038](story-038-edit-and-remove-characters.md) | Editing and removing characters | Not started | 016, 018 |
+| [038](story-038-edit-and-remove-characters.md) | Editing and removing characters | Done | 016, 018 |
 | [019](story-019-member-left-discord.md) | Members who leave the Discord server | Not started | 008, 016 |
 
 ### Events

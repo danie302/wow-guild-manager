@@ -10,7 +10,7 @@ The app is available in English and Spanish.
 
 - **Discord login** for everyone, with access based on the guild's roster and a Discord role for Officers.
 - **Roster** of members and their characters (main and alts), with ranks, officer notes, and rank history.
-- **Requests to join** from Discord with `/register`, approved by an Officer, and **choosing your main** with `/main`.
+- **Requests to join** from Discord with `/register`, approved by an Officer. Members **choose their main** with `/main` and **remove their characters** with `/character remove`; Officers add, edit, and remove characters in the web app.
 - **Events** (raids, dungeons, and PvP) with slots per combat role, weekly recurring events, and a post in Discord that updates in real time.
 - **Sign-ups from Discord** with a waitlist per role, and a configurable deadline for Tentative sign-ups with reminders.
 - **Missing-role alerts** in Discord before each event.

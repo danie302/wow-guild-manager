@@ -13,6 +13,7 @@ function fakeCommandInteraction(commandName: string, locale = 'en-US') {
     replied: false,
     deferred: false,
     isAutocomplete: () => false,
+    isButton: () => false,
     isChatInputCommand: () => true,
     reply: vi.fn(() => Promise.resolve()),
   };
@@ -47,12 +48,33 @@ describe('handleInteraction', () => {
     );
   });
 
+  it('sends a button click to the command its custom ID starts with', async () => {
+    const button = vi.fn(() => Promise.resolve());
+    const execute = vi.fn();
+    const command = { definition: ping.definition, execute, button } as SlashCommand;
+    const click = {
+      ...fakeCommandInteraction('ignored'),
+      customId: 'ping:again',
+      isButton: () => true,
+      isChatInputCommand: () => false,
+    };
+
+    await handleInteraction(asInteraction(click), [command], createTestLogger().logger);
+
+    expect(button).toHaveBeenCalledWith(click, expect.objectContaining({ locale: 'en' }));
+    expect(execute).not.toHaveBeenCalled();
+  });
+
   it('ignores interactions that are not slash commands', async () => {
     const execute = vi.fn();
     const command = { definition: ping.definition, execute } as SlashCommand;
 
     await handleInteraction(
-      asInteraction({ isAutocomplete: () => false, isChatInputCommand: () => false }),
+      asInteraction({
+        isAutocomplete: () => false,
+        isButton: () => false,
+        isChatInputCommand: () => false,
+      }),
       [command],
       createTestLogger().logger,
     );

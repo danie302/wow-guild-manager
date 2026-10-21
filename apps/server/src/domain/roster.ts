@@ -150,13 +150,16 @@ async function addCharacterTo(
   const hasCharacters = await Character.count({
     where: { memberId: member.id, removedAt: null },
   });
+  // A character this member had and removed comes back with its history.
+  const removed = await Character.findOne({
+    where: { memberId: member.id, removedAt: { [Op.ne]: null }, ...sameName(character.name) },
+    order: [['removedAt', 'DESC']],
+  });
+  const details = { ...character, characterClass, isMain: hasCharacters === 0 };
   try {
-    return await Character.create({
-      ...character,
-      characterClass,
-      memberId: member.id,
-      isMain: hasCharacters === 0,
-    });
+    return removed
+      ? await removed.update({ ...details, removedAt: null })
+      : await Character.create({ ...details, memberId: member.id });
   } catch (err) {
     // Another request took the name between the check and the insert.
     if (err instanceof UniqueConstraintError) {
@@ -166,16 +169,96 @@ async function addCharacterTo(
   }
 }
 
-/** Whether an active character anywhere in the game has this name (ignoring case). */
-async function nameTaken(name: string): Promise<boolean> {
-  const sequelize = Character.sequelize!;
+/**
+ * Whether an active character anywhere in the game has this name (ignoring case), other than
+ * `exceptId`.
+ */
+async function nameTaken(name: string, exceptId?: string): Promise<boolean> {
   const count = await Character.count({
     where: {
       removedAt: null,
-      [Op.and]: sequelize.where(sequelize.fn('lower', sequelize.col('name')), name.toLowerCase()),
+      ...sameName(name),
+      ...(exceptId && { id: { [Op.ne]: exceptId } }),
     },
   });
   return count > 0;
+}
+
+/** A `where` for a character name, ignoring case. */
+function sameName(name: string) {
+  const sequelize = Character.sequelize!;
+  return {
+    [Op.and]: sequelize.where(sequelize.fn('lower', sequelize.col('name')), name.toLowerCase()),
+  };
+}
+
+/**
+ * Changes a character's name, race, class, level, and professions, with the same checks as
+ * adding one. The faction stays the guild's.
+ */
+export async function updateCharacter(
+  member: Member,
+  guild: Guild,
+  characterId: string,
+  input: CharacterInput,
+): Promise<Character> {
+  return transaction(async () => {
+    const character = await activeCharacter(member, characterId);
+    const parsed = characterSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new DomainValidationError(toValidationIssues(parsed.error, input));
+    }
+    const { class: characterClass, ...details } = parsed.data;
+    const invalid = (field: string, code: ValidationIssueCode) =>
+      new DomainValidationError([{ field, code }]);
+    if (details.faction !== guild.faction) {
+      throw invalid('faction', CHARACTER_ERROR_CODES.wrongFaction);
+    }
+    if (await nameTaken(details.name, character.id)) {
+      throw invalid('name', CHARACTER_ERROR_CODES.nameTaken);
+    }
+    try {
+      return await character.update({ ...details, characterClass });
+    } catch (err) {
+      if (err instanceof UniqueConstraintError) {
+        throw invalid('name', CHARACTER_ERROR_CODES.nameTaken);
+      }
+      throw err;
+    }
+  });
+}
+
+/**
+ * Removes one of a member's characters. Its record stays, marked as removed, so past sign-ups
+ * and attendance remain, and its name is free. If it was the main, the member's oldest
+ * remaining character becomes the main.
+ */
+export async function removeCharacter(member: Member, characterId: string): Promise<Character> {
+  return transaction(async () => {
+    const character = await activeCharacter(member, characterId);
+    // Its own timestamp, so restoring the member later doesn't bring it back.
+    await character.update({ removedAt: new Date(), isMain: false });
+    const hasMain = await Character.count({
+      where: { memberId: member.id, removedAt: null, isMain: true },
+    });
+    if (!hasMain) {
+      const oldest = await Character.findOne({
+        where: { memberId: member.id, removedAt: null },
+        order: [['createdAt', 'ASC']],
+      });
+      await oldest?.update({ isMain: true });
+    }
+    return character;
+  });
+}
+
+async function activeCharacter(member: Member, characterId: string): Promise<Character> {
+  const character = await Character.findOne({
+    where: { id: characterId, memberId: member.id, removedAt: null },
+    lock: Transaction.LOCK.UPDATE,
+  });
+  if (!character) throw new DomainError({ code: 'NOT_FOUND' });
+  return character;
 }
 
 /**
@@ -228,12 +311,35 @@ export async function memberOnServer(
   return { guild, member };
 }
 
-/** What /main did. */
-export type ChooseMainOutcome =
-  | { result: 'changed' | 'already_main'; name: string }
+/** Why a member's command about one of their characters can't go ahead. */
+export type OwnCharacterRefusal =
   | { result: 'no_guild' }
   | { result: 'not_on_roster'; guild: Guild }
   | { result: 'not_your_character' };
+
+/**
+ * One of the Discord user's active characters in the guild of a Discord server, by name
+ * (ignoring case) or ID, for their commands in Discord.
+ */
+export async function ownCharacter(
+  serverId: string,
+  discordUserId: string,
+  match: { name: string } | { id: string },
+): Promise<{ result: 'found'; member: Member; character: Character } | OwnCharacterRefusal> {
+  const { guild, member } = await memberOnServer(serverId, discordUserId);
+  if (!guild) return { result: 'no_guild' };
+  if (!member) return { result: 'not_on_roster', guild };
+  const character = member.characters!.find((candidate) =>
+    'id' in match
+      ? candidate.id === match.id
+      : candidate.name.toLowerCase() === match.name.trim().toLowerCase(),
+  );
+  return character ? { result: 'found', member, character } : { result: 'not_your_character' };
+}
+
+/** What /main did. */
+export type ChooseMainOutcome =
+  { result: 'changed' | 'already_main'; name: string } | OwnCharacterRefusal;
 
 /** A member picks their main from Discord, by the name of one of their active characters. */
 export async function chooseMainByName(
@@ -241,16 +347,35 @@ export async function chooseMainByName(
   discordUserId: string,
   name: string,
 ): Promise<ChooseMainOutcome> {
-  const { guild, member } = await memberOnServer(serverId, discordUserId);
-  if (!guild) return { result: 'no_guild' };
-  if (!member) return { result: 'not_on_roster', guild };
-  const character = member.characters!.find(
-    (candidate) => candidate.name.toLowerCase() === name.trim().toLowerCase(),
-  );
-  if (!character) return { result: 'not_your_character' };
+  const own = await ownCharacter(serverId, discordUserId, { name });
+  if (own.result !== 'found') return own;
+  const { member, character } = own;
   if (character.isMain) return { result: 'already_main', name: character.name };
   await setMainCharacter(member, character.id);
   return { result: 'changed', name: character.name };
+}
+
+/** What /character remove did once confirmed. */
+export type RemoveOwnCharacterOutcome =
+  { result: 'removed'; name: string; newMain: string | null } | OwnCharacterRefusal;
+
+/**
+ * A member removes one of their own characters from Discord, after confirming. Checked again
+ * here, since the confirmation can come later: it must still be theirs and active.
+ */
+export async function removeOwnCharacter(
+  serverId: string,
+  discordUserId: string,
+  characterId: string,
+): Promise<RemoveOwnCharacterOutcome> {
+  const own = await ownCharacter(serverId, discordUserId, { id: characterId });
+  if (own.result !== 'found') return own;
+  const { member, character } = own;
+  await removeCharacter(member, character.id);
+  const main = character.isMain
+    ? await Character.findOne({ where: { memberId: member.id, removedAt: null, isMain: true } })
+    : null;
+  return { result: 'removed', name: character.name, newMain: main?.name ?? null };
 }
 
 /**
