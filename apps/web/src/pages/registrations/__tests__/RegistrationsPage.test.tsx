@@ -1,5 +1,5 @@
 import type { PendingRegistration } from '@wgm/shared';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -29,7 +29,9 @@ const furion: PendingRegistration = {
 };
 
 function items() {
-  return within(screen.getByRole('list', { name: 'Requests to join' })).getAllByRole('listitem');
+  return within(screen.getByRole('list', { name: 'Pending registrations' })).getAllByRole(
+    'listitem',
+  );
 }
 
 describe('RegistrationsPage', () => {
@@ -40,7 +42,7 @@ describe('RegistrationsPage', () => {
 
     expect(await screen.findByText('Tyra')).toBeInTheDocument();
     const [first, second] = items();
-    expect(first).toHaveTextContent('/register · Oct 20, 2026, 6:30 PM');
+    expect(first).toHaveTextContent(/\/register · \d+ (s|min|h|d) ago/);
     expect(first).not.toHaveTextContent('Was on the roster');
     expect(second).toHaveTextContent('Was on the roster: comes back with their characters');
   });
@@ -50,7 +52,7 @@ describe('RegistrationsPage', () => {
 
     renderRoute(path);
 
-    expect(await screen.findByText('No requests waiting.')).toBeInTheDocument();
+    expect(await screen.findByText('No registrations waiting.')).toBeInTheDocument();
   });
 
   it('approves a request and links to the new member to add their characters', async () => {
@@ -67,12 +69,12 @@ describe('RegistrationsPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Approve' }));
 
-    expect(await screen.findByText('Tyra joined the roster.')).toBeInTheDocument();
+    expect(await screen.findByText('Tyra approved')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Add characters' })).toHaveAttribute(
       'href',
       `/guilds/${ashenId}/roster/${memberId}`,
     );
-    expect(await screen.findByText('No requests waiting.')).toBeInTheDocument();
+    expect(await screen.findByText('No registrations waiting.')).toBeInTheDocument();
   });
 
   it('says when a returning member gets their characters back', async () => {
@@ -86,7 +88,7 @@ describe('RegistrationsPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Approve' }));
 
     expect(
-      await screen.findByText('Furion is back on the roster, with their characters.'),
+      await screen.findByText('Furion approved, back with their characters'),
     ).toBeInTheDocument();
   });
 
@@ -102,7 +104,7 @@ describe('RegistrationsPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Approve' }));
 
     expect(
-      await screen.findByText('This request was already approved or rejected.'),
+      await screen.findByText('This registration was already approved or rejected.'),
     ).toBeInTheDocument();
   });
 
@@ -119,12 +121,12 @@ describe('RegistrationsPage', () => {
     renderRoute(path);
 
     await user.click(await screen.findByRole('button', { name: 'Reject' }));
-    const dialog = await screen.findByRole('dialog', { name: "Reject Tyra's request?" });
+    const dialog = await screen.findByRole('dialog', { name: 'Reject Tyra?' });
     expect(dialog).toHaveTextContent('Tyra gets a direct message');
     await user.click(within(dialog).getByRole('button', { name: 'Reject' }));
 
-    expect(await screen.findByText("Tyra's request was rejected.")).toBeInTheDocument();
-    expect(await screen.findByText('No requests waiting.')).toBeInTheDocument();
+    expect(await screen.findByText('Tyra rejected')).toBeInTheDocument();
+    expect(await screen.findByText('No registrations waiting.')).toBeInTheDocument();
   });
 
   it('marks a request from someone who left the Discord server', async () => {
@@ -135,5 +137,14 @@ describe('RegistrationsPage', () => {
     renderRoute(path);
 
     expect(await screen.findByText('Left the Discord server')).toBeInTheDocument();
+  });
+
+  it('shows how many requests are waiting in the sidebar', async () => {
+    mockApi({ [api]: () => Response.json([tyra, furion]) });
+
+    renderRoute(path);
+
+    const link = await screen.findByRole('link', { name: /Pending registrations/ });
+    await waitFor(() => expect(link).toHaveTextContent('Pending registrations2'));
   });
 });

@@ -1,6 +1,6 @@
 # Story 018: Requests to join with /register, and /main
 
-**Status:** Done with debt  
+**Status:** Done  
 **Phase:** Roster  
 **Depends on:** [Story 008](story-008-bot-skeleton.md), [Story 016](story-016-roster-management.md), [Story 017](story-017-character-lookup.md)
 
@@ -11,7 +11,7 @@ Let people ask to join the roster from Discord, for the Guild Master or an Offic
 ## Scope
 
 - A `/register` command, without options, that sends a request to join the guild of the Discord server.
-- A "Requests to join" page in the web app (screen 06), to approve or reject them.
+- A "Pending registrations" page in the web app (screen 06), to approve or reject them.
 - A direct message with the result.
 - A `/main <character>` command that suggests the member's characters and makes the chosen one their main.
 
@@ -41,5 +41,4 @@ Let people ask to join the roster from Discord, for the Guild Master or an Offic
 
 ## Technical debt
 
-- Officers aren't told about new requests; they see them on this page (and on the dashboard, story 034). The sidebar has no count of pending requests.
-- Times show as dates, not relative ("2 h ago") as in the design: `useFormat()` has no relative time yet.
+None. (Resolved on 2026-10-21: the sidebar shows how many requests are waiting, and the page shows relative times such as "3h ago". The dashboard lists pending requests in story 034.)

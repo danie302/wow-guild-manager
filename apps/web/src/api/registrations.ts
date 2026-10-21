@@ -6,10 +6,11 @@ import { apiRequest } from './client';
 const registrationsKey = (guildId: string) => ['guilds', guildId, 'registrations'] as const;
 
 /** Requests to join the roster, made with /register, waiting for the Guild Master or an Officer. */
-export function useRegistrations(guildId: string) {
+export function useRegistrations(guildId: string, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: registrationsKey(guildId),
     queryFn: () => apiRequest<PendingRegistration[]>(`/guilds/${guildId}/registrations`),
+    enabled: enabled && guildId !== '',
   });
 }
 

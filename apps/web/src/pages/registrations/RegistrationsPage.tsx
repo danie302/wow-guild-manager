@@ -50,11 +50,11 @@ export function RegistrationsPage() {
   };
 
   return (
-    <Page>
+    <Page narrow>
       <Page.Header>
         <div>
           <Page.Title>{t('registrations.title')}</Page.Title>
-          <Page.Text>{t('registrations.lead')}</Page.Text>
+          <Page.Lead>{t('registrations.lead')}</Page.Lead>
         </div>
       </Page.Header>
 
@@ -83,26 +83,21 @@ export function RegistrationsPage() {
         {registrations.data.map((registration) => (
           <ActionList.Item
             key={registration.id}
-            title={
-              <>
-                <strong>{registration.discordName}</strong>
-                <Page.Text>
-                  {t('registrations.requestedAt', {
-                    date: format.dateTime(new Date(registration.requestedAt)),
-                  })}
-                </Page.Text>
-              </>
-            }
+            title={registration.discordName}
+            detail={t('registrations.requestedAt', {
+              date: format.relative(new Date(registration.requestedAt)),
+            })}
             actions={
               <>
                 <Button
                   variant="primary"
+                  size="medium"
                   onClick={() => approveRequest(registration)}
                   disabled={busy}
                 >
                   {t('registrations.approve')}
                 </Button>
-                <Button onClick={() => setRejecting(registration)} disabled={busy}>
+                <Button size="medium" onClick={() => setRejecting(registration)} disabled={busy}>
                   {t('registrations.reject')}
                 </Button>
               </>

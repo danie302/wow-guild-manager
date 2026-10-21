@@ -35,6 +35,9 @@ export const theme = createTheme({
   typography: {
     fontFamily,
     fontSize: 14,
+    // The design's base text: 14px with a line height of 1.45 (MUI's default is 16px).
+    body1: { fontSize: 14, lineHeight: 1.45 },
+    body2: { fontSize: 13, lineHeight: 1.45 },
     h1: { fontSize: 30, fontWeight: 800, letterSpacing: '-0.015em', lineHeight: 1.1 },
     h2: {
       fontSize: 12,
@@ -47,6 +50,10 @@ export const theme = createTheme({
   components: {
     // Flat surfaces: no shadows except dialogs and toasts.
     MuiPaper: { defaultProps: { elevation: 0 } },
+    // Numbers line up in columns (counts, times, item levels), as in the design.
+    MuiCssBaseline: {
+      styleOverrides: { body: { fontVariantNumeric: 'tabular-nums' } },
+    },
     MuiButton: { defaultProps: { disableElevation: true } },
   },
 });

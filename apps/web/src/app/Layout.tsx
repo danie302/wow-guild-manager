@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate } from 'react-router';
 
 import { useLogout, useMe, useSaveSettings } from '../api/me';
+import { useRegistrations } from '../api/registrations';
 import { guildPath, lastGuild, useGuildIdParam } from './guildSelection';
 
 import { AppShell, Button, useThemeMode } from '../components/ui';
@@ -21,6 +22,10 @@ export function Layout() {
   const urlGuildId = useGuildIdParam();
   const guild =
     guilds.find((candidate) => candidate.id === urlGuildId) ?? lastGuild(guilds) ?? guilds[0];
+  // Only the Guild Master and Officers see requests to join.
+  const registrations = useRegistrations(guild?.id ?? '', {
+    enabled: guild?.access === 'guild_master' || guild?.access === 'officer',
+  });
   const createValue = 'new';
   const switcherOptions = [
     ...guilds.map((option) => ({ value: option.id, label: option.name })),
@@ -58,7 +63,11 @@ export function Layout() {
               <AppShell.NavItem to={guildPath(guild.id, 'roster')} icon="roster">
                 {t('nav.roster')}
               </AppShell.NavItem>
-              <AppShell.NavItem to={guildPath(guild.id, 'registrations')} icon="registrations">
+              <AppShell.NavItem
+                to={guildPath(guild.id, 'registrations')}
+                icon="registrations"
+                badge={registrations.data?.length}
+              >
                 {t('nav.registrations')}
               </AppShell.NavItem>
               <AppShell.NavItem to={guildPath(guild.id, 'attendance')} icon="report">

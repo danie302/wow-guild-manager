@@ -12,8 +12,20 @@ import { token } from './tokens';
  *   <Page.Section title="…">…</Page.Section>
  * </Page>
  */
-function PageRoot({ children }: { children: ReactNode }) {
-  return <Box sx={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>{children}</Box>;
+/** `narrow` caps the width, for a page with a single list (e.g. requests to join). */
+function PageRoot({ children, narrow }: { children: ReactNode; narrow?: boolean }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '28px',
+        ...(narrow && { maxWidth: 1000 }),
+      }}
+    >
+      {children}
+    </Box>
+  );
 }
 
 function Header({ children }: { children: ReactNode }) {
@@ -71,6 +83,15 @@ function Footer({ children }: { children: ReactNode }) {
         borderTop: `2px solid ${token('dv')}`,
       }}
     >
+      {children}
+    </Box>
+  );
+}
+
+/** The sentence under a page title that says what the page is for. */
+function Lead({ children }: { children: ReactNode }) {
+  return (
+    <Box component="p" sx={{ m: 0, color: token('mt'), maxWidth: 640 }}>
       {children}
     </Box>
   );
@@ -150,4 +171,5 @@ export const Page = Object.assign(PageRoot, {
   Text,
   Muted,
   Footer,
+  Lead,
 });

@@ -200,9 +200,11 @@ export interface AppShellNavItemProps {
   children: ReactNode;
   /** Only active on this exact path, not on its children (use for "/"). */
   end?: boolean;
+  /** A count to show, e.g. requests waiting; hidden when 0 or left out. */
+  badge?: number;
 }
 
-function NavItem({ to, icon, children, end }: AppShellNavItemProps) {
+function NavItem({ to, icon, children, end, badge }: AppShellNavItemProps) {
   useAppShell('NavItem');
   return (
     <Box
@@ -232,6 +234,20 @@ function NavItem({ to, icon, children, end }: AppShellNavItemProps) {
       <Box component="span" sx={{ flex: 1 }}>
         {children}
       </Box>
+      {badge ? (
+        <Box
+          component="span"
+          sx={{
+            fontSize: 11,
+            fontWeight: 800,
+            p: '1px 6px',
+            bgcolor: token('ac'),
+            color: token('ac-on'),
+          }}
+        >
+          {badge}
+        </Box>
+      ) : null}
     </Box>
   );
 }

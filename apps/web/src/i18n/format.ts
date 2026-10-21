@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { useMe } from '../api/me';
+import { i18n } from './index';
 
 /** The browser's time zone, used before login and as the default for a new user. */
 export function browserTimeZone(): string {
@@ -29,6 +30,18 @@ export function formatters(locale: string, timeZone: string) {
       }).format(value),
     date: (value: Date | number) =>
       new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(value),
+    /** How long ago, as in the design: "3 h ago" or "hace 3 h". */
+    relative: (value: Date | number, now = Date.now()) => {
+      const seconds = Math.max(0, Math.round((now - Number(value)) / 1000));
+      const units: [string, number][] = [
+        ['d', 86_400],
+        ['h', 3_600],
+        ['min', 60],
+      ];
+      const [unit, size] = units.find(([, length]) => seconds >= length) ?? ['s', 1];
+      const amount = new Intl.NumberFormat(locale).format(Math.floor(seconds / size));
+      return i18n.getFixedT(locale)('time.ago', { value: `${amount} ${unit}` });
+    },
     /** Only the given parts (e.g. `{ weekday: 'short' }`), in the user's time zone. */
     parts: (value: Date | number, options: Intl.DateTimeFormatOptions) =>
       new Intl.DateTimeFormat(locale, { timeZone, ...options }).format(value),
