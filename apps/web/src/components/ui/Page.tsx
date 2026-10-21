@@ -85,4 +85,9 @@ function Setting({ title, description, children }: PageSettingProps) {
   );
 }
 
-export const Page = Object.assign(PageRoot, { Header, Title, Section, Setting });
+/** A muted line of explanation. */
+function Text({ children }: { children: ReactNode }) {
+  return <Box sx={{ fontSize: 13, color: token('mt') }}>{children}</Box>;
+}
+
+export const Page = Object.assign(PageRoot, { Header, Title, Section, Setting, Text });

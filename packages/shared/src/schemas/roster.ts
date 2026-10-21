@@ -12,12 +12,15 @@ export const ROSTER_ERROR_CODES = {
   notInServer: 'DISCORD_USER_NOT_IN_SERVER',
 } as const;
 
-/** Body of `POST /api/guilds/:guildId/members`: a Discord user and their characters. */
+/**
+ * Body of `POST /api/guilds/:guildId/members`: a Discord user and their characters, if any.
+ * A member can be added without characters, e.g. to register them later with /register.
+ */
 export const addMemberSchema = z
   .object({
     discordUserId: discordIdSchema,
     rank: z.enum(BASE_RANKS),
-    characters: z.array(characterSchema).min(1),
+    characters: z.array(characterSchema).default([]),
   })
   .strict();
 

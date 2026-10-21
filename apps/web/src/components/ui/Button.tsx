@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 
 import { Icon, type IconName } from './Icon';
 import { token } from './tokens';
@@ -11,6 +12,8 @@ export interface ButtonProps {
   size?: 'small' | 'large';
   /** Renders a link that looks like a button, for actions that leave the page. */
   href?: string;
+  /** A page in the app to open, without reloading it. */
+  to?: string;
   /** With `href`, opens the link in a new tab. */
   newTab?: boolean;
   /** `submit` makes the button send its form. */
@@ -25,6 +28,7 @@ export function Button({
   variant = 'secondary',
   size = 'small',
   href,
+  to,
   newTab,
   type = 'button',
   onClick,
@@ -35,10 +39,12 @@ export function Button({
   const large = size === 'large';
   return (
     <Box
-      component={href ? 'a' : 'button'}
-      {...(href
-        ? { href, ...(newTab && { target: '_blank', rel: 'noopener noreferrer' }) }
-        : { type, onClick, disabled })}
+      component={to ? Link : href ? 'a' : 'button'}
+      {...(to
+        ? { to }
+        : href
+          ? { href, ...(newTab && { target: '_blank', rel: 'noopener noreferrer' }) }
+          : { type, onClick, disabled })}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',

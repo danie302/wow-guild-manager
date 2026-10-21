@@ -28,6 +28,13 @@ export interface ComboBoxProps {
   /** Help text under the field. */
   hint?: string;
   disabled?: boolean;
+  /**
+   * For options searched on the server: called with the typed text, and the options are shown
+   * as given instead of filtered here.
+   */
+  onInputChange?: (text: string) => void;
+  /** Shown in the field while it's empty. */
+  placeholder?: string;
 }
 
 /** Lowercase, without accents, and with "_" and "/" as spaces, so "sao paulo" finds "São_Paulo". */
@@ -58,6 +65,8 @@ export function ComboBox({
   noOptionsText,
   hint,
   disabled,
+  onInputChange,
+  placeholder,
 }: ComboBoxProps) {
   const id = useId();
   const selected = options.find((option) => option.value === value) ?? null;
@@ -79,8 +88,15 @@ export function ComboBox({
         disableClearable={selected !== null}
         autoHighlight
         filterOptions={(list, state) =>
-          filterOptions(list, { ...state, inputValue: searchable(state.inputValue) })
+          onInputChange
+            ? list
+            : filterOptions(list, { ...state, inputValue: searchable(state.inputValue) })
         }
+        {...(onInputChange && {
+          onInputChange: (_event: unknown, text: string, reason: string) => {
+            if (reason === 'input') onInputChange(text);
+          },
+        })}
         groupBy={(option) => option.group ?? ''}
         getOptionLabel={(option) =>
           option.group ? `${option.label} · ${option.group}` : option.label
@@ -105,6 +121,7 @@ export function ComboBox({
         renderInput={(params) => (
           <TextField
             {...params}
+            placeholder={placeholder}
             size="small"
             slotProps={{
               ...params.slotProps,

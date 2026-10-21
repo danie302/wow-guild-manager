@@ -37,7 +37,7 @@ export function GuildPickerPage() {
         ))}
       </Splash.List>
       <Splash.Actions>
-        {me?.canCreateGuild && <Button href="/setup">{t('nav.createGuild')}</Button>}
+        {me?.canCreateGuild && <Button to="/setup">{t('nav.createGuild')}</Button>}
         <Button onClick={() => logout.mutate()} disabled={logout.isPending}>
           {t('noAccess.otherAccount')}
         </Button>

@@ -73,13 +73,13 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 - Each member has:
   - A linked Discord account
   - A rank. The Officer rank comes from the Discord role. Raider and Member are set in the app.
-  - One or more characters, one of which is their **main**. The others are **alts**.
+  - Their characters, one of which is their **main**. The others are **alts**. A member can be added without characters and get them later (by hand or with `/register`).
   - Private officer notes (e.g. warnings, trial status)
   - A history of rank changes, including gaining or losing the Officer role in Discord
 - Members register their own characters with a `/register` command in Discord. The app looks the character up in the Battle.net API to confirm it exists and fills in its class, race, and level. An Officer then approves the registration.
 - If the Battle.net API can't find the character, the registration is still sent to Officers, flagged, with class, race, and level entered by hand.
 - The Guild Master and Officers can also add members and characters by hand, choosing the member's Discord account from the server's members.
-- A member's first character becomes their main. The Guild Master and Officers can change which character is the main. The roster shows each member's main, with a count of their alts.
+- A member's first character becomes their main, whenever it's added. The Guild Master and Officers can change which character is the main. The roster shows each member's main, with a count of their alts.
 - When a member leaves the guild's Discord server, they are flagged on the roster and the dashboard. An Officer decides whether to remove them. They aren't removed automatically.
 - When a member is removed from the roster:
   - Their sign-ups for upcoming events are removed and their spots are released.

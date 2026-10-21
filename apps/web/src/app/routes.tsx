@@ -7,6 +7,8 @@ import { GuildSetupPage } from '../pages/GuildSetupPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NoAccessPage } from '../pages/NoAccessPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
+import { MemberPage } from '../pages/roster/MemberPage';
+import { RosterPage } from '../pages/roster/RosterPage';
 import { StatusPage } from '../pages/StatusPage';
 import { UserSettingsPage } from '../pages/UserSettingsPage';
 import { GuildRoute } from './GuildRoute';
@@ -35,7 +37,8 @@ export const routes: RouteObject[] = [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <DashboardPage /> },
               { path: 'events', element: <PlaceholderPage titleKey="nav.events" /> },
-              { path: 'roster', element: <PlaceholderPage titleKey="nav.roster" /> },
+              { path: 'roster', element: <RosterPage /> },
+              { path: 'roster/:memberId', element: <MemberPage /> },
               { path: 'registrations', element: <PlaceholderPage titleKey="nav.registrations" /> },
               { path: 'attendance', element: <PlaceholderPage titleKey="nav.attendance" /> },
               { path: 'settings', element: <GuildSettingsPage /> },

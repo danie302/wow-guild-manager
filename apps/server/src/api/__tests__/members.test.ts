@@ -136,6 +136,18 @@ describe('adding a member', () => {
     ]);
   });
 
+  it('adds a member without characters', async () => {
+    const { gmAgent, base } = await setup();
+
+    const response = await gmAgent.post(base).send({ discordUserId: thrall, rank: 'member' });
+
+    expect(response.status).toBe(201);
+    expect(added(response).member).toMatchObject({ discordName: 'Thrall', characters: [] });
+    expect(
+      roster(await gmAgent.get(base)).find((m) => m.discordName === 'Thrall')?.characters,
+    ).toEqual([]);
+  });
+
   it('rejects an invalid character with the field that is wrong', async () => {
     const { gmAgent, base } = await setup();
 

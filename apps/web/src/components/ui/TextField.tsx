@@ -14,6 +14,12 @@ export interface TextFieldProps {
   maxLength?: number;
   autoFocus?: boolean;
   disabled?: boolean;
+  placeholder?: string;
+  /** Hide the label when the page already shows what the field is for, e.g. a search box. */
+  hideLabel?: boolean;
+  /** Several lines, e.g. a note. */
+  multiline?: boolean;
+  type?: 'text' | 'number' | 'search';
 }
 
 /** A one-line text input with its label above it. */
@@ -26,19 +32,27 @@ export function TextField({
   maxLength,
   autoFocus,
   disabled,
+  placeholder,
+  hideLabel,
+  multiline,
+  type = 'text',
 }: TextFieldProps) {
   const id = useId();
   const message = error ?? hint;
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: 420 }}>
-      <Box component="label" htmlFor={id} sx={{ fontWeight: 700 }}>
+      <Box component="label" htmlFor={id} sx={hideLabel ? visuallyHidden : { fontWeight: 700 }}>
         {label}
       </Box>
       <Box
-        component="input"
+        component={multiline ? 'textarea' : 'input'}
         id={id}
+        {...(multiline ? { rows: 3 } : { type })}
+        placeholder={placeholder}
         value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
+        onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+          onChange(event.target.value)
+        }
         maxLength={maxLength}
         autoFocus={autoFocus}
         disabled={disabled}
@@ -49,6 +63,7 @@ export function TextField({
           p: '7px 10px',
           font: 'inherit',
           fontSize: 14,
+          resize: 'vertical',
           color: token('tx'),
           bgcolor: token('bg'),
           border: `1px solid ${error ? token('bad') : token('dv')}`,
@@ -64,3 +79,12 @@ export function TextField({
     </Box>
   );
 }
+
+const visuallyHidden = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+} as const;

@@ -33,6 +33,7 @@ function mockSettingsApi(start: GuildResponse = testGuild) {
       return Response.json(guild);
     },
     '/api/discord/servers/300000000000000001/roles': () => Response.json(roles),
+    [`/api/guilds/${ashenId}/members`]: () => Response.json([]),
   });
 }
 

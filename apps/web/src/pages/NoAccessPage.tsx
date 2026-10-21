@@ -28,7 +28,7 @@ export function NoAccessPage() {
           <Splash.Card
             title={t('noAccess.newGuildTitle')}
             action={
-              <Button variant="primary" href="/setup">
+              <Button variant="primary" to="/setup">
                 {t('noAccess.createGuild')}
               </Button>
             }
