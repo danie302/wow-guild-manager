@@ -3,6 +3,7 @@ import { pinoHttp } from 'pino-http';
 
 import type { DiscordOAuth } from '../auth/discord-oauth.js';
 import type { Logger } from '../logger.js';
+import { memoryFileStorage, type FileStorage } from '../storage/file-storage.js';
 import { authRouter } from './auth.js';
 import { discordRouter, type DiscordAccess } from './discord.js';
 import { errorHandler, notFoundHandler } from './errors.js';
@@ -16,6 +17,8 @@ export interface AppDependencies {
   healthChecks: HealthChecks;
   /** Sessions and the Discord login. Tests that don't need them can leave this out. */
   auth?: SessionOptions & { oauth: DiscordOAuth | null };
+  /** Where uploads (guild images) are kept. Tests that don't upload can leave it out. */
+  storage?: FileStorage;
   /** Reading Discord with the bot token. Null (or left out) when it isn't set up. */
   discord?: DiscordAccess | null;
   /** Set behind a reverse proxy that terminates HTTPS, so secure cookies work. */
@@ -28,6 +31,7 @@ export function createApp({
   healthChecks,
   auth,
   discord = null,
+  storage = memoryFileStorage(),
   trustProxy,
 }: AppDependencies): Express {
   const app = express();
@@ -46,7 +50,7 @@ export function createApp({
     api.use(authRouter(auth.oauth));
     api.use(meRouter());
     api.use(discordRouter(discord));
-    api.use(guildsRouter(discord));
+    api.use(guildsRouter(discord, storage));
   }
   app.use('/api', api);
 

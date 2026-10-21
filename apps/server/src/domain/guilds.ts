@@ -33,19 +33,18 @@ export async function createGuild(
 }
 
 /**
- * Connects the guild to another server or Officer role. Callers check the permission first
- * (`connectDiscordServer` and `chooseOfficerRole`). The user must manage the new server.
+ * Checks that the guild can be connected to this server and Officer role: the user manages the
+ * server, the role is in it, and no other guild uses the server. Callers check the permissions
+ * (`connectDiscordServer` and `chooseOfficerRole`) and save the change.
  */
-export async function changeGuildDiscord(
+export async function checkGuildDiscordChange(
   user: User,
   guild: Guild,
   input: GuildDiscordInput,
   discord: DiscordDirectory,
-): Promise<Guild> {
+): Promise<void> {
   await checkDiscordConnection(user, input, discord);
   await checkServerIsFree(input.discordServerId, guild.id);
-
-  return withUniqueErrors(() => guild.update(input));
 }
 
 /** The servers where the bot is and `user` can manage the server, by name. */
@@ -126,7 +125,7 @@ async function checkServerIsFree(serverId: string, exceptGuildId?: string): Prom
 }
 
 /** Two requests at once can both pass the checks above; the unique indexes catch the second. */
-async function withUniqueErrors(save: () => Promise<Guild>): Promise<Guild> {
+export async function withUniqueErrors(save: () => Promise<Guild>): Promise<Guild> {
   try {
     return await save();
   } catch (err) {

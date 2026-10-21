@@ -12,7 +12,7 @@ export const testUser: MeResponse = {
   locale: 'en',
   timeZone: 'UTC',
   theme: 'dark',
-  guilds: [{ id: ashenId, name: 'Ashen Vanguard', access: 'guild_master' }],
+  guilds: [{ id: ashenId, name: 'Ashen Vanguard', imageUrl: null, access: 'guild_master' }],
   canCreateGuild: false,
 };
 
@@ -23,6 +23,7 @@ export const testGuild: GuildResponse = {
   id: ashenId,
   name: 'Ashen Vanguard',
   faction: 'alliance',
+  imageUrl: null,
   access: 'guild_master',
   discordServer: { id: '300000000000000001', name: 'Ashen Vanguard Discord', iconUrl: null },
   officerRole: { id: '400000000000000001', name: 'Officers' },

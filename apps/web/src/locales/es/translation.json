@@ -43,7 +43,10 @@
     "ALREADY_LEADS_GUILD": "Ya lideras una hermandad. Transfiere su liderazgo antes de crear otra.",
     "DISCORD_SERVER_TAKEN": "Ese servidor de Discord ya está conectado a otra hermandad.",
     "DISCORD_NOT_CONFIGURED": "Discord aún no está configurado en este servidor, así que no se pueden conectar hermandades.",
-    "DISCORD_UNAVAILABLE": "Discord no responde en este momento. Inténtalo de nuevo en un rato."
+    "DISCORD_UNAVAILABLE": "Discord no responde en este momento. Inténtalo de nuevo en un rato.",
+    "FILE_TOO_LARGE": "El archivo es demasiado grande.",
+    "UNSUPPORTED_FILE_TYPE": "Este tipo de archivo no es compatible.",
+    "INVALID_IMAGE": "No se pudo leer el archivo como imagen."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",
@@ -160,5 +163,36 @@
     "title": "Elige una hermandad",
     "lead": "Tienes acceso a más de una hermandad. Puedes cambiar más tarde desde la barra lateral.",
     "yourRank": "Tú: {{rank}}"
+  },
+  "guildSettings": {
+    "title": "Ajustes de la hermandad",
+    "identity": "Identidad",
+    "identityHelp": "Cómo aparece la hermandad en la aplicación.",
+    "name": "Nombre de la hermandad",
+    "image": "Imagen de la hermandad",
+    "imageHelp": "PNG, JPEG o WebP, de hasta 5 MB. Se recorta cuadrada.",
+    "imageTooLarge": "La imagen es demasiado grande. Usa una de hasta 5 MB.",
+    "imageWrongType": "Usa una imagen PNG, JPEG o WebP.",
+    "chooseImage": "Subir imagen",
+    "removeImage": "Quitar imagen",
+    "discord": "Discord",
+    "discordHelp": "El servidor donde publica el bot y el rol que convierte a los miembros en Officers.",
+    "server": "Servidor de Discord",
+    "changeServer": "Cambiar de servidor",
+    "serverUnavailable": "No se puede leer de Discord en este momento",
+    "ownerNote": "Ser propietario del servidor de Discord no convierte a nadie en Guild Master aquí.",
+    "officerRole": "Rol de Discord que otorga el rango de Officer",
+    "chooseRole": "Elige el rol de Officer del nuevo servidor.",
+    "gmOnly": "Solo el Guild Master puede cambiar esto.",
+    "unsaved": "Cambios sin guardar",
+    "saved": "Todos los cambios guardados",
+    "save": "Guardar",
+    "discard": "Descartar cambios",
+    "saveFailed": "No se pudieron guardar algunos cambios",
+    "leaveTitle": "¿Salir sin guardar?",
+    "leaveBody": "Se perderán tus cambios en los ajustes de la hermandad.",
+    "leave": "Salir",
+    "stay": "Seguir editando",
+    "loading": "Cargando los ajustes de la hermandad"
   }
 }

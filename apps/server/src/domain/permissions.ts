@@ -8,6 +8,8 @@ import type { GuildAccess } from '@wgm/shared';
 export const PERMISSIONS = {
   /** Open the guild's pages. */
   viewGuild: ['guild_master', 'officer'],
+  /** Edit the guild name and image. */
+  editGuildProfile: ['guild_master'],
   /** Connect the guild's Discord server. */
   connectDiscordServer: ['guild_master'],
   /** Choose the Discord role that grants Officer. */

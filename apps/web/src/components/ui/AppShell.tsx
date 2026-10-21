@@ -89,27 +89,33 @@ export interface AppShellBrandProps {
   subtitle?: string;
   /** One or two letters shown in the square badge. */
   initials: string;
+  /** Shown instead of the initials when set. */
+  imageUrl?: string | null;
 }
 
-function Brand({ title, subtitle, initials }: AppShellBrandProps) {
+function Brand({ title, subtitle, initials, imageUrl }: AppShellBrandProps) {
   useAppShell('Brand');
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', p: '18px 16px', flex: 'none' }}>
-      <Box
-        sx={{
-          width: 30,
-          height: 30,
-          display: 'grid',
-          placeItems: 'center',
-          flex: 'none',
-          bgcolor: token('ac'),
-          color: token('ac-on'),
-          fontWeight: 800,
-          fontSize: 12,
-        }}
-      >
-        {initials}
-      </Box>
+      {imageUrl ? (
+        <Box component="img" src={imageUrl} alt="" sx={{ width: 30, height: 30, flex: 'none' }} />
+      ) : (
+        <Box
+          sx={{
+            width: 30,
+            height: 30,
+            display: 'grid',
+            placeItems: 'center',
+            flex: 'none',
+            bgcolor: token('ac'),
+            color: token('ac-on'),
+            fontWeight: 800,
+            fontSize: 12,
+          }}
+        >
+          {initials}
+        </Box>
+      )}
       <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Box sx={{ fontWeight: 800, fontSize: 14, lineHeight: 1.15, whiteSpace: 'nowrap' }}>
           {title}

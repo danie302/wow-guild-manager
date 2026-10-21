@@ -11,6 +11,7 @@ import { cachedDiscordDirectory } from '../integrations/discord/cached-directory
 import { botInviteUrl } from '../integrations/discord/invite.js';
 import { createRestDiscordDirectory } from '../integrations/discord/rest-directory.js';
 import { createLogger } from '../logger.js';
+import { localFileStorage } from '../storage/file-storage.js';
 
 // Migrations run before this process starts (see the api command in docker-compose.yml), never from bot or worker.
 
@@ -68,6 +69,7 @@ const app = createApp({
     oauth,
   },
   discord,
+  storage: localFileStorage(config.UPLOADS_DIR),
   trustProxy: production,
 });
 

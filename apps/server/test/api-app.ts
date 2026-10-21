@@ -5,6 +5,7 @@ import { expect } from 'vitest';
 import type { DiscordAccess } from '../src/api/discord.js';
 import { createApp } from '../src/api/app.js';
 import type { DiscordOAuth, DiscordProfile } from '../src/auth/discord-oauth.js';
+import type { FileStorage } from '../src/storage/file-storage.js';
 import { createTestLogger } from '../src/test-logger.js';
 
 const up = () => Promise.resolve();
@@ -21,7 +22,7 @@ const fakeOAuth: DiscordOAuth = {
 };
 
 /** The API with sessions, a fake Discord login, and the given Discord access. */
-export function testApp(discord: DiscordAccess | null = null) {
+export function testApp(discord: DiscordAccess | null = null, storage?: FileStorage) {
   return createApp({
     logger: createTestLogger().logger,
     healthChecks: { database: up, redis: up },
@@ -32,6 +33,7 @@ export function testApp(discord: DiscordAccess | null = null) {
       oauth: fakeOAuth,
     },
     discord,
+    ...(storage && { storage }),
   });
 }
 

@@ -43,7 +43,10 @@
     "ALREADY_LEADS_GUILD": "You already lead a guild. Transfer its leadership before creating another.",
     "DISCORD_SERVER_TAKEN": "That Discord server is already connected to another guild.",
     "DISCORD_NOT_CONFIGURED": "Discord isn't set up on this server yet, so guilds can't be connected.",
-    "DISCORD_UNAVAILABLE": "Discord isn't responding right now. Please try again in a moment."
+    "DISCORD_UNAVAILABLE": "Discord isn't responding right now. Please try again in a moment.",
+    "FILE_TOO_LARGE": "The file is too big.",
+    "UNSUPPORTED_FILE_TYPE": "This file type isn't supported.",
+    "INVALID_IMAGE": "The file couldn't be read as an image."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -160,5 +163,36 @@
     "title": "Choose a guild",
     "lead": "You have access to more than one guild. You can switch later from the sidebar.",
     "yourRank": "You: {{rank}}"
+  },
+  "guildSettings": {
+    "title": "Guild settings",
+    "identity": "Identity",
+    "identityHelp": "How the guild appears in the app.",
+    "name": "Guild name",
+    "image": "Guild image",
+    "imageHelp": "PNG, JPEG, or WebP, up to 5 MB. It is cropped square.",
+    "imageTooLarge": "The image is too big. Use one up to 5 MB.",
+    "imageWrongType": "Use a PNG, JPEG, or WebP image.",
+    "chooseImage": "Upload image",
+    "removeImage": "Remove image",
+    "discord": "Discord",
+    "discordHelp": "The server the bot posts in, and the role that makes members Officers.",
+    "server": "Discord server",
+    "changeServer": "Change server",
+    "serverUnavailable": "Can't be read from Discord right now",
+    "ownerNote": "Owning the Discord server doesn't make someone the Guild Master here.",
+    "officerRole": "Discord role that grants Officer",
+    "chooseRole": "Choose the Officer role for the new server.",
+    "gmOnly": "Only the Guild Master can change these.",
+    "unsaved": "Unsaved changes",
+    "saved": "All changes saved",
+    "save": "Save",
+    "discard": "Discard changes",
+    "saveFailed": "Some changes could not be saved",
+    "leaveTitle": "Leave without saving?",
+    "leaveBody": "Your changes to the guild settings will be lost.",
+    "leave": "Leave",
+    "stay": "Keep editing",
+    "loading": "Loading the guild settings"
   }
 }

@@ -3,6 +3,7 @@ import type {
   CreateGuildInput,
   DiscordRolesResponse,
   DiscordServersResponse,
+  GuildDiscordInput,
   GuildResponse,
 } from '@wgm/shared';
 
@@ -47,6 +48,36 @@ export function useCreateGuild() {
     onSuccess: async (guild) => {
       queryClient.setQueryData(['guilds', guild.id], guild);
       // The user's guild list in /api/me now includes it.
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+}
+
+/** The guild settings page's changes. Only what changed is sent. */
+export interface GuildSettingsChanges {
+  name?: string;
+  /** A new image file, or null to remove the image. */
+  image?: File | null;
+  discord?: GuildDiscordInput;
+}
+
+/** Saves every change in one request, so they all apply or none does. */
+export function useSaveGuildSettings(guildId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (changes: GuildSettingsChanges) => {
+      const form = new FormData();
+      if (changes.name !== undefined) form.set('name', changes.name);
+      if (changes.image) form.set('image', changes.image);
+      if (changes.image === null) form.set('removeImage', 'true');
+      if (changes.discord) {
+        form.set('discordServerId', changes.discord.discordServerId);
+        form.set('officerRoleId', changes.discord.officerRoleId);
+      }
+      return apiRequest<GuildResponse>(`/guilds/${guildId}`, { method: 'PATCH', body: form });
+    },
+    onSuccess: async (guild) => {
+      queryClient.setQueryData(['guilds', guildId], guild);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });

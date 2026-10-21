@@ -35,9 +35,11 @@ export async function apiRequest<T>(
       method,
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        // Form data (with files) sets its own type and boundary; anything else goes as JSON.
+        ...(body !== undefined &&
+          !(body instanceof FormData) && { 'Content-Type': 'application/json' }),
       },
-      ...(body !== undefined && { body: JSON.stringify(body) }),
+      ...(body !== undefined && { body: body instanceof FormData ? body : JSON.stringify(body) }),
     });
   } catch {
     throw new ApiUnavailableError();

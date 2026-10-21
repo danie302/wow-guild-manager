@@ -82,7 +82,7 @@ The first start builds the images and installs dependencies, which takes a few m
 `api`, `bot`, and `worker` restart automatically when you save a file in `apps/server` or `packages/shared`. If a port is already in use on your machine, change it in `.env`.
 
 - `docker compose down` stops the stack and keeps the database and Redis data.
-- `docker compose down -v` also deletes the data volumes, including `node_modules`, for a clean start.
+- `docker compose down -v` also deletes the data volumes, including `node_modules` and uploaded guild images, for a clean start.
 - `docker compose logs -f api` follows one service's logs.
 - The `api` container applies pending database migrations when it starts, but not when it restarts after a file change. After pulling or writing a new migration, run `docker compose exec api pnpm --filter @wgm/server db:migrate` (`db:migrate:undo` reverts the last one).
 - After changing `.env`, run `docker compose up -d` to recreate the affected containers. `docker compose restart` keeps the old environment.

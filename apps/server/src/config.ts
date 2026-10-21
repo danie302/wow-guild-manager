@@ -17,6 +17,8 @@ export const apiConfigSchema = baseConfigSchema.extend({
   /** The Discord application's OAuth2 credentials. Without them the API runs, but login is off. */
   DISCORD_CLIENT_ID: z.string().min(1).optional(),
   DISCORD_CLIENT_SECRET: z.string().min(1).optional(),
+  /** Where uploaded files (guild images) are stored: a Docker volume in development. */
+  UPLOADS_DIR: z.string().min(1).default('/uploads'),
   /** Reads servers and roles for the guild setup. Without it (or the client ID), setup is off. */
   DISCORD_BOT_TOKEN: z.string().min(1).optional(),
 });

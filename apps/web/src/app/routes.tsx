@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from 'react-router';
 
 import { DashboardPage } from '../pages/DashboardPage';
 import { GuildPickerPage } from '../pages/GuildPickerPage';
+import { GuildSettingsPage } from '../pages/GuildSettingsPage';
 import { GuildSetupPage } from '../pages/GuildSetupPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NoAccessPage } from '../pages/NoAccessPage';
@@ -37,7 +38,7 @@ export const routes: RouteObject[] = [
               { path: 'roster', element: <PlaceholderPage titleKey="nav.roster" /> },
               { path: 'registrations', element: <PlaceholderPage titleKey="nav.registrations" /> },
               { path: 'attendance', element: <PlaceholderPage titleKey="nav.attendance" /> },
-              { path: 'settings', element: <PlaceholderPage titleKey="nav.guildSettings" /> },
+              { path: 'settings', element: <GuildSettingsPage /> },
             ],
           },
           { path: 'settings/user', element: <UserSettingsPage /> },

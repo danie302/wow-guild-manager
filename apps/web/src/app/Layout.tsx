@@ -34,6 +34,7 @@ export function Layout() {
           title={guild?.name ?? t('app.name')}
           subtitle={guild ? t('app.name') : t('app.game')}
           initials={initials(guild?.name ?? t('app.name'))}
+          imageUrl={guild?.imageUrl}
         />
         {guild && switcherOptions.length > 1 && (
           <AppShell.Switcher

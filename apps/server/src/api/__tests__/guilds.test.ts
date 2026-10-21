@@ -187,6 +187,7 @@ describe('POST /api/guilds', () => {
       id: expect.stringMatching(/^[0-9a-f-]{36}$/) as unknown,
       name: 'Ashen Vanguard',
       faction: 'alliance',
+      imageUrl: null,
       access: 'guild_master',
       discordServer: {
         id: ashen,
@@ -197,7 +198,7 @@ describe('POST /api/guilds', () => {
     });
     const me = await agent.get('/api/me');
     expect(body(me).guilds).toEqual([
-      { id: body(response).id, name: 'Ashen Vanguard', access: 'guild_master' },
+      { id: body(response).id, name: 'Ashen Vanguard', imageUrl: null, access: 'guild_master' },
     ]);
   });
 
@@ -310,7 +311,7 @@ describe('GET /api/guilds/:guildId', () => {
   });
 });
 
-describe('PUT /api/guilds/:guildId/discord', () => {
+describe('PATCH /api/guilds/:guildId with the Discord connection', () => {
   it('reads the Officers again when the Officer role changes', async () => {
     const access = discord();
     access.directory.addMember(ashen, stranger, [managers]);
@@ -322,7 +323,7 @@ describe('PUT /api/guilds/:guildId/discord', () => {
     await officer.get(`/api/guilds/${guildId}`).expect(200);
 
     await gmAgent
-      .put(`/api/guilds/${guildId}/discord`)
+      .patch(`/api/guilds/${guildId}`)
       .send({ discordServerId: ashen, officerRoleId: managers })
       .expect(200);
 
@@ -335,7 +336,7 @@ describe('PUT /api/guilds/:guildId/discord', () => {
     const created = await agent.post('/api/guilds').send(newGuild);
 
     const response = await agent
-      .put(`/api/guilds/${body(created).id}/discord`)
+      .patch(`/api/guilds/${body(created).id}`)
       .send({ discordServerId: ember, officerRoleId: emberOfficers });
 
     expect(response.status).toBe(200);
@@ -350,7 +351,7 @@ describe('PUT /api/guilds/:guildId/discord', () => {
     const created = await agent.post('/api/guilds').send(newGuild);
 
     const response = await agent
-      .put(`/api/guilds/${body(created).id}/discord`)
+      .patch(`/api/guilds/${body(created).id}`)
       .send({ discordServerId: ashen, officerRoleId: managers });
 
     expect(response.status).toBe(200);
@@ -366,7 +367,7 @@ describe('PUT /api/guilds/:guildId/discord', () => {
     const response = await (
       await loginAs(app, other)
     )
-      .put(`/api/guilds/${body(created).id}/discord`)
+      .patch(`/api/guilds/${body(created).id}`)
       .send({ discordServerId: ashen, officerRoleId: managers });
 
     expect(response.status).toBe(403);
@@ -389,7 +390,9 @@ describe('Officer access', () => {
 
     const me = await officer.get('/api/me');
 
-    expect(body(me).guilds).toEqual([{ id: guildId, name: 'Ashen Vanguard', access: 'officer' }]);
+    expect(body(me).guilds).toEqual([
+      { id: guildId, name: 'Ashen Vanguard', imageUrl: null, access: 'officer' },
+    ]);
     expect(body(me).canCreateGuild).toBe(true);
   });
 
@@ -438,7 +441,7 @@ describe('Officer access', () => {
     const { officer, guildId } = await guildWithOfficer();
 
     const response = await officer
-      .put(`/api/guilds/${guildId}/discord`)
+      .patch(`/api/guilds/${guildId}`)
       .send({ discordServerId: ashen, officerRoleId: managers });
 
     expect(response.status).toBe(403);

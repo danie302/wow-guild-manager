@@ -13,6 +13,7 @@ export interface TextFieldProps {
   hint?: string;
   maxLength?: number;
   autoFocus?: boolean;
+  disabled?: boolean;
 }
 
 /** A one-line text input with its label above it. */
@@ -24,6 +25,7 @@ export function TextField({
   hint,
   maxLength,
   autoFocus,
+  disabled,
 }: TextFieldProps) {
   const id = useId();
   const message = error ?? hint;
@@ -39,6 +41,7 @@ export function TextField({
         onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
         maxLength={maxLength}
         autoFocus={autoFocus}
+        disabled={disabled}
         aria-invalid={error ? true : undefined}
         aria-describedby={message ? `${id}-message` : undefined}
         sx={{
@@ -50,6 +53,7 @@ export function TextField({
           bgcolor: token('bg'),
           border: `1px solid ${error ? token('bad') : token('dv')}`,
           '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: 0 },
+          '&:disabled': { color: token('mt'), bgcolor: token('sf') },
         }}
       />
       {message && (

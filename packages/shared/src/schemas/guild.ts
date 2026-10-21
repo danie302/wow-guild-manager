@@ -39,5 +39,32 @@ export const createGuildSchema = z
   })
   .strict();
 
+/**
+ * Fields of `PATCH /api/guilds/:guildId`, the guild settings page's single save. It's sent as
+ * multipart/form-data with an optional `image` file, so every value is text. Only the fields
+ * that changed are sent; they're all saved together or not at all.
+ */
+export const updateGuildSchema = z
+  .object({
+    name: guildNameSchema,
+    discordServerId: discordIdSchema,
+    officerRoleId: discordIdSchema,
+    /** "true" removes the guild image. */
+    removeImage: z.literal('true'),
+  })
+  .partial()
+  .strict()
+  // A role belongs to one server, so a new server needs its Officer role too.
+  .refine((input) => input.discordServerId === undefined || input.officerRoleId !== undefined, {
+    path: ['officerRoleId'],
+    message: 'REQUIRED',
+  });
+
+export type UpdateGuildInput = z.infer<typeof updateGuildSchema>;
+
+/** Image types the guild image can be uploaded as, and the largest upload. */
+export const GUILD_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
+export const GUILD_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
 export type CreateGuildInput = z.infer<typeof createGuildSchema>;
 export type GuildDiscordInput = z.infer<typeof guildDiscordSchema>;

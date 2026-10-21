@@ -35,6 +35,10 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, next) 
     sendError(res, 400, { code: 'INVALID_JSON' });
     return;
   }
+  if (isTooLargeError(err)) {
+    sendError(res, 413, { code: 'FILE_TOO_LARGE' });
+    return;
+  }
   if (err instanceof DomainError) {
     sendError(res, DOMAIN_ERROR_STATUS[err.error.code] ?? 400, err.error);
     return;
@@ -56,6 +60,12 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, next) 
   }
   sendError(res, 500, { code: 'INTERNAL_ERROR' });
 };
+
+function isTooLargeError(err: unknown): boolean {
+  return (
+    typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.too.large'
+  );
+}
 
 function isJsonParseError(err: unknown): boolean {
   return (

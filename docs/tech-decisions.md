@@ -417,7 +417,11 @@ The API, bot, and worker log with pino as structured JSON, with `pino-http` for 
 
 **Status:** Accepted
 
-Uploaded files (guild images) go through a small storage interface (save, read, delete). In development, it writes to a Docker volume. In production, it can be switched to an S3-compatible object store without changing the rest of the code. The production provider is chosen when deployment is planned.
+Uploaded files (guild images) go through a small storage interface (save, read, delete) in `apps/server/src/storage/file-storage.ts`. In development, it writes to the `uploads` Docker volume (`UPLOADS_DIR`, `/uploads`). In production, it can be switched to an S3-compatible object store without changing the rest of the code. The production provider is chosen when deployment is planned. Tests use the in-memory implementation.
+
+- **Images are processed with sharp:** cropped square, resized to 256×256, and re-encoded as WebP. Re-encoding drops metadata (EXIF, location) and anything hidden in the file. Only PNG, JPEG, and WebP up to 5 MB are accepted; the type is checked from the file's contents, not only its declared type.
+- **Uploads go with the rest of the form:** the guild settings page saves in one multipart/form-data request (multer reads it into memory, within the size limit), so the image and the other settings apply together or not at all.
+- **Images are served by the API** to people who can open the guild, not from a public folder. Each upload gets a new storage key, which is part of the image URL, so browsers can cache it for good and never show a stale one.
 
 ## Local development requirements
 

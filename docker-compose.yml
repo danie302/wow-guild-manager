@@ -22,6 +22,8 @@ x-server: &server
     - web_node_modules:/app/apps/web/node_modules
     - server_node_modules:/app/apps/server/node_modules
     - shared_node_modules:/app/packages/shared/node_modules
+    # Uploaded files (guild images), kept across restarts. Only the api uses it.
+    - uploads:/uploads
   depends_on:
     deps:
       condition: service_completed_successfully
@@ -115,3 +117,4 @@ volumes:
   web_node_modules:
   server_node_modules:
   shared_node_modules:
+  uploads:

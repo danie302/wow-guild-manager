@@ -5,6 +5,7 @@ import { can, PERMISSIONS, type GuildAction } from '../permissions.js';
 // One row per action, from the App permissions table in requirements.md.
 const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   viewGuild: { guildMaster: true, officer: true },
+  editGuildProfile: { guildMaster: true, officer: false },
   connectDiscordServer: { guildMaster: true, officer: false },
   chooseOfficerRole: { guildMaster: true, officer: false },
 };

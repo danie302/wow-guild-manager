@@ -25,6 +25,8 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   declare officerRoleId: string;
   /** A user leads at most one guild at a time (a unique index). */
   declare guildMasterUserId: ForeignKey<User['id']>;
+  /** The image's key in file storage, or null when the guild has none. */
+  declare imageKey: CreationOptional<string | null>;
 
   declare guildMaster?: NonAttribute<User>;
 
@@ -39,6 +41,7 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
         faction: { type: DataTypes.STRING(8), allowNull: false },
         discordServerId: { type: DataTypes.STRING(20), allowNull: false, unique: true },
         officerRoleId: { type: DataTypes.STRING(20), allowNull: false },
+        imageKey: { type: DataTypes.STRING(100), allowNull: true },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

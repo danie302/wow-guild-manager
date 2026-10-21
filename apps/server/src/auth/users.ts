@@ -2,6 +2,7 @@ import type { Locale, MeResponse } from '@wgm/shared';
 
 import { User } from '../db/models/index.js';
 import { accessibleGuilds } from '../domain/access.js';
+import { guildImageUrl } from '../domain/guild-settings.js';
 import { discordAvatarUrl, type DiscordProfile } from './discord-oauth.js';
 
 /** Settings a new user starts with, taken from the browser they first log in from. */
@@ -39,7 +40,12 @@ export async function toMeResponse(user: User): Promise<MeResponse> {
     locale: user.locale,
     timeZone: user.timeZone,
     theme: user.theme,
-    guilds: guilds.map(({ guild, access }) => ({ id: guild.id, name: guild.name, access })),
+    guilds: guilds.map(({ guild, access }) => ({
+      id: guild.id,
+      name: guild.name,
+      imageUrl: guildImageUrl(guild),
+      access,
+    })),
     canCreateGuild: !leads,
   };
 }

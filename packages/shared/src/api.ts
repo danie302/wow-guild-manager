@@ -52,7 +52,13 @@ export type ApiError =
         // The server has no bot token, so it can't read Discord.
         | 'DISCORD_NOT_CONFIGURED'
         // Discord didn't answer or returned an error.
-        | 'DISCORD_UNAVAILABLE';
+        | 'DISCORD_UNAVAILABLE'
+        // An upload is bigger than allowed (the guild image: GUILD_IMAGE_MAX_BYTES).
+        | 'FILE_TOO_LARGE'
+        // An upload isn't one of the accepted types (the guild image: PNG, JPEG, or WebP).
+        | 'UNSUPPORTED_FILE_TYPE'
+        // The file says it's an image but can't be read as one.
+        | 'INVALID_IMAGE';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
@@ -103,6 +109,8 @@ export type GuildAccess = (typeof GUILD_ACCESS)[number];
 export interface MeGuild {
   id: string;
   name: string;
+  /** Null when the guild has no image. */
+  imageUrl: string | null;
   access: GuildAccess;
 }
 
@@ -139,6 +147,8 @@ export interface GuildResponse {
   id: string;
   name: string;
   faction: Faction;
+  /** Null when the guild has no image. */
+  imageUrl: string | null;
   /** The logged-in user's access to this guild. */
   access: GuildAccess;
   /** `name` is null when Discord can't be read right now; the page still shows. */

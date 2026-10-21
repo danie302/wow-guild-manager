@@ -31,7 +31,7 @@ function mockSetupApi(overrides: Parameters<typeof mockApi>[0] = {}) {
     'POST /api/guilds': () => {
       me = {
         ...userWithoutGuild,
-        guilds: [{ id: ashenId, name: testGuild.name, access: 'guild_master' }],
+        guilds: [{ id: ashenId, name: testGuild.name, imageUrl: null, access: 'guild_master' }],
         canCreateGuild: false,
       };
       return Response.json(testGuild, { status: 201 });

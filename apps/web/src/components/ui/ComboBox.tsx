@@ -27,6 +27,7 @@ export interface ComboBoxProps {
   noOptionsText: string;
   /** Help text under the field. */
   hint?: string;
+  disabled?: boolean;
 }
 
 /** Lowercase, without accents, and with "_" and "/" as spaces, so "sao paulo" finds "São_Paulo". */
@@ -56,6 +57,7 @@ export function ComboBox({
   onChange,
   noOptionsText,
   hint,
+  disabled,
 }: ComboBoxProps) {
   const id = useId();
   const selected = options.find((option) => option.value === value) ?? null;
@@ -68,6 +70,7 @@ export function ComboBox({
       )}
       <Autocomplete
         id={id}
+        disabled={disabled}
         options={options}
         value={selected}
         onChange={(_event, option) => {

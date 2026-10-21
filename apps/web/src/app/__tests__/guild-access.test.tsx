@@ -16,8 +16,8 @@ import { renderRoute } from '../../test/render';
 const twoGuilds: MeResponse = {
   ...testUser,
   guilds: [
-    { id: ashenId, name: 'Ashen Vanguard', access: 'guild_master' },
-    { id: emberwatchId, name: 'Emberwatch', access: 'officer' },
+    { id: ashenId, name: 'Ashen Vanguard', imageUrl: null, access: 'guild_master' },
+    { id: emberwatchId, name: 'Emberwatch', imageUrl: null, access: 'officer' },
   ],
 };
 
