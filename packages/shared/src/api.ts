@@ -58,7 +58,11 @@ export type ApiError =
         // An upload isn't one of the accepted types (the guild image: PNG, JPEG, or WebP).
         | 'UNSUPPORTED_FILE_TYPE'
         // The file says it's an image but can't be read as one.
-        | 'INVALID_IMAGE';
+        | 'INVALID_IMAGE'
+        // The Discord user is already on this guild's roster.
+        | 'MEMBER_ALREADY_ON_ROSTER'
+        // The Guild Master can't leave the roster; they transfer leadership first.
+        | 'GUILD_MASTER_CANNOT_BE_REMOVED';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 

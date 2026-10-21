@@ -2,6 +2,7 @@ import { createClient } from 'redis';
 
 import { watchDiscordChanges } from '../bot/cache-events.js';
 import { createBotClient, describeLoginError } from '../bot/client.js';
+import { syncMemberProfiles } from '../bot/member-profiles.js';
 import { syncOfficers } from '../bot/officer-sync.js';
 import { commands } from '../bot/commands/index.js';
 import { botConfigSchema, loadConfigOrExit } from '../config.js';
@@ -23,6 +24,7 @@ await redis.connect();
 const client = createBotClient({ logger, commands });
 watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
 syncOfficers(client, logger);
+syncMemberProfiles(client, logger);
 
 process.on('SIGTERM', () => {
   logger.info('Disconnecting from Discord');

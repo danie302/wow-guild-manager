@@ -25,6 +25,10 @@ export const CHARACTER_ERROR_CODES = {
   duplicateProfession: 'DUPLICATE_PROFESSION',
   tooManyPrimaryProfessions: 'TOO_MANY_PRIMARY_PROFESSIONS',
   classCannotFillRole: 'CLASS_CANNOT_FILL_ROLE',
+  /** Another active character already has this name (names are unique across the game). */
+  nameTaken: 'CHARACTER_NAME_TAKEN',
+  /** The character's faction differs from the guild's. */
+  wrongFaction: 'CHARACTER_WRONG_FACTION',
 } as const;
 
 /** A character as entered by hand or filled in from Battle.net. */

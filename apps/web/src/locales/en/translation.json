@@ -46,7 +46,9 @@
     "DISCORD_UNAVAILABLE": "Discord isn't responding right now. Please try again in a moment.",
     "FILE_TOO_LARGE": "The file is too big.",
     "UNSUPPORTED_FILE_TYPE": "This file type isn't supported.",
-    "INVALID_IMAGE": "The file couldn't be read as an image."
+    "INVALID_IMAGE": "The file couldn't be read as an image.",
+    "MEMBER_ALREADY_ON_ROSTER": "This Discord user is already on the roster.",
+    "GUILD_MASTER_CANNOT_BE_REMOVED": "The Guild Master can't be removed from the roster. Transfer leadership first."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -72,7 +74,9 @@
     "INVALID_TIME_ZONE": "Not a valid time zone.",
     "NAME_NOT_ALLOWED": "This name contains a word that isn't allowed.",
     "DISCORD_SERVER_NOT_MANAGEABLE": "The bot must be in this server, and you need the Manage Server permission in it.",
-    "OFFICER_ROLE_NOT_FOUND": "This role isn't in the server, or can't be used as the Officer role."
+    "OFFICER_ROLE_NOT_FOUND": "This role isn't in the server, or can't be used as the Officer role.",
+    "CHARACTER_NAME_TAKEN": "Another character already has this name.",
+    "CHARACTER_WRONG_FACTION": "The character's faction must match the guild's."
   },
   "auth": {
     "checking": "Checking your session",

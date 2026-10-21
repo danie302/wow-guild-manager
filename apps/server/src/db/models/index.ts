@@ -1,10 +1,14 @@
 import type { Sequelize } from 'sequelize';
 
+import { Character } from './character.js';
 import { Guild } from './guild.js';
 import { GuildOfficer } from './guild-officer.js';
+import { Member } from './member.js';
+import { OfficerNote } from './officer-note.js';
+import { RankChange } from './rank-change.js';
 import { User } from './user.js';
 
-export { Guild, GuildOfficer, User };
+export { Character, Guild, GuildOfficer, Member, OfficerNote, RankChange, User };
 
 /**
  * Registers every model with the connection, then sets up their associations.
@@ -14,7 +18,15 @@ export function initModels(sequelize: Sequelize): void {
   User.initModel(sequelize);
   Guild.initModel(sequelize);
   GuildOfficer.initModel(sequelize);
+  Member.initModel(sequelize);
+  Character.initModel(sequelize);
+  RankChange.initModel(sequelize);
+  OfficerNote.initModel(sequelize);
 
   Guild.associate();
   GuildOfficer.associate();
+  Member.associate();
+  Character.associate();
+  RankChange.associate();
+  OfficerNote.associate();
 }

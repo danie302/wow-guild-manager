@@ -75,7 +75,7 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
   - A rank. The Officer rank comes from the Discord role. Raider and Member are set in the app.
   - One or more characters, one of which is their **main**. The others are **alts**.
   - Private officer notes (e.g. warnings, trial status)
-  - A history of rank changes
+  - A history of rank changes, including gaining or losing the Officer role in Discord
 - Members register their own characters with a `/register` command in Discord. The app looks the character up in the Battle.net API to confirm it exists and fills in its class, race, and level. An Officer then approves the registration.
 - If the Battle.net API can't find the character, the registration is still sent to Officers, flagged, with class, race, and level entered by hand.
 - The Guild Master and Officers can also add members and characters by hand, choosing the member's Discord account from the server's members.
@@ -86,7 +86,7 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
   - Their history is kept: past sign-ups and attendance records stay as they were, and past events still show them, marked as no longer on the roster.
   - They no longer appear on the roster or in the attendance report's member list.
   - Their characters are freed, so they can join another guild.
-- If a removed member is added back to the same guild (by hand or through an approved `/register`), their previous record is restored, with their characters, rank history, officer notes, and attendance history.
+- If a removed member is added back to the same guild (by hand or through an approved `/register`), their previous record is restored, with their characters, rank history, officer notes, and attendance history. A character whose name another active character has taken in the meantime stays removed (its history is kept), and if it was the main, the first restored character becomes the main.
 - There is no limit on the number of Officers.
 
 ### Characters

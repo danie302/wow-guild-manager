@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Worker } from 'bullmq';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestLogger } from '../../test-logger.js';
 import type { JobPayloads } from '../definitions.js';
@@ -153,6 +153,9 @@ describe('scheduling with a fixed ID', () => {
       const ran = nextRun();
       await queue.schedule('ping', { message }, { jobId: 'same', runAt: new Date() });
       await ran;
+      // The handler has run, but the finished job is removed a moment later; until then its
+      // ID is still taken.
+      await vi.waitFor(async () => expect(await queue.queue.getJob('same')).toBeUndefined());
     }
 
     expect(runs.map((run) => run.message)).toEqual(['once', 'twice']);

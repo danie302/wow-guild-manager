@@ -154,3 +154,20 @@ export const PROFESSION_NAMES: Record<Profession, string> = {
   first_aid: 'First Aid',
   fishing: 'Fishing',
 };
+
+/**
+ * A member's rank. Guild Master comes from the guild and Officer from the Discord role; Raider
+ * and Member are set in the app (the "base" rank every member keeps underneath).
+ */
+export const RANKS = ['guild_master', 'officer', 'raider', 'member'] as const;
+export type Rank = (typeof RANKS)[number];
+
+export const BASE_RANKS = ['raider', 'member'] as const;
+export type BaseRank = (typeof BASE_RANKS)[number];
+
+export const RANK_NAMES: Record<Rank, string> = {
+  guild_master: 'Guild Master',
+  officer: 'Officer',
+  raider: 'Raider',
+  member: 'Member',
+};

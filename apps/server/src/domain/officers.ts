@@ -1,12 +1,13 @@
 import { Op } from 'sequelize';
 
-import { Guild, GuildOfficer } from '../db/models/index.js';
+import { Guild, GuildOfficer, Member, RankChange, User } from '../db/models/index.js';
 
 /**
  * Keeps `guild_officers` (who has each guild's Officer role) in step with Discord. The bot
  * calls these on Discord's events and when it starts; the API calls `replaceGuildOfficers`
  * when a guild is created or its Officer role changes. Discord server IDs identify the guild,
- * since that's what Discord's events carry.
+ * since that's what Discord's events carry. Roster members who gain or lose the role get an
+ * entry in their rank history, from Discord.
  */
 
 /** Sets the guild's Officers to exactly `discordUserIds`. */
@@ -16,13 +17,18 @@ export async function replaceGuildOfficers(
 ): Promise<void> {
   const sequelize = GuildOfficer.sequelize!;
   await sequelize.transaction(async () => {
-    await GuildOfficer.destroy({
-      where: { guildId, discordUserId: { [Op.notIn]: [...discordUserIds] } },
-    });
+    const current = (await GuildOfficer.findAll({ where: { guildId } })).map(
+      (officer) => officer.discordUserId,
+    );
+    const added = discordUserIds.filter((id) => !current.includes(id));
+    const removed = current.filter((id) => !discordUserIds.includes(id));
+
+    await GuildOfficer.destroy({ where: { guildId, discordUserId: removed } });
     await GuildOfficer.bulkCreate(
-      discordUserIds.map((discordUserId) => ({ guildId, discordUserId })),
+      added.map((discordUserId) => ({ guildId, discordUserId })),
       { ignoreDuplicates: true },
     );
+    await recordRankChanges(guildId, added, removed);
   });
 }
 
@@ -34,14 +40,18 @@ export async function updateServerMember(
 ): Promise<void> {
   const guild = await Guild.findOne({ where: { discordServerId: serverId } });
   if (!guild) return;
-  if (roleIds.includes(guild.officerRoleId)) {
-    await GuildOfficer.findOrCreate({
-      where: { guildId: guild.id, discordUserId },
-      defaults: { guildId: guild.id, discordUserId },
-    });
-  } else {
-    await GuildOfficer.destroy({ where: { guildId: guild.id, discordUserId } });
-  }
+  const sequelize = GuildOfficer.sequelize!;
+  await sequelize.transaction(async () => {
+    const where = { guildId: guild.id, discordUserId };
+    const isOfficer = (await GuildOfficer.count({ where })) > 0;
+    if (roleIds.includes(guild.officerRoleId) && !isOfficer) {
+      await GuildOfficer.create(where);
+      await recordRankChanges(guild.id, [discordUserId], []);
+    } else if (!roleIds.includes(guild.officerRoleId) && isOfficer) {
+      await GuildOfficer.destroy({ where });
+      await recordRankChanges(guild.id, [], [discordUserId]);
+    }
+  });
 }
 
 /** After a member leaves the server. */
@@ -61,4 +71,33 @@ export async function removeServerRole(serverId: string, roleId: string): Promis
 export async function removeServer(serverId: string): Promise<void> {
   const guild = await Guild.findOne({ where: { discordServerId: serverId } });
   if (guild) await replaceGuildOfficers(guild.id, []);
+}
+
+/**
+ * Records gaining or losing the Officer role in the rank history of roster members. The Guild
+ * Master's rank doesn't change with the role, so they get no entry.
+ */
+async function recordRankChanges(
+  guildId: string,
+  added: readonly string[],
+  removed: readonly string[],
+): Promise<void> {
+  if (added.length === 0 && removed.length === 0) return;
+  const guild = await Guild.findByPk(guildId, {
+    include: [{ model: User, as: 'guildMaster', attributes: ['discordId'] }],
+  });
+  const members = await Member.findAll({
+    where: { guildId, removedAt: null, discordUserId: { [Op.in]: [...added, ...removed] } },
+  });
+  for (const member of members) {
+    if (member.discordUserId === guild?.guildMaster?.discordId) continue;
+    const gained = added.includes(member.discordUserId);
+    await RankChange.create({
+      memberId: member.id,
+      fromRank: gained ? member.rank : 'officer',
+      toRank: gained ? 'officer' : member.rank,
+      changedByUserId: null,
+      source: 'discord',
+    });
+  }
 }

@@ -6,7 +6,7 @@ import {
 } from '@wgm/shared';
 import { Op, UniqueConstraintError } from 'sequelize';
 
-import { Guild, type User } from '../db/models/index.js';
+import { Guild, Member, RankChange, type User } from '../db/models/index.js';
 import {
   canManageServer,
   discordServerIconUrl,
@@ -17,7 +17,10 @@ import {
 } from '../integrations/discord/directory.js';
 import { DomainError, DomainValidationError } from './errors.js';
 
-/** Creates a guild led by `user`, connected to a Discord server they manage. */
+/**
+ * Creates a guild led by `user`, connected to a Discord server they manage, with the Guild
+ * Master on its roster.
+ */
 export async function createGuild(
   user: User,
   input: CreateGuildInput,
@@ -29,7 +32,27 @@ export async function createGuild(
   await checkDiscordConnection(user, input, discord);
   await checkServerIsFree(input.discordServerId);
 
-  return withUniqueErrors(() => Guild.create({ ...input, guildMasterUserId: user.id }));
+  return withUniqueErrors(() =>
+    Guild.sequelize!.transaction(async () => {
+      const guild = await Guild.create({ ...input, guildMasterUserId: user.id });
+      // A Raider underneath, which they keep if they hand over leadership.
+      const member = await Member.create({
+        guildId: guild.id,
+        discordUserId: user.discordId,
+        discordName: user.name,
+        discordAvatar: user.avatar,
+        rank: 'raider',
+      });
+      await RankChange.create({
+        memberId: member.id,
+        fromRank: null,
+        toRank: 'guild_master',
+        changedByUserId: user.id,
+        source: 'app',
+      });
+      return guild;
+    }),
+  );
 }
 
 /**
