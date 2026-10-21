@@ -40,6 +40,7 @@ Let the Guild Master and Officers create, edit, and cancel events in the web app
   - The type (raid, dungeon, PvP) can't change after creating the event; to change it, cancel and create another.
   - PvP events have 1 to 80 players (`requirements.md` updated).
   - Names are 1 to 100 characters, descriptions up to 2000. A cancelled event can't be reactivated.
+- Part 2 (the events page): the view, the list (upcoming or past), and the calendar month are in the URL. The calendar puts each event on the day it starts in the user's time zone, and starts weeks on Sunday in English and Monday in Spanish. Event types are translated as in the design (Banda, Mazmorra, JcJ); they aren't among the game terms that stay in English. The design's per-role fill bars and "missing N" tags need sign-ups (stories 023, 024), and the "Recurring events" panel needs series (story 021); the list shows the slots per role for now. Past events show the latest 100.
 - The per-event Tentative deadline is story 026, and pre-confirmed raid participants story 025, though both appear in the design's form (screen 08).
 
 ## Technical debt

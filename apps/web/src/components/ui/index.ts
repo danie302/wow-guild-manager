@@ -1,5 +1,7 @@
 // The only entry point to the UI kit. Pages and features import from here, never from @mui/*.
 export { ActionList } from './ActionList';
+export { AgendaList } from './AgendaList';
+export type { AgendaListItemProps, AgendaListProps } from './AgendaList';
 export type { ActionListItemProps, ActionListProps } from './ActionList';
 export { AppShell } from './AppShell';
 export type {
@@ -36,6 +38,8 @@ export type { IconName, IconProps } from './Icon';
 export { ListTable } from './ListTable';
 export type { ListTableProps } from './ListTable';
 export { Loading, Notice } from './Notice';
+export { MonthCalendar } from './MonthCalendar';
+export type { MonthCalendarDay, MonthCalendarEntry, MonthCalendarProps } from './MonthCalendar';
 export type { LoadingProps, NoticeProps } from './Notice';
 export { Page } from './Page';
 export type { PageSectionProps, PageSettingProps } from './Page';

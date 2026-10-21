@@ -324,5 +324,29 @@
     "rejectBody": "{{name}} gets a direct message saying an Officer rejected it.",
     "reviewFailed": "Couldn't review the request.",
     "leftDiscord": "Left the Discord server"
+  },
+  "events": {
+    "title": "Events",
+    "view": "View",
+    "list": "List",
+    "calendar": "Calendar",
+    "when": "Show",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "new": "New event",
+    "loading": "Loading events…",
+    "loadFailed": "Couldn't load the events.",
+    "noUpcoming": "No upcoming events.",
+    "noPast": "No past events.",
+    "types": {
+      "raid": "Raid",
+      "dungeon": "Dungeon",
+      "pvp": "PvP"
+    },
+    "players_one": "{{count}} player",
+    "players_other": "{{count}} players",
+    "cancelled": "Cancelled",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month"
   }
 }

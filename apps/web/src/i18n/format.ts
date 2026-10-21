@@ -29,6 +29,12 @@ export function formatters(locale: string, timeZone: string) {
       }).format(value),
     date: (value: Date | number) =>
       new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(value),
+    /** Only the given parts (e.g. `{ weekday: 'short' }`), in the user's time zone. */
+    parts: (value: Date | number, options: Intl.DateTimeFormatOptions) =>
+      new Intl.DateTimeFormat(locale, { timeZone, ...options }).format(value),
+    /** The hour and minute, e.g. "7:00 PM" or "19:00". */
+    shortTime: (value: Date | number) =>
+      new Intl.DateTimeFormat(locale, { timeStyle: 'short', timeZone }).format(value),
     time: (value: Date | number) =>
       new Intl.DateTimeFormat(locale, { timeStyle: 'medium', timeZone }).format(value),
     number: (value: number, options?: Intl.NumberFormatOptions) =>
