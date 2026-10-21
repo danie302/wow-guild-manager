@@ -19,6 +19,7 @@ const paths = {
   chevronLeft: 'm15 18-6-6 6-6',
   chevronRight: 'm9 18 6-6-6-6',
   plus: 'M5 12h14M12 5v14',
+  repeat: 'm17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3',
   refresh: 'M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5',
   external: 'M14 3h7v7M10 14 21 3M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5',
 } as const;

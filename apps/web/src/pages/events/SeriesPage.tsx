@@ -1,4 +1,3 @@
-import { COMBAT_ROLE_NAMES, COMBAT_ROLES } from '@wgm/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
@@ -6,10 +5,11 @@ import { useParams } from 'react-router';
 import { ApiRequestError } from '../../api/client';
 import { useSeries, useStopSeries } from '../../api/events';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
-import { Button, ConfirmDialog, DetailList, Loading, Notice, Page } from '../../components/ui';
+import { Button, ConfirmDialog, DetailHeader, Loading, Notice, Page } from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
-import { everyWeekText } from './seriesText';
+import { everyWeekText, whenText } from './eventText';
+import { SignUpSections } from './SignUpSections';
 
 /** A weekly series: when it repeats, its next event, and editing or stopping it. */
 export function SeriesPage() {
@@ -30,67 +30,68 @@ export function SeriesPage() {
 
   return (
     <Page>
-      <Page.Header>
-        <div>
-          <Button to={guildPath(guildId, 'events')}>{t('eventPage.back')}</Button>
-          <Page.Text>
-            {t(`events.types.${data.type}`)} · {t('events.players', { count: data.size })} ·{' '}
-            {t('series.recurring')}
-          </Page.Text>
-          <Page.Title>{data.name}</Page.Title>
-          <Page.Text>{everyWeekText(t, format, data.startsAt)}</Page.Text>
-        </div>
-        {!data.stopped && (
-          <div>
-            <Button to={guildPath(guildId, `events/series/${data.id}/edit`)}>
-              {t('series.edit')}
-            </Button>{' '}
-            <Button onClick={() => setConfirming(true)} disabled={stop.isPending}>
-              {t('series.stop')}
-            </Button>
-          </div>
-        )}
-      </Page.Header>
+      <DetailHeader
+        back={{ to: guildPath(guildId, 'events'), label: t('events.title') }}
+        badge={t(`events.types.${data.type}`)}
+        facts={`${t('events.players', { count: data.size })} · ${t('series.recurring')}`}
+        title={data.name}
+        when={everyWeekText(t, format, data.startsAt)}
+        details={[
+          data.nextEventAt
+            ? t('series.nextOn', { date: whenText(format, new Date(data.nextEventAt)) })
+            : t('series.noNext'),
+          t('series.dstHint'),
+        ]}
+        description={data.description}
+        actions={
+          !data.stopped && (
+            <>
+              <Button size="medium" to={guildPath(guildId, `events/series/${data.id}/edit`)}>
+                {t('series.edit')}
+              </Button>
+              <Button
+                size="medium"
+                tone="danger"
+                onClick={() => setConfirming(true)}
+                disabled={stop.isPending}
+              >
+                {t('series.stop')}
+              </Button>
+            </>
+          )
+        }
+        banner={
+          data.stopped
+            ? {
+                label: t('series.stopped'),
+                text: t('series.stoppedText', {
+                  date: format.dateTime(new Date(data.stopped.at)),
+                  name: data.stopped.by ?? t('member.unknownUser'),
+                }),
+              }
+            : undefined
+        }
+      />
 
-      {data.stopped && (
-        <Notice
-          tone="warn"
-          title={t('series.stoppedTitle', {
-            date: format.dateTime(new Date(data.stopped.at)),
-            name: data.stopped.by ?? t('member.unknownUser'),
-          })}
-        />
-      )}
       {stop.error && (
         <Notice tone="bad" title={t('series.stopFailed')}>
           {apiErrorText(t, stop.error)}
         </Notice>
       )}
 
-      <Page.Section title={t('series.next')}>
-        <Page.Text>
-          {data.nextEventAt
-            ? format.dateTime(new Date(data.nextEventAt), { dateStyle: 'full' })
-            : t('series.noNext')}
-        </Page.Text>
-        <Page.Text>{t('series.dstHint')}</Page.Text>
-      </Page.Section>
-
-      {data.description && (
-        <Page.Section title={t('eventPage.description')}>
-          <Page.Text>{data.description}</Page.Text>
-        </Page.Section>
-      )}
-
-      <Page.Section title={t('eventPage.slots')}>
-        <DetailList>
-          {COMBAT_ROLES.map((role) => (
-            <DetailList.Item key={role} label={COMBAT_ROLE_NAMES[role]}>
-              {data.slots[role]}
-            </DetailList.Item>
-          ))}
-        </DetailList>
-      </Page.Section>
+      <SignUpSections
+        slots={data.slots}
+        notice={
+          <Page.Text>
+            {t('series.signUpsPerEvent')}{' '}
+            {data.nextEventId && (
+              <Button variant="text" to={guildPath(guildId, `events/${data.nextEventId}`)}>
+                {t('series.openNext')}
+              </Button>
+            )}
+          </Page.Text>
+        }
+      />
 
       <ConfirmDialog
         open={confirming}

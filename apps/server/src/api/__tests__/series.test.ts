@@ -35,6 +35,18 @@ async function setup() {
 }
 
 describe('series', () => {
+  it('gives its start as the next event until its first event is created', async () => {
+    const { agent, base } = await setup();
+    const startsAt = inDays(30);
+
+    const response = await agent
+      .post(`${base}/series`)
+      .send({ type: 'raid', ...details, startsAt });
+
+    expect((response.body as SeriesResponse).nextEventAt).toBe(startsAt);
+    expect((await agent.get(`${base}/events?scope=upcoming`)).body).toEqual([]);
+  });
+
   it('creates a series with its events, each linked to it', async () => {
     const { agent, base } = await setup();
     const startsAt = inDays(1);

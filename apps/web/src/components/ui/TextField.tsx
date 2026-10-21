@@ -20,6 +20,10 @@ export interface TextFieldProps {
   /** Several lines, e.g. a note. */
   multiline?: boolean;
   type?: 'text' | 'number' | 'search' | 'date' | 'time';
+  /** A fixed width in pixels (never wider than its container), e.g. a search box in a header. */
+  width?: number;
+  /** Fills its container instead of stopping at a readable width. */
+  wide?: boolean;
 }
 
 /** A one-line text input with its label above it. */
@@ -36,12 +40,26 @@ export function TextField({
   hideLabel,
   multiline,
   type = 'text',
+  width,
+  wide,
 }: TextFieldProps) {
   const id = useId();
   const message = error ?? hint;
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: 420 }}>
-      <Box component="label" htmlFor={id} sx={hideLabel ? visuallyHidden : { fontWeight: 700 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        maxWidth: wide ? 'none' : 420,
+        ...(width && { width: `min(${width}px, 100%)` }),
+      }}
+    >
+      <Box
+        component="label"
+        htmlFor={id}
+        sx={hideLabel ? visuallyHidden : { fontSize: 12, color: token('mt') }}
+      >
         {label}
       </Box>
       <Box

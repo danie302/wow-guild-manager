@@ -60,19 +60,26 @@ function eventsApi(
 }
 
 describe('EventsPage', () => {
-  it('lists upcoming events with their time, type, size, and slots', async () => {
+  it('lists upcoming events with their time, type, size, and how full each role is', async () => {
     eventsApi({ upcoming: [mc, wsg] });
 
     renderRoute(path);
 
     const list = await screen.findByRole('list', { name: 'Upcoming' });
-    const [first, second] = within(list).getAllByRole('listitem');
+    const [first, second] = within(list)
+      .getAllByRole('listitem', { name: undefined })
+      .filter((item) => item.getAttribute('href'));
     expect(first).toHaveTextContent('Tue10Nov');
     expect(first).toHaveTextContent('Molten Core');
     expect(first).toHaveTextContent('7:00 PM · Raid · 40 players');
-    expect(first).toHaveTextContent('4 Tank · 10 Healer · 26 DPS');
+    const roles = within(first!).getByRole('list', { name: 'Slots' });
+    expect(
+      within(roles)
+        .getAllByRole('listitem')
+        .map((role) => role.textContent),
+    ).toEqual(['Tanks0/4', 'Healers0/10', 'DPS0/26']);
+    expect(first).toHaveTextContent('0/40Missing 40');
     expect(first).toHaveAttribute('href', `${path}/${mc.id}`);
-    expect(second).toHaveTextContent('2 Healer · 8 DPS');
     expect(second).toHaveTextContent('Cancelled');
   });
 
@@ -109,7 +116,7 @@ describe('EventsPage', () => {
     expect(await screen.findByRole('grid', { name: 'December 2026' })).toBeInTheDocument();
   });
 
-  it('lists the running series with their next event', async () => {
+  it('lists the running series beside the events, with their next event', async () => {
     eventsApi({
       upcoming: [{ ...mc, series: { id: 'series-1', name: 'Molten Core' } }],
       series: [
@@ -117,6 +124,7 @@ describe('EventsPage', () => {
           ...mc,
           id: 'series-1',
           nextEventAt: mc.startsAt,
+          nextEventId: mc.id,
           stopped: null,
         },
       ],
@@ -124,12 +132,11 @@ describe('EventsPage', () => {
 
     renderRoute(path);
 
-    expect(await screen.findByRole('heading', { name: 'Recurring events' })).toBeInTheDocument();
-    expect(screen.getByText('Every Tuesday at 7:00 PM')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Molten Core' })).toHaveAttribute(
-      'href',
-      `${path}/series/series-1`,
-    );
-    expect(screen.getByText(/Raid · 40 players · Weekly/)).toBeInTheDocument();
+    const aside = await screen.findByRole('complementary', { name: 'Recurring events' });
+    const card = within(aside).getByRole('link', { name: /Molten Core/ });
+    expect(card).toHaveAttribute('href', `${path}/series/series-1`);
+    expect(card).toHaveTextContent('Every Tuesday · 7:00 PM · 40 players');
+    expect(card).toHaveTextContent('Next: Tue, Nov 10');
+    expect(screen.getByRole('list', { name: 'Upcoming' })).toHaveTextContent('Every Tuesday');
   });
 });

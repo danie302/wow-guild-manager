@@ -7,6 +7,7 @@ interface ChoiceGroupContextValue {
   name: string;
   value: string;
   onChange: (value: string) => void;
+  small: boolean;
 }
 
 const ChoiceGroupContext = createContext<ChoiceGroupContextValue | null>(null);
@@ -16,6 +17,8 @@ export interface ChoiceGroupProps<Value extends string> {
   label: string;
   /** Hide the label when the page already shows it, e.g. in a settings row. */
   hideLabel?: boolean;
+  /** Smaller options, e.g. a secondary filter like Upcoming / Past. */
+  size?: 'small';
   value: Value;
   onChange: (value: Value) => void;
   children: ReactNode;
@@ -32,6 +35,7 @@ export interface ChoiceGroupProps<Value extends string> {
 function ChoiceGroupRoot<Value extends string>({
   label,
   hideLabel,
+  size,
   value,
   onChange,
   children,
@@ -40,10 +44,10 @@ function ChoiceGroupRoot<Value extends string>({
   const labelId = `${name}-label`;
   return (
     <ChoiceGroupContext.Provider
-      value={{ name, value, onChange: (next) => onChange(next as Value) }}
+      value={{ name, value, onChange: (next) => onChange(next as Value), small: size === 'small' }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
-        <Box id={labelId} sx={hideLabel ? visuallyHidden : { fontWeight: 700 }}>
+        <Box id={labelId} sx={hideLabel ? visuallyHidden : { fontSize: 12, color: token('mt') }}>
           {label}
         </Box>
         <Box
@@ -74,7 +78,8 @@ function Option({ value, children }: ChoiceGroupOptionProps) {
       component="label"
       sx={{
         position: 'relative',
-        p: '8px 18px',
+        p: group.small ? '7px 14px' : '8px 18px',
+        fontSize: group.small ? 13 : undefined,
         fontWeight: 700,
         cursor: 'pointer',
         bgcolor: checked ? token('ac') : 'transparent',

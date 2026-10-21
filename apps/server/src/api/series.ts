@@ -90,7 +90,7 @@ async function toSeriesResponse(series: EventSeries): Promise<SeriesResponse> {
   const next = await Event.findOne({
     where: { seriesId: series.id, cancelledAt: null, startsAt: { [Op.gt]: new Date() } },
     order: [['startsAt', 'ASC']],
-    attributes: ['startsAt'],
+    attributes: ['id', 'startsAt'],
   });
   return {
     id: series.id,
@@ -100,7 +100,11 @@ async function toSeriesResponse(series: EventSeries): Promise<SeriesResponse> {
     startsAt: series.startsAt.toISOString(),
     size: series.size,
     slots: { tank: series.tankSlots, healer: series.healerSlots, dps: series.dpsSlots },
-    nextEventAt: next?.startsAt.toISOString() ?? null,
+    // Before its first event is created (two weeks ahead), the next one is its start.
+    nextEventAt:
+      next?.startsAt.toISOString() ??
+      (!series.stoppedAt && series.startsAt > new Date() ? series.startsAt.toISOString() : null),
+    nextEventId: next?.id ?? null,
     createdBy: series.createdBy?.name ?? null,
     stopped: series.stoppedAt
       ? { at: series.stoppedAt.toISOString(), by: series.stoppedBy?.name ?? null }

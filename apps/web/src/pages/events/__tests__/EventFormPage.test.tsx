@@ -43,7 +43,7 @@ describe('EventFormPage', () => {
     await user.type(screen.getByLabelText('Description'), 'Fire resistance gear.');
     await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
     await user.type(screen.getByLabelText('Time'), '16:00');
-    expect(screen.getByText('Total: 40 / 40')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Total' })).toHaveTextContent('40 / 40');
     await user.click(screen.getByRole('button', { name: 'Create event' }));
 
     expect(await screen.findByRole('heading', { name: 'Molten Core' })).toBeInTheDocument();
@@ -57,22 +57,43 @@ describe('EventFormPage', () => {
     });
   });
 
-  it('keeps the running total and refuses slots that do not add up', async () => {
-    const fetchMock = mockApi({ '/api/me': () => Response.json(me) });
+  it('keeps the running total, and only saves once everything is right', async () => {
+    mockApi({ '/api/me': () => Response.json(me) });
     const user = userEvent.setup();
     renderRoute(`/guilds/${ashenId}/events/new`);
 
-    await user.click(await screen.findByRole('radio', { name: '20 players' }));
-    expect(screen.getByText('Total: 20 / 20')).toBeInTheDocument();
+    const create = await screen.findByRole('button', { name: 'Create event' });
+    expect(create).toBeDisabled();
+    expect(screen.getByText('Add a name to save.')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Name'), 'Molten Core');
+    await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
+    await user.type(screen.getByLabelText('Time'), '16:00');
+    await user.click(screen.getByRole('radio', { name: '20' }));
+    expect(screen.getByRole('group', { name: 'Total' })).toHaveTextContent('20 / 20');
+    expect(create).toBeEnabled();
+
     await user.click(screen.getByRole('button', { name: 'More: Tank' }));
 
-    expect(screen.getByText('Total: 21 / 20')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Total' })).toHaveTextContent('21 / 20');
     expect(
       screen.getByText('The slots of the three combat roles must add up to the size.'),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Create event' }));
-    expect(screen.getByText('Required.')).toBeInTheDocument();
-    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
+    expect(screen.getByText('Make the slots add up to the size to save.')).toBeInTheDocument();
+    expect(create).toBeDisabled();
+  });
+
+  it('says when the date is in the past', async () => {
+    mockApi({ '/api/me': () => Response.json(me) });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/new`);
+
+    await user.type(await screen.findByLabelText('Name'), 'Molten Core');
+    await user.type(screen.getByLabelText('Date'), '2020-11-10');
+    await user.type(screen.getByLabelText('Time'), '16:00');
+
+    expect(screen.getByText('Pick a date and time in the future.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create event' })).toBeDisabled();
   });
 
   it('fixes the slots of a dungeon', async () => {
@@ -82,8 +103,8 @@ describe('EventFormPage', () => {
 
     await user.click(await screen.findByRole('radio', { name: 'Dungeon' }));
 
-    expect(screen.getByText('Total: 5 / 5')).toBeInTheDocument();
-    expect(screen.getByLabelText('Tank')).toBeDisabled();
+    expect(screen.getByRole('group', { name: 'Total' })).toHaveTextContent('5 / 5');
+    expect(screen.getByLabelText('Tanks')).toBeDisabled();
     expect(screen.getByLabelText('DPS')).toHaveValue('3');
   });
 
@@ -118,6 +139,7 @@ describe('EventFormPage', () => {
       ...saved,
       id: '019a0c3e-5b1e-7c2a-9f3d-000000000601',
       nextEventAt: saved.startsAt,
+      nextEventId: null,
       stopped: null,
     };
     const fetchMock = mockApi({
@@ -131,7 +153,7 @@ describe('EventFormPage', () => {
     await user.type(await screen.findByLabelText('Name'), 'Molten Core');
     await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
     await user.type(screen.getByLabelText('Time'), '16:00');
-    await user.click(screen.getByRole('checkbox', { name: 'Repeat every week' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Repeat every week on this day' }));
     await user.click(screen.getByRole('button', { name: 'Create weekly series' }));
 
     expect(await screen.findByText(/^Every \w+ at 4:00 PM$/)).toBeInTheDocument();

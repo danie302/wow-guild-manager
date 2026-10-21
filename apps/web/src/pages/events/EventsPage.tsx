@@ -1,4 +1,4 @@
-import { COMBAT_ROLE_NAMES, type EventResponse } from '@wgm/shared';
+import { COMBAT_ROLE_PLURAL_NAMES, COMBAT_ROLES, type EventResponse } from '@wgm/shared';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
@@ -8,11 +8,14 @@ import {
   AgendaList,
   Button,
   ChoiceGroup,
-  DetailList,
+  IconLabel,
+  LinkCard,
+  MeterList,
   Loading,
   MonthCalendar,
   Notice,
   Page,
+  PageColumns,
   Tag,
   type MonthCalendarEntry,
 } from '../../components/ui';
@@ -27,7 +30,7 @@ import {
   type CalendarDay,
 } from '../../i18n/calendar';
 import { useFormat } from '../../i18n/format';
-import { everyWeekText } from './seriesText';
+import { roleColor } from './eventText';
 
 type View = 'list' | 'calendar';
 type When = 'upcoming' | 'past';
@@ -55,29 +58,39 @@ export function EventsPage() {
       return next;
     });
 
+  const series = useSeriesAside(guildId);
+
   return (
     <Page>
       <Page.Header>
         <Page.Title>{t('events.title')}</Page.Title>
-        <ChoiceGroup
-          label={t('events.view')}
-          hideLabel
-          value={view}
-          onChange={(next: View) => set({ view: next })}
-        >
-          <ChoiceGroup.Option value="list">{t('events.list')}</ChoiceGroup.Option>
-          <ChoiceGroup.Option value="calendar">{t('events.calendar')}</ChoiceGroup.Option>
-        </ChoiceGroup>
-        <Button variant="primary" to={guildPath(guildId, 'events/new')}>
-          {t('events.new')}
-        </Button>
+        <Page.Actions>
+          <ChoiceGroup
+            label={t('events.view')}
+            hideLabel
+            value={view}
+            onChange={(next: View) => set({ view: next })}
+          >
+            <ChoiceGroup.Option value="list">{t('events.list')}</ChoiceGroup.Option>
+            <ChoiceGroup.Option value="calendar">{t('events.calendar')}</ChoiceGroup.Option>
+          </ChoiceGroup>
+          <Button
+            variant="primary"
+            size="medium"
+            startIcon="plus"
+            to={guildPath(guildId, 'events/new')}
+          >
+            {t('events.new')}
+          </Button>
+        </Page.Actions>
       </Page.Header>
 
       {view === 'list' ? (
-        <>
+        <PageColumns aside={series}>
           <ChoiceGroup
             label={t('events.when')}
             hideLabel
+            size="small"
             value={when}
             onChange={(next: When) => set({ when: next })}
           >
@@ -85,8 +98,7 @@ export function EventsPage() {
             <ChoiceGroup.Option value="past">{t('events.past')}</ChoiceGroup.Option>
           </ChoiceGroup>
           <EventList guildId={guildId} when={when} />
-          <SeriesList guildId={guildId} />
-        </>
+        </PageColumns>
       ) : (
         <EventCalendar
           guildId={guildId}
@@ -112,6 +124,9 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
     >
       {events.data.map((event) => {
         const startsAt = new Date(event.startsAt);
+        // Nobody can sign up yet (story 023).
+        const filled = { tank: 0, healer: 0, dps: 0 };
+        const total = filled.tank + filled.healer + filled.dps;
         return (
           <AgendaList.Item
             key={event.id}
@@ -123,16 +138,40 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
             }}
             title={event.name}
             struck={event.cancelled !== null}
-            detail={
+            detail={`${format.shortTime(startsAt)} · ${t(`events.types.${event.type}`)} · ${t('events.players', { count: event.size })}`}
+            extra={
+              event.series && (
+                <IconLabel icon="repeat">
+                  {t('series.everyDay', { weekday: format.parts(startsAt, { weekday: 'long' }) })}
+                </IconLabel>
+              )
+            }
+            middle={
+              <MeterList
+                label={t('eventPage.slots')}
+                items={COMBAT_ROLES.filter((role) => event.slots[role] > 0).map((role) => ({
+                  key: role,
+                  label: COMBAT_ROLE_PLURAL_NAMES[role],
+                  value: filled[role],
+                  max: event.slots[role],
+                  color: roleColor[role],
+                }))}
+              />
+            }
+            aside={
               <>
-                {format.shortTime(startsAt)} · {t(`events.types.${event.type}`)} ·{' '}
-                {t('events.players', { count: event.size })}
-                {event.series && ` · ${t('series.recurring')}`}
-                <br />
-                {slotsText(event)}
+                <strong>
+                  {total}/{event.size}
+                </strong>
+                {event.cancelled ? (
+                  <Tag tone="bad">{t('events.cancelled')}</Tag>
+                ) : (
+                  total < event.size && (
+                    <Tag tone="warn">{t('eventPage.missing', { count: event.size - total })}</Tag>
+                  )
+                )}
               </>
             }
-            aside={event.cancelled && <Tag tone="bad">{t('events.cancelled')}</Tag>}
           />
         );
       })}
@@ -140,36 +179,41 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
   );
 }
 
-/** The running weekly series, each with when it repeats and its next event. */
-function SeriesList({ guildId }: { guildId: string }) {
+/** The running weekly series, for the column beside the list; null when there are none. */
+function useSeriesAside(guildId: string) {
   const { t } = useTranslation();
   const format = useFormat();
   const series = useSeriesList(guildId);
   if (!series.data || series.data.length === 0) return null;
-  return (
-    <Page.Section title={t('series.title')}>
-      <DetailList>
-        {series.data.map((item) => (
-          <DetailList.Item key={item.id} label={everyWeekText(t, format, item.startsAt)}>
-            <Button to={guildPath(guildId, `events/series/${item.id}`)}>{item.name}</Button>{' '}
-            <Page.Text>
-              {item.nextEventAt
-                ? t('series.nextOn', { date: format.dateTime(new Date(item.nextEventAt)) })
-                : t('series.noNext')}
-            </Page.Text>
-          </DetailList.Item>
-        ))}
-      </DetailList>
-    </Page.Section>
-  );
-}
-
-/** "4 Tank · 10 Healer · 26 DPS", leaving out roles without slots. */
-function slotsText({ slots }: EventResponse): string {
-  return (['tank', 'healer', 'dps'] as const)
-    .filter((role) => slots[role] > 0)
-    .map((role) => `${slots[role]} ${COMBAT_ROLE_NAMES[role]}`)
-    .join(' · ');
+  return {
+    title: t('series.title'),
+    content: series.data.map((item) => {
+      const startsAt = new Date(item.startsAt);
+      return (
+        <LinkCard
+          key={item.id}
+          to={guildPath(guildId, `events/series/${item.id}`)}
+          title={item.name}
+          detail={[
+            t('series.everyDay', { weekday: format.parts(startsAt, { weekday: 'long' }) }),
+            format.shortTime(startsAt),
+            t('events.players', { count: item.size }),
+          ].join(' · ')}
+          highlight={
+            item.nextEventAt
+              ? t('series.nextOn', {
+                  date: format.parts(new Date(item.nextEventAt), {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  }),
+                })
+              : t('series.noNext')
+          }
+        />
+      );
+    }),
+  };
 }
 
 function EventCalendar({

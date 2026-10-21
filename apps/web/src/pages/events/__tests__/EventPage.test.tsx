@@ -40,15 +40,27 @@ describe('EventPage', () => {
     renderRoute(`/guilds/${ashenId}/events/${eventId}`);
 
     expect(await screen.findByRole('heading', { name: 'Molten Core' })).toBeInTheDocument();
-    expect(screen.getByText('Raid · 40 players')).toBeInTheDocument();
-    expect(screen.getByText(/November 10, \d{4} at 4:00 PM/)).toBeInTheDocument();
+    expect(screen.getByText('Raid')).toBeInTheDocument();
+    expect(screen.getByText('40 players')).toBeInTheDocument();
+    expect(screen.getByText(/November 10 · 4:00 PM/)).toBeInTheDocument();
+    const roles = within(screen.getByRole('list', { name: 'Slots' })).getAllByRole('listitem');
+    expect(roles.map((role) => role.textContent)).toEqual([
+      'Tanks0/4Missing 4',
+      'Healers0/10Missing 10',
+      'DPS0/26Missing 26',
+    ]);
+    expect(
+      within(screen.getByRole('region', { name: 'Tanks' })).getAllByText('Open slot'),
+    ).toHaveLength(4);
     expect(screen.getByText('Fire resistance gear.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Cancel event' }));
     const dialog = await screen.findByRole('dialog', { name: 'Cancel Molten Core?' });
     await user.click(within(dialog).getByRole('button', { name: 'Cancel event' }));
 
-    expect(await screen.findByText(/Cancelled on Nov 1, \d{4}.* by Thrall/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Cancelled on Nov 1, \d{4}.* by Thrall. Sign-ups are closed./),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
   });
 

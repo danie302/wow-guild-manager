@@ -12,18 +12,18 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useGuild } from '../../api/guilds';
+import { useMe } from '../../api/me';
 import { useRoster } from '../../api/roster';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import {
   Button,
   CharacterName,
   Checkbox,
-  ChoiceGroup,
+  FilterChips,
   ListTable,
   Loading,
   Notice,
   Page,
-  Select,
   Tag,
   TextField,
 } from '../../components/ui';
@@ -69,6 +69,7 @@ export function RosterPage() {
   const [characterClass, setCharacterClass] = useState('');
   const [leftOnly, setLeftOnly] = useState(false);
   const format = useFormat();
+  const me = useMe();
   const [adding, setAdding] = useState(false);
   const [lastAdded, setLastAdded] = useState<AddMemberResponse>();
 
@@ -79,6 +80,15 @@ export function RosterPage() {
     matches(member, { query, rank, characterClass, leftOnly }),
   );
 
+  const classOptions = [
+    { value: '', label: t('roster.allClasses') },
+    ...CLASSES.map((option) => ({
+      value: option,
+      label: CLASS_NAMES[option],
+      dot: `c-${option}` as const,
+    })),
+  ];
+
   return (
     <Page>
       <Page.Header>
@@ -86,17 +96,20 @@ export function RosterPage() {
           <Page.Text>{t('roster.count', { count: roster.data.length })}</Page.Text>
           <Page.Title>{t('roster.title')}</Page.Title>
         </div>
-        <TextField
-          label={t('roster.search')}
-          hideLabel
-          type="search"
-          placeholder={t('roster.search')}
-          value={query}
-          onChange={setQuery}
-        />
-        <Button variant="primary" onClick={() => setAdding(true)}>
-          {t('roster.addMember')}
-        </Button>
+        <Page.Actions>
+          <TextField
+            label={t('roster.search')}
+            hideLabel
+            type="search"
+            width={300}
+            placeholder={t('roster.search')}
+            value={query}
+            onChange={setQuery}
+          />
+          <Button variant="primary" size="medium" startIcon="plus" onClick={() => setAdding(true)}>
+            {t('roster.addMember')}
+          </Button>
+        </Page.Actions>
       </Page.Header>
 
       {lastAdded && (
@@ -111,25 +124,28 @@ export function RosterPage() {
         </Notice>
       )}
 
-      <Page.Section title={t('roster.rankFilter')}>
-        <ChoiceGroup label={t('roster.rankFilter')} hideLabel value={rank} onChange={setRank}>
-          <ChoiceGroup.Option value="all">{t('roster.allRanks')}</ChoiceGroup.Option>
-          {RANKS.map((option) => (
-            <ChoiceGroup.Option key={option} value={option}>
-              {RANK_NAMES[option]}
-            </ChoiceGroup.Option>
-          ))}
-        </ChoiceGroup>
-        <Select
-          label={t('roster.classFilter')}
-          hideLabel
-          value={characterClass}
-          placeholder={t('roster.allClasses')}
-          options={CLASSES.map((option) => ({ value: option, label: CLASS_NAMES[option] }))}
-          onChange={setCharacterClass}
-        />
-        <Checkbox label={t('roster.leftOnly')} checked={leftOnly} onChange={setLeftOnly} />
-      </Page.Section>
+      <Page.Filters>
+        <div>
+          <FilterChips
+            label={t('roster.rankFilter')}
+            value={rank}
+            onChange={setRank}
+            options={[
+              { value: 'all', label: t('roster.allRanks') },
+              ...RANKS.map((option) => ({ value: option, label: RANK_NAMES[option] })),
+            ]}
+          />
+        </div>
+        <div>
+          <FilterChips
+            label={t('roster.classFilter')}
+            value={characterClass}
+            onChange={setCharacterClass}
+            options={classOptions}
+          />
+          <Checkbox label={t('roster.leftOnly')} checked={leftOnly} onChange={setLeftOnly} />
+        </div>
+      </Page.Filters>
 
       <ListTable
         label={t('roster.title')}
@@ -148,6 +164,9 @@ export function RosterPage() {
             <ListTable.Row key={member.id} to={guildPath(guildId, `roster/${member.id}`)}>
               <div>
                 <strong>{member.discordName}</strong>{' '}
+                {member.discordUserId === me.data?.discordId && (
+                  <Tag tone="accent">{t('roster.you')}</Tag>
+                )}{' '}
                 {member.leftDiscordAt && (
                   <Tag tone="bad">
                     {t('roster.leftDiscord', {
@@ -160,9 +179,11 @@ export function RosterPage() {
               {main ? (
                 <div>
                   <CharacterName name={main.name} characterClass={main.class} />{' '}
-                  {alts.length > 0 && t('roster.alts', { count: alts.length })}
+                  {alts.length > 0 && (
+                    <Page.Muted>{t('roster.alts', { count: alts.length })}</Page.Muted>
+                  )}
                   <Page.Text>
-                    {RACE_NAMES[main.race]} {CLASS_NAMES[main.class]} · {main.level}
+                    {CLASS_NAMES[main.class]} · {RACE_NAMES[main.race]} · {main.level}
                   </Page.Text>
                 </div>
               ) : (

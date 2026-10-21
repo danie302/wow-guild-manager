@@ -28,7 +28,7 @@ export function CheckboxGroup({
       aria-describedby={error ? `${id}-error` : undefined}
       sx={{ m: 0, p: 0, border: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}
     >
-      <Box component="legend" sx={{ p: 0, mb: '6px', fontWeight: 700 }}>
+      <Box component="legend" sx={{ p: 0, mb: '6px', fontSize: 12, color: token('mt') }}>
         {label}
       </Box>
       <Box

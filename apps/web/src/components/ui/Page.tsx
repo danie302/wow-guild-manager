@@ -35,6 +35,56 @@ function Header({ children }: { children: ReactNode }) {
   );
 }
 
+/** Controls on the right of a page header, e.g. a search box and the page's main button. */
+function Actions({ children }: { children: ReactNode }) {
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'flex-end' }}>{children}</Box>
+  );
+}
+
+/** Filters under a page header, one row each. */
+function Filters({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        '& > *': { display: 'flex', flexWrap: 'wrap', gap: '4px 12px', alignItems: 'center' },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** The buttons at the end of a form, after a rule, with an optional hint beside them. */
+function Footer({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 1,
+        alignItems: 'center',
+        pt: 2,
+        borderTop: `2px solid ${token('dv')}`,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** Small muted text inside a line, e.g. "+1 alt" after a name. */
+function Muted({ children }: { children: ReactNode }) {
+  return (
+    <Box component="span" sx={{ fontSize: 12, color: token('mt'), fontWeight: 400 }}>
+      {children}
+    </Box>
+  );
+}
+
 function Title({ children }: { children: ReactNode }) {
   return <Typography variant="h1">{children}</Typography>;
 }
@@ -90,4 +140,14 @@ function Text({ children }: { children: ReactNode }) {
   return <Box sx={{ fontSize: 13, color: token('mt') }}>{children}</Box>;
 }
 
-export const Page = Object.assign(PageRoot, { Header, Title, Section, Setting, Text });
+export const Page = Object.assign(PageRoot, {
+  Header,
+  Actions,
+  Filters,
+  Title,
+  Section,
+  Setting,
+  Text,
+  Muted,
+  Footer,
+});

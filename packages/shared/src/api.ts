@@ -295,6 +295,8 @@ export interface SeriesResponse {
   slots: { tank: number; healer: number; dps: number };
   /** Its next event that isn't cancelled; null when there's none. */
   nextEventAt: string | null;
+  /** That event, once it's created (two weeks ahead); null before. */
+  nextEventId: string | null;
   createdBy: string | null;
   /** Set once the series is stopped. */
   stopped: { at: string; by: string | null } | null;

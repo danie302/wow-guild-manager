@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { createContext, useContext, type ReactNode } from 'react';
+import { Children, createContext, useContext, type ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { compactBreakpoint, token } from './tokens';
@@ -37,8 +37,10 @@ function ListTableRoot({ label, columns, widths, children, empty }: ListTablePro
             gridTemplateColumns: template,
             gap: 2,
             p: '8px 12px',
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: 700,
+            letterSpacing: '.08em',
+            textTransform: 'uppercase',
             color: token('mt'),
             borderBottom: `2px solid ${token('dv')}`,
             [`@media (max-width: ${compactBreakpoint}px)`]: { display: 'none' },
@@ -49,12 +51,8 @@ function ListTableRoot({ label, columns, widths, children, empty }: ListTablePro
           ))}
         </Box>
         {children}
-        {empty && (
-          <Box
-            sx={{ p: '24px 12px', color: token('mt'), '&:not(:last-child)': { display: 'none' } }}
-          >
-            {empty}
-          </Box>
+        {empty && Children.toArray(children).length === 0 && (
+          <Box sx={{ p: '24px 12px', color: token('mt') }}>{empty}</Box>
         )}
       </Box>
     </ColumnsContext.Provider>

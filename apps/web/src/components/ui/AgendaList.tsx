@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import type { ReactNode } from 'react';
+import { Children, type ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { token } from './tokens';
@@ -27,10 +27,8 @@ function AgendaListRoot({ label, children, empty }: AgendaListProps) {
       sx={{ display: 'flex', flexDirection: 'column', borderTop: `2px solid ${token('dv')}` }}
     >
       {children}
-      {empty && (
-        <Box sx={{ p: '20px 8px', color: token('mt'), '&:not(:last-child)': { display: 'none' } }}>
-          {empty}
-        </Box>
+      {empty && Children.toArray(children).length === 0 && (
+        <Box sx={{ p: '20px 8px', color: token('mt') }}>{empty}</Box>
       )}
     </Box>
   );
@@ -45,11 +43,15 @@ export interface AgendaListItemProps {
   struck?: boolean;
   /** A line under the title, e.g. "7:00 PM · Raid". */
   detail: ReactNode;
-  /** Things on the right, e.g. the size and a "Cancelled" tag. */
+  /** More under it, e.g. that the event repeats every week. */
+  extra?: ReactNode;
+  /** A column in the middle, e.g. how full each role is. */
+  middle?: ReactNode;
+  /** Things on the right, e.g. the total and a "Missing 1" tag. */
   aside?: ReactNode;
 }
 
-function Item({ to, date, title, struck, detail, aside }: AgendaListItemProps) {
+function Item({ to, date, title, struck, detail, extra, middle, aside }: AgendaListItemProps) {
   return (
     <Box
       role="listitem"
@@ -97,10 +99,19 @@ function Item({ to, date, title, struck, detail, aside }: AgendaListItemProps) {
         <Box component="span" sx={{ fontSize: 12.5, color: token('mt') }}>
           {detail}
         </Box>
+        {extra}
       </Box>
+      {middle && <Box sx={{ flex: '1 1 220px', maxWidth: 300, minWidth: 0 }}>{middle}</Box>}
       {aside && (
         <Box
-          sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: '4px',
+            width: 150,
+            flex: 'none',
+          }}
         >
           {aside}
         </Box>

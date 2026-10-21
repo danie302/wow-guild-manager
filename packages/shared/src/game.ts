@@ -164,6 +164,13 @@ export const COMBAT_ROLE_NAMES: Record<CombatRole, string> = {
   dps: 'DPS',
 };
 
+/** Plural headings, e.g. for the slots of each role ("Tanks"). */
+export const COMBAT_ROLE_PLURAL_NAMES: Record<CombatRole, string> = {
+  tank: 'Tanks',
+  healer: 'Healers',
+  dps: 'DPS',
+};
+
 export const PROFESSION_NAMES: Record<Profession, string> = {
   alchemy: 'Alchemy',
   blacksmithing: 'Blacksmithing',

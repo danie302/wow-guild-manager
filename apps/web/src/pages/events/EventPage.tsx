@@ -1,4 +1,3 @@
-import { COMBAT_ROLE_NAMES, COMBAT_ROLES } from '@wgm/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
@@ -6,13 +5,16 @@ import { useParams } from 'react-router';
 import { ApiRequestError } from '../../api/client';
 import { useCancelEvent, useEvent } from '../../api/events';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
-import { Button, ConfirmDialog, DetailList, Loading, Notice, Page, Tag } from '../../components/ui';
+import { Button, ConfirmDialog, DetailHeader, Loading, Notice, Page } from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
+import { everyWeekText, whenText } from './eventText';
+import { SignUpSections } from './SignUpSections';
 
 /**
- * One event: when it is, its description and slots, and editing or cancelling it while it's
- * upcoming. Sign-ups, the gear check, and the Discord post come with later stories.
+ * One event: when it is, its description, how full each role is, and editing or cancelling
+ * it while it's upcoming. Sign-ups fill the roles from story 023; the gear check, attendance,
+ * and Discord post tabs come with their stories.
  */
 export function EventPage() {
   const { t } = useTranslation();
@@ -36,40 +38,50 @@ export function EventPage() {
 
   return (
     <Page>
-      <Page.Header>
-        <div>
-          <Button to={guildPath(guildId, 'events')}>{t('eventPage.back')}</Button>
-          <Page.Text>
-            {t(`events.types.${data.type}`)} · {t('events.players', { count: data.size })}
-          </Page.Text>
-          <Page.Title>{data.name}</Page.Title>
-          <Page.Text>{format.dateTime(startsAt, { dateStyle: 'full' })}</Page.Text>
-          {data.series && (
-            <Button to={guildPath(guildId, `events/series/${data.series.id}`)}>
-              {t('eventPage.series', { name: data.series.name })}
-            </Button>
-          )}
-        </div>
-        {changeable && (
-          <div>
-            <Button to={guildPath(guildId, `events/${data.id}/edit`)}>{t('eventPage.edit')}</Button>{' '}
-            <Button onClick={() => setConfirming(true)} disabled={cancel.isPending}>
-              {t('eventPage.cancel')}
-            </Button>
-          </div>
-        )}
-      </Page.Header>
+      <DetailHeader
+        back={{ to: guildPath(guildId, 'events'), label: t('events.title') }}
+        badge={t(`events.types.${data.type}`)}
+        facts={[
+          t('events.players', { count: data.size }),
+          ...(data.series ? [everyWeekText(t, format, data.startsAt)] : []),
+        ].join(' · ')}
+        title={data.name}
+        when={whenText(format, startsAt)}
+        description={data.description}
+        actions={
+          changeable && (
+            <>
+              <Button size="medium" to={guildPath(guildId, `events/${data.id}/edit`)}>
+                {t('eventPage.edit')}
+              </Button>
+              <Button
+                size="medium"
+                tone="danger"
+                onClick={() => setConfirming(true)}
+                disabled={cancel.isPending}
+              >
+                {t('eventPage.cancel')}
+              </Button>
+            </>
+          )
+        }
+        banner={
+          data.cancelled
+            ? {
+                label: t('events.cancelled'),
+                text: t('eventPage.cancelledText', {
+                  date: format.dateTime(new Date(data.cancelled.at)),
+                  name: data.cancelled.by ?? t('member.unknownUser'),
+                }),
+              }
+            : undefined
+        }
+      />
 
-      {data.cancelled && (
-        <Notice
-          tone="bad"
-          title={t('eventPage.cancelledTitle', {
-            date: format.dateTime(new Date(data.cancelled.at)),
-            name: data.cancelled.by ?? t('member.unknownUser'),
-          })}
-        >
-          {t('eventPage.cancelledBody')}
-        </Notice>
+      {data.series && (
+        <Button variant="text" to={guildPath(guildId, `events/series/${data.series.id}`)}>
+          {t('eventPage.series', { name: data.series.name })}
+        </Button>
       )}
       {!data.cancelled && started && <Notice tone="warn" title={t('eventPage.started')} />}
       {cancel.error && (
@@ -78,25 +90,7 @@ export function EventPage() {
         </Notice>
       )}
 
-      {data.description && (
-        <Page.Section title={t('eventPage.description')}>
-          <Page.Text>{data.description}</Page.Text>
-        </Page.Section>
-      )}
-
-      <Page.Section title={t('eventPage.slots')}>
-        <DetailList>
-          {COMBAT_ROLES.map((role) => (
-            <DetailList.Item key={role} label={COMBAT_ROLE_NAMES[role]}>
-              {data.slots[role]}
-            </DetailList.Item>
-          ))}
-        </DetailList>
-        <Page.Text>
-          {data.createdBy && t('eventPage.createdBy', { name: data.createdBy })}{' '}
-          {data.cancelled && <Tag tone="bad">{t('events.cancelled')}</Tag>}
-        </Page.Text>
-      </Page.Section>
+      <SignUpSections slots={data.slots} />
 
       <ConfirmDialog
         open={confirming}

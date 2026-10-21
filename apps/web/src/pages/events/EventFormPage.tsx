@@ -1,5 +1,6 @@
 import {
   COMBAT_ROLE_NAMES,
+  COMBAT_ROLE_PLURAL_NAMES,
   COMBAT_ROLES,
   createEventSchema,
   DUNGEON_SLOTS,
@@ -36,16 +37,19 @@ import {
   Button,
   Checkbox,
   ChoiceGroup,
+  FormColumns,
   FormGrid,
   Loading,
   Notice,
   Page,
   Stepper,
   TextField,
+  TotalMeter,
 } from '../../components/ui';
 import { apiErrorText, validationIssueMessage } from '../../i18n/api-errors';
 import { fromZonedFields, toZonedFields } from '../../i18n/calendar';
 import { useFormat } from '../../i18n/format';
+import { roleColor } from './eventText';
 
 type Slots = Record<CombatRole, number>;
 
@@ -117,7 +121,6 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     : repeat
       ? createSeries
       : createEvent;
-  const [submitted, setSubmitted] = useState(false);
   const [draft, setDraft] = useState<Draft>(() =>
     event
       ? {
@@ -162,17 +165,32 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     save.error instanceof ApiRequestError && save.error.error.code === 'VALIDATION_ERROR'
       ? save.error.error.issues
       : [];
+  // Something missing only disables saving (the footer says what); a wrong value shows on its
+  // field right away.
+  const missing = (issue: ValidationIssue) =>
+    issue.code === 'REQUIRED' || (issue.field === 'startsAt' && (!draft.date || !draft.time));
   const errorFor = (field: string) => {
-    const issue = [...(submitted ? localIssues : []), ...serverIssues].find(
+    const issue = [...localIssues.filter((i) => !missing(i)), ...serverIssues].find(
       (candidate) => candidate.field === field || candidate.field.startsWith(`${field}.`),
     );
     return issue && validationIssueMessage(t, issue);
   };
+  const firstProblem = localIssues[0];
+  const saveHint = !firstProblem
+    ? undefined
+    : firstProblem.field === 'name'
+      ? t('eventForm.hintName')
+      : firstProblem.field === 'startsAt'
+        ? missing(firstProblem)
+          ? t('eventForm.hintDate')
+          : t('eventForm.hintFuture')
+        : firstProblem.field === 'size' || firstProblem.field.startsWith('slots')
+          ? t('eventForm.hintSlots')
+          : t('eventForm.hintFix');
   const total = draft.slots.tank + draft.slots.healer + draft.slots.dps;
   const slotProblem = eventSlotIssues(draft.type, draft)[0];
 
   const submit = () => {
-    setSubmitted(true);
     if (localIssues.length > 0) return;
     const toEvent = { onSuccess: (saved: { id: string }) => open(`events/${saved.id}`) };
     const toSeries = { onSuccess: (saved: { id: string }) => open(`events/series/${saved.id}`) };
@@ -190,11 +208,131 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
   const back = () =>
     open(!event ? 'events' : editingSeries ? `events/series/${event.id}` : `events/${event.id}`);
 
+  const fields = (
+    <>
+      {event ? (
+        <Page.Text>
+          {t('eventForm.type')}: {t(`events.types.${event.type}`)} · {t('eventForm.typeFixed')}
+        </Page.Text>
+      ) : (
+        <ChoiceGroup
+          label={t('eventForm.type')}
+          value={draft.type}
+          onChange={(type: EventType) => resize(type, defaultSize[type])}
+        >
+          {EVENT_TYPES.map((type) => (
+            <ChoiceGroup.Option key={type} value={type}>
+              {t(`events.types.${type}`)}
+            </ChoiceGroup.Option>
+          ))}
+        </ChoiceGroup>
+      )}
+      <TextField
+        label={t('eventForm.name')}
+        wide
+        value={draft.name}
+        onChange={(name) => change({ name })}
+        maxLength={EVENT_NAME_MAX_LENGTH}
+        placeholder={t('eventForm.namePlaceholder')}
+        error={errorFor('name')}
+      />
+      <TextField
+        label={t('eventForm.description')}
+        wide
+        multiline
+        value={draft.description}
+        onChange={(description) => change({ description })}
+        maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
+        error={errorFor('description')}
+      />
+      <FormGrid>
+        <TextField
+          label={editingSeries ? t('eventForm.nextDate') : t('eventForm.date')}
+          type="date"
+          wide
+          value={draft.date}
+          onChange={(date) => change({ date })}
+          error={errorFor('startsAt')}
+        />
+        <TextField
+          label={t('eventForm.time')}
+          type="time"
+          wide
+          value={draft.time}
+          onChange={(time) => change({ time })}
+          hint={t('eventForm.timeZone', { timeZone: format.timeZone })}
+        />
+      </FormGrid>
+      {!event && <Checkbox label={t('eventForm.repeat')} checked={repeat} onChange={setRepeat} />}
+      {(repeat || editingSeries) && <Page.Text>{t('eventForm.repeatHint')}</Page.Text>}
+    </>
+  );
+
+  const slots = (
+    <>
+      {draft.type === 'raid' && (
+        <ChoiceGroup
+          label={t('eventForm.size')}
+          value={String(draft.size)}
+          onChange={(size: string) => resize('raid', Number(size))}
+        >
+          {RAID_SIZES.map((size) => (
+            <ChoiceGroup.Option key={size} value={String(size)}>
+              {size}
+            </ChoiceGroup.Option>
+          ))}
+        </ChoiceGroup>
+      )}
+      {draft.type === 'pvp' && (
+        <Stepper
+          label={t('eventForm.size')}
+          value={draft.size}
+          min={PVP_MIN_SIZE}
+          max={PVP_MAX_SIZE}
+          onChange={(size) => change({ size })}
+          decreaseLabel={t('eventForm.decrease', { what: t('eventForm.players') })}
+          increaseLabel={t('eventForm.increase', { what: t('eventForm.players') })}
+        />
+      )}
+      {draft.type === 'dungeon' && <Page.Text>{t('eventForm.dungeonFixed')}</Page.Text>}
+      <div>
+        <Page.Text>{t('eventForm.slots')}</Page.Text>
+        {COMBAT_ROLES.map((role) => (
+          <Stepper
+            key={role}
+            label={COMBAT_ROLE_PLURAL_NAMES[role]}
+            dot={roleColor[role]}
+            value={draft.slots[role]}
+            max={PVP_MAX_SIZE}
+            disabled={draft.type === 'dungeon'}
+            onChange={(value) => change({ slots: { ...draft.slots, [role]: value } })}
+            decreaseLabel={t('eventForm.decrease', { what: COMBAT_ROLE_NAMES[role] })}
+            increaseLabel={t('eventForm.increase', { what: COMBAT_ROLE_NAMES[role] })}
+          />
+        ))}
+      </div>
+      <TotalMeter
+        label={t('eventForm.total')}
+        value={total}
+        max={draft.size}
+        segments={COMBAT_ROLES.map((role) => ({
+          key: role,
+          value: draft.slots[role],
+          color: roleColor[role],
+        }))}
+        tone={slotProblem ? 'warn' : 'ok'}
+        message={slotProblem ? validationIssueMessage(t, slotProblem) : t('eventForm.slotsAddUp')}
+      />
+    </>
+  );
+
   return (
     <Page>
       <Page.Header>
         <div>
-          <Button onClick={back}>{t('eventForm.back')}</Button>
+          <Button variant="text" startIcon="chevronLeft" onClick={back}>
+            {t('eventForm.back')}
+          </Button>
           <Page.Title>
             {!event
               ? t('eventForm.newTitle')
@@ -205,133 +343,31 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
         </div>
       </Page.Header>
 
-      <Page.Section title={t('eventForm.details')}>
-        {event ? (
-          <Page.Text>
-            {t('eventForm.type')}: {t(`events.types.${event.type}`)} · {t('eventForm.typeFixed')}
-          </Page.Text>
-        ) : (
-          <ChoiceGroup
-            label={t('eventForm.type')}
-            value={draft.type}
-            onChange={(type: EventType) => resize(type, defaultSize[type])}
-          >
-            {EVENT_TYPES.map((type) => (
-              <ChoiceGroup.Option key={type} value={type}>
-                {t(`events.types.${type}`)}
-              </ChoiceGroup.Option>
-            ))}
-          </ChoiceGroup>
-        )}
-        <FormGrid>
-          <FormGrid.Wide>
-            <TextField
-              label={t('eventForm.name')}
-              value={draft.name}
-              onChange={(name) => change({ name })}
-              maxLength={EVENT_NAME_MAX_LENGTH}
-              placeholder={t('eventForm.namePlaceholder')}
-              error={errorFor('name')}
-            />
-          </FormGrid.Wide>
-          <FormGrid.Wide>
-            <TextField
-              label={t('eventForm.description')}
-              multiline
-              value={draft.description}
-              onChange={(description) => change({ description })}
-              maxLength={EVENT_DESCRIPTION_MAX_LENGTH}
-              hint={t('eventForm.descriptionHint')}
-              error={errorFor('description')}
-            />
-          </FormGrid.Wide>
-          <TextField
-            label={editingSeries ? t('eventForm.nextDate') : t('eventForm.date')}
-            type="date"
-            value={draft.date}
-            onChange={(date) => change({ date })}
-            error={errorFor('startsAt')}
-          />
-          <TextField
-            label={t('eventForm.time')}
-            type="time"
-            value={draft.time}
-            onChange={(time) => change({ time })}
-            hint={t('eventForm.timeZone', { timeZone: format.timeZone })}
-          />
-          {!event && (
-            <FormGrid.Wide>
-              <Checkbox label={t('eventForm.repeat')} checked={repeat} onChange={setRepeat} />
-            </FormGrid.Wide>
-          )}
-        </FormGrid>
-        {(repeat || editingSeries) && <Page.Text>{t('eventForm.repeatHint')}</Page.Text>}
-      </Page.Section>
-
-      <Page.Section title={t('eventForm.size')}>
-        {draft.type === 'raid' && (
-          <ChoiceGroup
-            label={t('eventForm.size')}
-            hideLabel
-            value={String(draft.size)}
-            onChange={(size: string) => resize('raid', Number(size))}
-          >
-            {RAID_SIZES.map((size) => (
-              <ChoiceGroup.Option key={size} value={String(size)}>
-                {t('events.players', { count: size })}
-              </ChoiceGroup.Option>
-            ))}
-          </ChoiceGroup>
-        )}
-        {draft.type === 'pvp' && (
-          <Stepper
-            label={t('eventForm.players')}
-            value={draft.size}
-            min={PVP_MIN_SIZE}
-            max={PVP_MAX_SIZE}
-            onChange={(size) => change({ size })}
-            decreaseLabel={t('eventForm.decrease', { what: t('eventForm.players') })}
-            increaseLabel={t('eventForm.increase', { what: t('eventForm.players') })}
-          />
-        )}
-        {draft.type === 'dungeon' && <Page.Text>{t('eventForm.dungeonFixed')}</Page.Text>}
-
-        {COMBAT_ROLES.map((role) => (
-          <Stepper
-            key={role}
-            label={COMBAT_ROLE_NAMES[role]}
-            value={draft.slots[role]}
-            max={PVP_MAX_SIZE}
-            disabled={draft.type === 'dungeon'}
-            onChange={(value) => change({ slots: { ...draft.slots, [role]: value } })}
-            decreaseLabel={t('eventForm.decrease', { what: COMBAT_ROLE_NAMES[role] })}
-            increaseLabel={t('eventForm.increase', { what: COMBAT_ROLE_NAMES[role] })}
-          />
-        ))}
-        <Notice
-          tone={slotProblem ? 'warn' : 'ok'}
-          title={t('eventForm.total', { total, size: draft.size })}
-        >
-          {slotProblem && validationIssueMessage(t, slotProblem)}
-          {errorFor('size')}
-        </Notice>
-      </Page.Section>
+      <FormColumns panel={slots}>{fields}</FormColumns>
 
       {save.error && serverIssues.length === 0 && (
         <Notice tone="bad" title={t('eventForm.saveFailed')}>
           {apiErrorText(t, save.error)}
         </Notice>
       )}
-      <div>
-        <Button variant="primary" onClick={submit} disabled={save.isPending}>
+      <Page.Footer>
+        <Button
+          variant="primary"
+          size="medium"
+          onClick={submit}
+          disabled={save.isPending || localIssues.length > 0}
+        >
           {event
             ? t('eventForm.save')
             : repeat
               ? t('eventForm.createSeries')
               : t('eventForm.create')}
-        </Button>{' '}
-        <Button onClick={back}>{t('eventForm.cancel')}</Button>
-      </div>
+        </Button>
+        <Button size="medium" onClick={back}>
+          {t('eventForm.cancel')}
+        </Button>
+        {saveHint && <Page.Muted>{saveHint}</Page.Muted>}
+      </Page.Footer>
     </Page>
   );
 }

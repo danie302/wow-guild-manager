@@ -29,7 +29,11 @@ export function Select({
   const id = useId();
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
-      <Box component="label" htmlFor={id} sx={hideLabel ? visuallyHidden : { fontWeight: 700 }}>
+      <Box
+        component="label"
+        htmlFor={id}
+        sx={hideLabel ? visuallyHidden : { fontSize: 12, color: token('mt') }}
+      >
         {label}
       </Box>
       <Box

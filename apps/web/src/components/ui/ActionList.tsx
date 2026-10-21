@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import type { ReactNode } from 'react';
+import { Children, type ReactNode } from 'react';
 
 import { token } from './tokens';
 
@@ -26,13 +26,12 @@ function ActionListRoot({ label, children, empty }: ActionListProps) {
       sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}
     >
       {children}
-      {empty && (
+      {empty && Children.toArray(children).length === 0 && (
         <Box
           sx={{
             p: '20px 16px',
             bgcolor: token('sf'),
             color: token('mt'),
-            '&:not(:last-child)': { display: 'none' },
           }}
         >
           {empty}

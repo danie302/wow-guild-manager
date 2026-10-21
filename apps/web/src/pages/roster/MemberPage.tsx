@@ -153,7 +153,9 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
     <Page>
       <Page.Header>
         <div>
-          <Button to={guildPath(guildId, 'roster')}>{t('member.back')}</Button>
+          <Button variant="text" startIcon="chevronLeft" to={guildPath(guildId, 'roster')}>
+            {t('member.back')}
+          </Button>
           <Page.Title>{member.discordName}</Page.Title>
           <Page.Text>{RANK_NAMES[member.rank]}</Page.Text>
         </div>

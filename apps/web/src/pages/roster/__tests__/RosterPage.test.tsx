@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { ashenId, mockApi } from '../../../test/api';
+import { ashenId, mockApi, testUser } from '../../../test/api';
 import { renderRoute } from '../../../test/render';
 
 const rosterPath = `/guilds/${ashenId}/roster`;
@@ -69,7 +69,8 @@ describe('RosterPage', () => {
     expect(jaina).toHaveTextContent('Jaina');
     expect(jaina).toHaveTextContent('Officer');
     expect(jaina).toHaveTextContent('+1 alt');
-    expect(jaina).toHaveTextContent('Human Mage · 60');
+    expect(jaina).toHaveTextContent('Mage · Human · 60');
+    expect(screen.queryByText('No members match.')).not.toBeInTheDocument();
     expect(jaina).toHaveTextContent('Tailoring');
     expect(jaina).toHaveAttribute('href', `${rosterPath}/${roster[1]!.id}`);
   });
@@ -90,7 +91,7 @@ describe('RosterPage', () => {
     expect(rows().map((row) => row.textContent)).toEqual([expect.stringContaining('Varian')]);
     await user.click(screen.getByRole('radio', { name: 'All' }));
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'Warlock');
+    await user.click(screen.getByRole('radio', { name: 'Warlock' }));
     expect(rows().map((row) => row.textContent)).toEqual([expect.stringContaining('Jaina')]);
   });
 
@@ -245,5 +246,20 @@ describe('RosterPage', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Left Discord only' }));
 
     expect(rows().map((row) => row.textContent)).toEqual([expect.stringContaining('Varian')]);
+  });
+
+  it('marks the logged-in user, and says when no member matches the filters', async () => {
+    const me = { ...roster[0]!, discordUserId: testUser.discordId };
+    mockApi({ [members]: () => Response.json([me, roster[1]]) });
+    const user = userEvent.setup();
+    renderRoute(rosterPath);
+
+    await screen.findByRole('list', { name: 'Roster' });
+    expect(within(rows()[0]!).getByText('You')).toBeInTheDocument();
+    expect(within(rows()[1]!).queryByText('You')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Druid' }));
+
+    expect(screen.getByText('No members match.')).toBeInTheDocument();
   });
 });

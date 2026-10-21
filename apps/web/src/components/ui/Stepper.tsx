@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import { useId } from 'react';
 
-import { token } from './tokens';
+import { token, type TokenName } from './tokens';
 
 export interface StepperProps {
   label: string;
@@ -12,6 +12,8 @@ export interface StepperProps {
   disabled?: boolean;
   decreaseLabel: string;
   increaseLabel: string;
+  /** A color token for a small square before the label, e.g. a combat role ("tank"). */
+  dot?: TokenName;
 }
 
 /** A whole number with − and + buttons, e.g. the slots of a combat role. */
@@ -24,26 +26,38 @@ export function Stepper({
   disabled,
   decreaseLabel,
   increaseLabel,
+  dot,
 }: StepperProps) {
   const id = useId();
   const clamp = (next: number) => Math.min(max, Math.max(min, next));
   const button = {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     bgcolor: 'transparent',
     color: token('tx'),
-    border: `1px solid ${token('dv')}`,
-    fontSize: 16,
+    border: 0,
+    fontSize: 18,
     fontWeight: 700,
     cursor: 'pointer',
     '&:disabled': { opacity: 0.4, cursor: 'default' },
   };
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-      <Box component="label" htmlFor={id} sx={{ fontWeight: 700 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        p: '8px 0',
+        borderBottom: `1px solid ${token('ln')}`,
+      }}
+    >
+      {dot && (
+        <Box component="span" sx={{ width: 10, height: 10, bgcolor: token(dot), flex: 'none' }} />
+      )}
+      <Box component="label" htmlFor={id} sx={{ flex: 1, fontWeight: 700 }}>
         {label}
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'stretch', border: `1px solid ${token('dv')}` }}>
         <Box
           component="button"
           type="button"
@@ -66,15 +80,15 @@ export function Stepper({
           }}
           sx={{
             width: 48,
-            height: 32,
             textAlign: 'center',
             bgcolor: token('bg'),
             color: token('tx'),
-            border: `1px solid ${token('dv')}`,
-            borderLeft: 0,
-            borderRight: 0,
+            border: 0,
+            borderLeft: `1px solid ${token('dv')}`,
+            borderRight: `1px solid ${token('dv')}`,
             font: 'inherit',
-            fontWeight: 700,
+            fontSize: 15,
+            fontWeight: 800,
           }}
         />
         <Box
