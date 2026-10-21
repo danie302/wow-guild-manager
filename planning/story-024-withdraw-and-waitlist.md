@@ -19,7 +19,7 @@ Free spots when someone withdraws or is removed, and fill them from the waitlist
 - [ ] Choosing Declined releases the member's spot.
 - [ ] When a spot opens, the earliest waitlisted character with the same combat role gets it, and is told by direct message.
 - [ ] Removing a member from the roster, or removing one of their characters, removes those sign-ups for upcoming events and promotes characters from the waitlist. Sign-ups and attendance in past events are kept.
-- [ ] Reducing a role's slots below the characters already in it moves the most recent sign-ups in that role to the front of the waitlist, and they get a direct message. The event form shows who will be affected before saving. (Moved from story 020.)
+- [ ] Reducing a role's slots below the characters already in it moves the most recent sign-ups in that role to the front of the waitlist, and they get a direct message. The event form shows who will be affected before saving. (Moved from story 020.) The same applies when a recurring series' slots are reduced, and participants of events changed by a series edit get a direct message (moved from story 021).
 - [ ] The post updates after every change.
 - [ ] A test with simultaneous withdrawals and sign-ups never fills more slots than the event has.
 

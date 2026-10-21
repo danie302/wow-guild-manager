@@ -1,0 +1,153 @@
+import {
+  createEventSchema,
+  eventSlotIssues,
+  SERIES_WEEKS_AHEAD,
+  updateEventSchema,
+  type CreateEventInput,
+  type UpdateEventInput,
+} from '@wgm/shared';
+import { Op, Transaction } from 'sequelize';
+
+import { Event, EventSeries, type Guild, type User } from '../db/models/index.js';
+import { transaction } from '../db/transaction.js';
+import type { Logger } from '../logger.js';
+import { DomainError, DomainValidationError } from './errors.js';
+import { checkStartsInFuture, eventColumns, parseInput } from './events.js';
+
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Creates a weekly series and its events for the next two weeks. `startsAt` is its first
+ * event; the rest follow every 7 days at the same UTC time.
+ */
+export async function createSeries(
+  guild: Guild,
+  input: CreateEventInput,
+  createdBy: User,
+  now = new Date(),
+): Promise<EventSeries> {
+  const details = parseInput(createEventSchema, input);
+  checkStartsInFuture(details.startsAt, now);
+  return transaction(async () => {
+    const series = await EventSeries.create({
+      guildId: guild.id,
+      type: details.type,
+      ...eventColumns(details),
+      createdByUserId: createdBy.id,
+    });
+    await extendSeries(series, now);
+    return series;
+  });
+}
+
+/**
+ * Creates the series' missing events up to two weeks ahead. Safe to run at any time and in
+ * parallel: a unique index keeps one event per week.
+ */
+export async function extendSeries(series: EventSeries, now = new Date()): Promise<void> {
+  if (series.stoppedAt) return;
+  const horizon = now.getTime() + SERIES_WEEKS_AHEAD * WEEK;
+  const last = await Event.max<Date | null, Event>('startsAt', { where: { seriesId: series.id } });
+  let next = last ? last.getTime() + WEEK : series.startsAt.getTime();
+  const events = [];
+  for (; next <= horizon; next += WEEK) {
+    if (next <= now.getTime()) continue;
+    events.push({
+      guildId: series.guildId,
+      seriesId: series.id,
+      type: series.type,
+      name: series.name,
+      description: series.description,
+      startsAt: new Date(next),
+      size: series.size,
+      tankSlots: series.tankSlots,
+      healerSlots: series.healerSlots,
+      dpsSlots: series.dpsSlots,
+      createdByUserId: series.createdByUserId,
+    });
+  }
+  if (events.length > 0) await Event.bulkCreate(events, { ignoreDuplicates: true });
+}
+
+/** The worker's hourly job: keeps every running series two weeks ahead. */
+export async function extendAllSeries(logger: Logger, now = new Date()): Promise<void> {
+  for (const series of await EventSeries.findAll({ where: { stoppedAt: null } })) {
+    try {
+      await extendSeries(series, now);
+    } catch (err) {
+      logger.error({ err, seriesId: series.id }, 'Could not create the events of a series');
+    }
+  }
+}
+
+/**
+ * Edits a running series and every future event in it, including ones edited on their own.
+ * `startsAt` is its next event: the future events move to it and every 7 days after. The type
+ * can't change.
+ */
+export async function updateSeries(
+  guild: Guild,
+  seriesId: string,
+  input: UpdateEventInput,
+  now = new Date(),
+): Promise<EventSeries> {
+  const details = parseInput(updateEventSchema, input);
+  return transaction(async () => {
+    const series = await runningSeries(guild, seriesId);
+    const issues = eventSlotIssues(series.type, details);
+    if (issues.length > 0) throw new DomainValidationError(issues);
+    checkStartsInFuture(details.startsAt, now);
+
+    const columns = eventColumns(details);
+    const anchor = columns.startsAt.getTime();
+    // Cancelled ones move too, so the weeks stay aligned, but keep their own details.
+    const future = await Event.findAll({
+      where: { seriesId: series.id, startsAt: { [Op.gt]: now } },
+      order: [['startsAt', 'ASC']],
+      lock: Transaction.LOCK.UPDATE,
+    });
+    const moves = future.map((event, index) => ({ event, startsAt: anchor + index * WEEK }));
+    // Moving later, the last event moves first (and earlier, the first), so two events of the
+    // series never share a time, which the unique index refuses.
+    if (moves.length > 0 && moves[0]!.startsAt > moves[0]!.event.startsAt.getTime()) {
+      moves.reverse();
+    }
+    for (const { event, startsAt } of moves) {
+      await event.update(
+        event.cancelledAt
+          ? { startsAt: new Date(startsAt) }
+          : { ...columns, startsAt: new Date(startsAt) },
+      );
+    }
+    await series.update(columns);
+    await extendSeries(series, now);
+    return series;
+  });
+}
+
+/**
+ * Stops a series: no more events are created, and its future events are removed. Its past
+ * events stay. (Story 023 keeps future events that have sign-ups.)
+ */
+export async function stopSeries(
+  guild: Guild,
+  seriesId: string,
+  stoppedBy: User,
+  now = new Date(),
+): Promise<EventSeries> {
+  return transaction(async () => {
+    const series = await runningSeries(guild, seriesId);
+    await Event.destroy({ where: { seriesId: series.id, startsAt: { [Op.gt]: now } } });
+    return series.update({ stoppedAt: now, stoppedByUserId: stoppedBy.id });
+  });
+}
+
+async function runningSeries(guild: Guild, seriesId: string): Promise<EventSeries> {
+  const series = await EventSeries.findOne({
+    where: { id: seriesId, guildId: guild.id },
+    lock: Transaction.LOCK.UPDATE,
+  });
+  if (!series) throw new DomainError({ code: 'NOT_FOUND' });
+  if (series.stoppedAt) throw new DomainError({ code: 'SERIES_STOPPED' });
+  return series;
+}

@@ -8,7 +8,7 @@ import {
 import express from 'express';
 import { Op, type WhereOptions } from 'sequelize';
 
-import { Event, User } from '../db/models/index.js';
+import { Event, EventSeries, User } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
 import { parseBody } from './errors.js';
@@ -102,9 +102,10 @@ export function eventsRouter() {
 const people = [
   { model: User, as: 'createdBy', attributes: ['name'] },
   { model: User, as: 'cancelledBy', attributes: ['name'] },
+  { model: EventSeries, as: 'series', attributes: ['id', 'name'] },
 ];
 
-function eventId(id: unknown): string {
+export function eventId(id: unknown): string {
   if (!uuidSchema.safeParse(id).success) throw new DomainError({ code: 'NOT_FOUND' });
   return id as string;
 }
@@ -126,5 +127,6 @@ function toEventResponse(event: Event): EventResponse {
     cancelled: event.cancelledAt
       ? { at: event.cancelledAt.toISOString(), by: event.cancelledBy?.name ?? null }
       : null,
+    series: event.series ? { id: event.series.id, name: event.series.name } : null,
   };
 }

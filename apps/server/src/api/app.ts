@@ -9,6 +9,7 @@ import { authRouter } from './auth.js';
 import { discordRouter, type DiscordAccess } from './discord.js';
 import { errorHandler, notFoundHandler } from './errors.js';
 import { eventsRouter } from './events.js';
+import { seriesRouter } from './series.js';
 import { guildsRouter } from './guilds.js';
 import { healthRouter, type HealthChecks } from './health.js';
 import { meRouter } from './me.js';
@@ -60,6 +61,7 @@ export function createApp({
     api.use(guildsRouter(discord, storage));
     api.use(membersRouter(discord));
     api.use(eventsRouter());
+    api.use(seriesRouter());
     if (jobs) api.use(registrationsRouter(jobs));
   }
   app.use('/api', api);

@@ -51,7 +51,8 @@
     "GUILD_MASTER_CANNOT_BE_REMOVED": "The Guild Master can't be removed from the roster. Transfer leadership first.",
     "REGISTRATION_NOT_PENDING": "This request was already approved or rejected.",
     "EVENT_STARTED": "This event has started, so it can't be changed or cancelled.",
-    "EVENT_CANCELLED": "This event was cancelled, so it can't be changed."
+    "EVENT_CANCELLED": "This event was cancelled, so it can't be changed.",
+    "SERIES_STOPPED": "This recurring series was stopped, so it can't be changed."
   },
   "validation": {
     "REQUIRED": "Required.",

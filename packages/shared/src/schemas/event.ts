@@ -78,6 +78,12 @@ export const createEventSchema = z
  */
 export const updateEventSchema = z.object(eventDetails).strict();
 
+/**
+ * A weekly series ("MC every Tuesday") is created with the same body as an event: `startsAt`
+ * is its first event, and the rest follow every 7 days at the same UTC time.
+ */
+export const SERIES_WEEKS_AHEAD = 2;
+
 export type CreateEventInput = z.input<typeof createEventSchema>;
 export type UpdateEventInput = z.input<typeof updateEventSchema>;
 

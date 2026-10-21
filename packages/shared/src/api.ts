@@ -72,7 +72,9 @@ export type ApiError =
         // The event has started, so it can't be edited or cancelled any more.
         | 'EVENT_STARTED'
         // The event was cancelled, so it can't be edited or cancelled again.
-        | 'EVENT_CANCELLED';
+        | 'EVENT_CANCELLED'
+        // The recurring series was stopped, so it can't be edited or stopped again.
+        | 'SERIES_STOPPED';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
@@ -274,6 +276,28 @@ export interface EventResponse {
   createdBy: string | null;
   /** Set once the event is cancelled; `by` is null when that account no longer exists. */
   cancelled: { at: string; by: string | null } | null;
+  /** The weekly series it belongs to, if any. */
+  series: { id: string; name: string } | null;
+}
+
+/**
+ * A weekly series on `GET /api/guilds/:guildId/series` and its own page. Its events follow
+ * `startsAt` every 7 days at the same UTC time.
+ */
+export interface SeriesResponse {
+  id: string;
+  type: EventType;
+  name: string;
+  description: string;
+  /** Its first event, or after an edit, the next one. */
+  startsAt: string;
+  size: number;
+  slots: { tank: number; healer: number; dps: number };
+  /** Its next event that isn't cancelled; null when there's none. */
+  nextEventAt: string | null;
+  createdBy: string | null;
+  /** Set once the series is stopped. */
+  stopped: { at: string; by: string | null } | null;
 }
 
 /** A request to join on `GET /api/guilds/:guildId/registrations`, oldest first. */

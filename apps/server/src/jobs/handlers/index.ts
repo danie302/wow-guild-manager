@@ -1,3 +1,4 @@
+import { extendAllSeries } from '../../domain/series.js';
 import type { CharacterLookup } from '../../integrations/character-lookup/character-lookup.js';
 import type { DirectMessenger } from '../../integrations/discord/direct-messages.js';
 import type { Logger } from '../../logger.js';
@@ -17,5 +18,6 @@ export function createJobHandlers(dependencies: JobDependencies): JobHandlers {
   return {
     ping: pingHandler(dependencies.logger),
     ...registrationHandlers(dependencies),
+    'extend-series': () => extendAllSeries(dependencies.logger),
   };
 }

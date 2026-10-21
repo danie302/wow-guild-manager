@@ -51,7 +51,8 @@
     "GUILD_MASTER_CANNOT_BE_REMOVED": "No se puede quitar al Guild Master de la plantilla. Primero transfiere el liderazgo.",
     "REGISTRATION_NOT_PENDING": "Esta solicitud ya fue aprobada o rechazada.",
     "EVENT_STARTED": "Este evento ya empezó, así que no se puede cambiar ni cancelar.",
-    "EVENT_CANCELLED": "Este evento fue cancelado, así que no se puede cambiar."
+    "EVENT_CANCELLED": "Este evento fue cancelado, así que no se puede cambiar.",
+    "SERIES_STOPPED": "Esta serie recurrente se detuvo, así que no se puede cambiar."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",

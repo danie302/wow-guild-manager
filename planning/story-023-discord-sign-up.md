@@ -22,6 +22,7 @@ Let members sign up for events with buttons on the Discord post.
 
 - [ ] Only roster members with an eligible rank can sign up. Members (rank) can't sign up for raids.
 - [ ] A Discord user who isn't on the roster is told to use `/register`.
+- [ ] Stopping a recurring series keeps its future events that have sign-ups (story 021 removes them all for now).
 - [ ] A member flagged as having left the Discord server (story 019) can't sign up.
 - [ ] The character list only shows characters whose class can fill the chosen role.
 - [ ] A member can have only one character signed up per event. Changing role or character replaces their sign-up, and they lose their spot if the new role is full.

@@ -20,6 +20,7 @@ const saved: EventResponse = {
   slots: { tank: 4, healer: 10, dps: 26 },
   createdBy: 'Thrall',
   cancelled: null,
+  series: null,
 };
 
 const me = { ...testUser, timeZone: 'America/Argentina/Buenos_Aires' };

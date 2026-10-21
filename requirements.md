@@ -208,10 +208,10 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - If an event's slots for a combat role are reduced below the number of characters already in that role, the most recent sign-ups in that role move to the front of the waitlist and get a direct message. The form warns who will be affected before saving.
 
 ### Recurring events
-- Recurrence is weekly only: the same weekday and time every week.
+- Recurrence is weekly only: the same weekday and time every week, at the same UTC time (so its local time moves by an hour when daylight saving time changes).
 - The next 2 weeks of events in a series always exist. Older ones are created as time passes.
 - Each event in a series can be edited or cancelled on its own.
-- Editing the series (time, slots, deadline, etc.) changes every future event in it, including ones with sign-ups. Participants of changed events get a direct message, and slot reductions follow the rule above.
+- Editing the series (time, slots, deadline, etc.) changes every future event in it, including ones with sign-ups and ones edited on their own. Cancelled events stay cancelled. Participants of changed events get a direct message, and slot reductions follow the rule above.
 - Stopping a series removes its future events that have no sign-ups.
 
 ### Tentative deadline

@@ -11,6 +11,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 
+import { EventSeries } from './event-series.js';
 import { Guild } from './guild.js';
 import { User } from './user.js';
 
@@ -31,9 +32,12 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare createdByUserId: ForeignKey<User['id']> | null;
   declare cancelledAt: CreationOptional<Date | null>;
   declare cancelledByUserId: CreationOptional<ForeignKey<User['id']> | null>;
+  /** The weekly series it belongs to, if any. */
+  declare seriesId: CreationOptional<ForeignKey<EventSeries['id']> | null>;
 
   declare createdBy?: NonAttribute<User | null>;
   declare cancelledBy?: NonAttribute<User | null>;
+  declare series?: NonAttribute<EventSeries | null>;
 
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -53,6 +57,7 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
         createdByUserId: { type: DataTypes.UUID, allowNull: true },
         cancelledAt: { type: DataTypes.DATE, allowNull: true },
         cancelledByUserId: { type: DataTypes.UUID, allowNull: true },
+        seriesId: { type: DataTypes.UUID, allowNull: true },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },
@@ -64,5 +69,6 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
     Event.belongsTo(Guild, { foreignKey: { name: 'guildId', allowNull: false }, as: 'guild' });
     Event.belongsTo(User, { foreignKey: 'createdByUserId', as: 'createdBy' });
     Event.belongsTo(User, { foreignKey: 'cancelledByUserId', as: 'cancelledBy' });
+    Event.belongsTo(EventSeries, { foreignKey: 'seriesId', as: 'series' });
   }
 }

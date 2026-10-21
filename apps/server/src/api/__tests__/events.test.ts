@@ -59,6 +59,7 @@ describe('events', () => {
       startsAt,
       createdBy: 'User 0001',
       cancelled: null,
+      series: null,
     });
     expect((await agent.get(`${base}/${event(response).id}`)).body).toEqual(response.body);
   });

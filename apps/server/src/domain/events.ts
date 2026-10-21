@@ -21,12 +21,12 @@ export async function createEvent(
   createdBy: User,
   now = new Date(),
 ): Promise<Event> {
-  const event = parse(createEventSchema, input);
+  const event = parseInput(createEventSchema, input);
   checkStartsInFuture(event.startsAt, now);
   return Event.create({
     guildId: guild.id,
     type: event.type,
-    ...columns(event),
+    ...eventColumns(event),
     createdByUserId: createdBy.id,
   });
 }
@@ -41,14 +41,14 @@ export async function updateEvent(
   input: UpdateEventInput,
   now = new Date(),
 ): Promise<Event> {
-  const details = parse(updateEventSchema, input);
+  const details = parseInput(updateEventSchema, input);
   return transaction(async () => {
     const event = await changeableEvent(guild, eventId, now);
     // The slots follow the rules of the event's type, which the body doesn't carry.
     const issues = eventSlotIssues(event.type, details);
     if (issues.length > 0) throw new DomainValidationError(issues);
     checkStartsInFuture(details.startsAt, now);
-    return event.update(columns(details));
+    return event.update(eventColumns(details));
   });
 }
 
@@ -77,19 +77,24 @@ async function changeableEvent(guild: Guild, eventId: string, now: Date): Promis
   return event;
 }
 
-function parse<Schema extends z.ZodType>(schema: Schema, input: unknown): z.output<Schema> {
+/** The parsed input, or a validation error with its issues. */
+export function parseInput<Schema extends z.ZodType>(
+  schema: Schema,
+  input: unknown,
+): z.output<Schema> {
   const result = schema.safeParse(input);
   if (!result.success) throw new DomainValidationError(toValidationIssues(result.error, input));
   return result.data;
 }
 
-function checkStartsInFuture(startsAt: string, now: Date): void {
+export function checkStartsInFuture(startsAt: string, now: Date): void {
   if (new Date(startsAt) <= now) {
     throw new DomainValidationError([{ field: 'startsAt', code: EVENT_ERROR_CODES.startsInPast }]);
   }
 }
 
-function columns(details: z.output<typeof updateEventSchema>) {
+/** An event's (or a series') columns from its parsed details. */
+export function eventColumns(details: z.output<typeof updateEventSchema>) {
   return {
     name: details.name,
     description: details.description,

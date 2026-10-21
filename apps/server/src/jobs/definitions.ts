@@ -8,6 +8,8 @@
 export interface JobPayloads {
   /** Logs a message. Only used to check the queue end to end; real jobs come in later stories. */
   ping: { message: string };
+  /** Hourly: creates the events of every running series two weeks ahead (domain/series.ts). */
+  'extend-series': Record<string, never>;
   /** Tells someone by direct message that their request to join was approved or rejected. */
   'registration-reviewed': { registrationId: string };
 }
