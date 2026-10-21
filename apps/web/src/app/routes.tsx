@@ -6,6 +6,8 @@ import { GuildSettingsPage } from '../pages/GuildSettingsPage';
 import { GuildSetupPage } from '../pages/GuildSetupPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NoAccessPage } from '../pages/NoAccessPage';
+import { EventFormPage } from '../pages/events/EventFormPage';
+import { EventPage } from '../pages/events/EventPage';
 import { EventsPage } from '../pages/events/EventsPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 import { RegistrationsPage } from '../pages/registrations/RegistrationsPage';
@@ -39,9 +41,9 @@ export const routes: RouteObject[] = [
               { index: true, element: <Navigate to="dashboard" replace /> },
               { path: 'dashboard', element: <DashboardPage /> },
               { path: 'events', element: <EventsPage /> },
-              // Built in story 020, part 3.
-              { path: 'events/new', element: <PlaceholderPage titleKey="events.new" /> },
-              { path: 'events/:eventId', element: <PlaceholderPage titleKey="events.title" /> },
+              { path: 'events/new', element: <EventFormPage /> },
+              { path: 'events/:eventId', element: <EventPage /> },
+              { path: 'events/:eventId/edit', element: <EventFormPage /> },
               { path: 'roster', element: <RosterPage /> },
               { path: 'roster/:memberId', element: <MemberPage /> },
               { path: 'registrations', element: <RegistrationsPage /> },

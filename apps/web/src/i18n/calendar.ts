@@ -76,3 +76,44 @@ export function utcRangeAround(
     to: noonUtc(addDays(last, 2)).toISOString(),
   };
 }
+
+/** A moment as the date ("2026-11-10") and time ("19:00") it shows in a time zone, for forms. */
+export function toZonedFields(value: Date, timeZone: string): { date: string; time: string } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(value);
+  const part = (type: string) => parts.find((p) => p.type === type)!.value;
+  return {
+    date: `${part('year')}-${part('month')}-${part('day')}`,
+    time: `${part('hour')}:${part('minute')}`,
+  };
+}
+
+/**
+ * The moment a date and time entered in a time zone stand for, or null if they aren't valid.
+ * Around a daylight saving change, a time that doesn't exist moves forward like a clock does.
+ */
+export function fromZonedFields(date: string, time: string, timeZone: string): Date | null {
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const t = /^(\d{2}):(\d{2})$/.exec(time);
+  if (!d || !t) return null;
+  const wanted = Date.UTC(+d[1]!, +d[2]! - 1, +d[3]!, +t[1]!, +t[2]!);
+  if (Number.isNaN(wanted)) return null;
+  // The zone's offset at a moment: what its clock shows minus UTC.
+  const offset = (moment: number) => {
+    const shown = toZonedFields(new Date(moment), timeZone);
+    const [y, m, day] = shown.date.split('-').map(Number);
+    const [h, min] = shown.time.split(':').map(Number);
+    return Date.UTC(y!, m! - 1, day, h, min) - moment;
+  };
+  // Guess with the offset at the wanted time, then correct once for a change in between.
+  let moment = wanted - offset(wanted);
+  moment = wanted - offset(moment);
+  return new Date(moment);
+}

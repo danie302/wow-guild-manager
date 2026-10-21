@@ -19,7 +19,7 @@ export interface TextFieldProps {
   hideLabel?: boolean;
   /** Several lines, e.g. a note. */
   multiline?: boolean;
-  type?: 'text' | 'number' | 'search';
+  type?: 'text' | 'number' | 'search' | 'date' | 'time';
 }
 
 /** A one-line text input with its label above it. */

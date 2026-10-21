@@ -51,6 +51,8 @@ export type { SelectProps } from './Select';
 export type { RadioListOptionProps, RadioListProps } from './RadioList';
 export { Splash } from './Splash';
 export type { SplashCardProps, SplashChoiceProps, SplashProps } from './Splash';
+export { Stepper } from './Stepper';
+export type { StepperProps } from './Stepper';
 export { StatusList } from './StatusList';
 export type { StatusListItemProps, Tone } from './StatusList';
 export { Tag } from './Tag';
