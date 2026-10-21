@@ -20,7 +20,7 @@ Build the guild settings page that later stories add sections to, with the guild
 - [ ] Changes on the guild settings page apply only when Save is pressed. Discard restores the saved values. Save is disabled when nothing changed or a value is invalid.
 - [ ] Leaving the page with unsaved changes asks for confirmation.
 - [ ] Sections the current user can't edit are shown read-only.
-- [ ] The Guild Master can change the guild name. An empty name is rejected.
+- [ ] The Guild Master can change the guild name, with the same rules as when creating the guild (1 to 50 characters, no offensive words).
 - [ ] The Guild Master can upload a PNG, JPEG, or WebP image up to the size limit. Other file types and larger files are rejected with a clear message.
 - [ ] Officers get 403 when trying to edit the profile.
 - [ ] The new name and image appear in the app header.

@@ -17,6 +17,8 @@ export const apiConfigSchema = baseConfigSchema.extend({
   /** The Discord application's OAuth2 credentials. Without them the API runs, but login is off. */
   DISCORD_CLIENT_ID: z.string().min(1).optional(),
   DISCORD_CLIENT_SECRET: z.string().min(1).optional(),
+  /** Reads servers and roles for the guild setup. Without it (or the client ID), setup is off. */
+  DISCORD_BOT_TOKEN: z.string().min(1).optional(),
 });
 
 export const botConfigSchema = baseConfigSchema.extend({

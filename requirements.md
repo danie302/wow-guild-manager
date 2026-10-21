@@ -64,6 +64,7 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 
 ### Guild settings
 - Each guild has a name and an image.
+- The guild name is 1 to 50 characters long (ignoring spaces at the start and end) and doesn't have to be unique. It can't contain offensive words in English or Spanish, checked against word lists that can be extended to more languages.
 - All guild settings are on one page. Changes apply only when saved, and unsaved changes can be discarded. Transferring leadership and disbanding are separate actions that apply right after their own confirmation.
 
 ## Roster

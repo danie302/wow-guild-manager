@@ -2,6 +2,19 @@ import { toValidationIssues, type ApiError, type ApiErrorResponse } from '@wgm/s
 import type { ErrorRequestHandler, RequestHandler, Response } from 'express';
 import type { z } from 'zod';
 
+import { DomainError, DomainValidationError } from '../domain/errors.js';
+import { DiscordUnavailableError } from '../integrations/discord/directory.js';
+
+/** The HTTP status for each error code that domain rules throw. */
+const DOMAIN_ERROR_STATUS: Partial<Record<ApiError['code'], number>> = {
+  NOT_FOUND: 404,
+  FORBIDDEN: 403,
+  ALREADY_LEADS_GUILD: 409,
+  DISCORD_SERVER_TAKEN: 409,
+  DISCORD_NOT_CONFIGURED: 503,
+  DISCORD_UNAVAILABLE: 503,
+};
+
 /** Sends an error code (with its details), never translated text: the web client translates it. */
 export function sendError(res: Response, status: number, error: ApiError): void {
   res.status(status).json({ error } satisfies ApiErrorResponse);
@@ -20,6 +33,19 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
 export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, next) => {
   if (isJsonParseError(err)) {
     sendError(res, 400, { code: 'INVALID_JSON' });
+    return;
+  }
+  if (err instanceof DomainError) {
+    sendError(res, DOMAIN_ERROR_STATUS[err.error.code] ?? 400, err.error);
+    return;
+  }
+  if (err instanceof DomainValidationError) {
+    sendError(res, 400, { code: 'VALIDATION_ERROR', issues: err.issues });
+    return;
+  }
+  if (err instanceof DiscordUnavailableError) {
+    req.log.warn({ err }, 'Discord request failed');
+    sendError(res, 503, { code: 'DISCORD_UNAVAILABLE' });
     return;
   }
 

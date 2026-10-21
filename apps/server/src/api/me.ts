@@ -25,8 +25,8 @@ export function currentUser(res: Response): User {
 export function meRouter() {
   const router = express.Router();
 
-  router.get('/me', requireUser, (_req, res) => {
-    res.json(toMeResponse(currentUser(res)));
+  router.get('/me', requireUser, async (_req, res) => {
+    res.json(await toMeResponse(currentUser(res)));
   });
 
   router.patch('/me', requireUser, async (req, res) => {
@@ -36,7 +36,7 @@ export function meRouter() {
       return;
     }
     await currentUser(res).update(result.data);
-    res.json(toMeResponse(currentUser(res)));
+    res.json(await toMeResponse(currentUser(res)));
   });
 
   return router;

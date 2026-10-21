@@ -9,6 +9,7 @@ export const testUser: MeResponse = {
   locale: 'en',
   timeZone: 'UTC',
   theme: 'dark',
+  guilds: [],
 };
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>;

@@ -90,6 +90,7 @@ describe('Discord login', () => {
       locale: 'en',
       timeZone: 'America/Bogota',
       theme: 'dark',
+      guilds: [],
     });
   });
 

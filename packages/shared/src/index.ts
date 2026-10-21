@@ -2,5 +2,7 @@ export * from './api.js';
 export * from './game.js';
 export * from './locales.js';
 export * from './preferences.js';
+export * from './offensive-words.js';
 export * from './schemas/character.js';
+export * from './schemas/guild.js';
 export * from './validation.js';

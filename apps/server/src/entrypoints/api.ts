@@ -7,6 +7,9 @@ import { createDiscordOAuth } from '../auth/discord-oauth.js';
 import { apiConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { JobQueue, redisConnection } from '../jobs/index.js';
+import { cachedDiscordDirectory } from '../integrations/discord/cached-directory.js';
+import { botInviteUrl } from '../integrations/discord/invite.js';
+import { createRestDiscordDirectory } from '../integrations/discord/rest-directory.js';
 import { createLogger } from '../logger.js';
 
 // Migrations run before this process starts (see the api command in docker-compose.yml), never from bot or worker.
@@ -38,6 +41,22 @@ if (!oauth) {
   );
 }
 
+// The guild setup reads Discord with the bot token, and the bot invite needs the client ID.
+const discord =
+  config.DISCORD_BOT_TOKEN && config.DISCORD_CLIENT_ID
+    ? {
+        directory: cachedDiscordDirectory(createRestDiscordDirectory(config.DISCORD_BOT_TOKEN), {
+          redis,
+        }),
+        botInviteUrl: botInviteUrl(config.DISCORD_CLIENT_ID),
+      }
+    : null;
+if (!discord) {
+  logger.warn(
+    'DISCORD_BOT_TOKEN or DISCORD_CLIENT_ID is not set, so guild setup is off (see README)',
+  );
+}
+
 const production = config.NODE_ENV === 'production';
 const app = createApp({
   logger,
@@ -48,6 +67,7 @@ const app = createApp({
     secure: production,
     oauth,
   },
+  discord,
   trustProxy: production,
 });
 

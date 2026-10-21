@@ -46,7 +46,7 @@ The bot and the web app's login share one Discord application, and you need a Di
 2. On the **Bot** page:
    - Click **Reset Token**, copy the token, and put it in `.env` as `DISCORD_BOT_TOKEN`. Treat it like a password.
    - Under **Privileged Gateway Intents**, turn on **Server Members Intent** and save. The bot needs it to see role changes and members leaving the server. Without it, the bot can't connect.
-3. Create a test server in Discord: click **+** in the server list, then **Create My Own**.
+3. Create a test server in Discord: click **+** in the server list, then **Create My Own**. In **Server Settings → Roles**, create a role for Officers (e.g. "Officer"): the guild setup asks which role grants Officer and doesn't offer `@everyone` or the bot's own role.
 4. Invite the bot: on the **OAuth2** page, open **URL Generator**, tick the **bot** and **applications.commands** scopes, and under **Bot Permissions** tick **View Channels**, **Send Messages**, **Embed Links**, and **Read Message History**. Open the generated URL and pick your test server.
 5. Set up the web login: on the **OAuth2** page:
    - Copy the **Client ID** into `.env` as `DISCORD_CLIENT_ID`.
@@ -56,7 +56,7 @@ The bot and the web app's login share one Discord application, and you need a Di
    - The bot's log (`docker compose logs bot`) shows "Bot online" and "Registered slash commands". In the test server, type `/ping`: the bot answers with a message only you can see.
    - Open http://localhost:5173 and click **Log in with Discord**.
 
-Without `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`, the API still runs, but the login page says that login isn't set up. `SESSION_SECRET` comes with a value for local development in `.env.example`; an `.env` made before the login existed needs it added.
+Without `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`, the API still runs, but the login page says that login isn't set up. The API also uses `DISCORD_BOT_TOKEN` (with `DISCORD_CLIENT_ID`) to read your servers and roles during guild setup; without them, guild setup says Discord isn't set up. Only servers where the bot is and you have the **Manage Server** permission (the server owner always does) can be connected. `SESSION_SECRET` comes with a value for local development in `.env.example`; an `.env` made before the login existed needs it added.
 
 The bot registers its commands on every server it's in when it connects, and on new servers as soon as it's invited, so they appear right away.
 

@@ -57,5 +57,6 @@ None known. Every earlier difference was fixed in the design.
 ### Notes for implementation
 - **The sample data is partial.** It has no Shaman class and only Alliance races, and the second guild in the picker (Emberwatch) shows Ashen Vanguard's data. Use the full tables from `packages/shared` and real data.
 - **Item names are invented**, and attendance per event type is sample data.
-- **Guild setup step 3 says "Everyone with this role can use this app."** Since members also have read-only access, the copy should say Officers can *manage* the guild. Fix it when building story 012.
+- **Guild setup step 3 says "Everyone with this role can use this app."** Since members also have read-only access, the copy should say Officers can *manage* the guild (story 012).
+- **Guild setup step 2** shows one server after adding the bot. The app instead lists every server where the bot is and the user can manage the server, and opens the bot invite in a new tab (story 012).
 - **Transferring leadership** keeps the old Guild Master on the roster as a Raider, and **disbanding** makes the bot leave the Discord server. Both are still assumptions in story 033.

@@ -29,6 +29,8 @@ Each decision has a status:
 | Toolchain versions | Node.js 24 LTS, pnpm through corepack, TypeScript 6.0 | Accepted |
 | Logging | pino | Accepted |
 | File storage | A storage interface, with a local Docker volume in development | Accepted |
+| Discord data in the API | Discord's REST API with the bot token, behind `DiscordDirectory` | Accepted |
+| Offensive word filter | `@2toad/profanity`, wrapped in `packages/shared` | Accepted |
 
 ## Runtime environment: Docker
 
@@ -117,7 +119,7 @@ wowGuildManager/
 │     │  ├─ auth/             Discord OAuth2 and app users
 │     │  ├─ bot/              Discord commands and buttons
 │     │  ├─ jobs/             BullMQ queue, worker, and job handlers
-│     │  ├─ integrations/     Battle.net and Discord API clients (from story 017)
+│     │  ├─ integrations/     Discord (from story 012) and Battle.net (from story 017) API clients
 │     │  ├─ i18n/, locales/   Server translations (bot replies, DMs, Discord posts)
 │     │  └─ entrypoints/      api.ts, bot.ts, worker.ts
 │     ├─ test/                Test setup (test database and Redis)
@@ -260,6 +262,21 @@ How the bot is set up:
 - **Slash commands are registered per Discord server,** not globally, because per-server commands appear immediately. The bot registers them for every server when it connects and when it joins a new one. Each command is a `SlashCommand` (definition plus `execute`) in `apps/server/src/bot/commands/`, listed in `commands/index.ts`.
 - **Replies only the user should see** use `MessageFlags.Ephemeral`. If a command throws, the bot logs the error and replies with a generic ephemeral message.
 
+### Discord data in the API
+
+**Status:** Accepted
+
+The login only has the `identify` scope, so the API can't ask Discord about a user's servers with the user's token. When it needs Discord data (the servers the bot is in, a user's permissions and roles in a server, a server's roles), it calls Discord's REST API with the bot token.
+
+- The calls sit behind a `DiscordDirectory` interface in `src/integrations/discord/`, so tests use a fake.
+- Responses are cached in Redis for a short time, to stay within Discord's rate limits.
+- The API reads `DISCORD_BOT_TOKEN` as optional: without it (or `DISCORD_CLIENT_ID`, which the bot invite link needs) the API runs, but the Discord routes answer 503 `DISCORD_NOT_CONFIGURED`.
+- Servers and members are cached for 60 seconds. The bot's server list isn't cached, so a server shows up right after the bot is added. If Discord fails, guild pages still load without the server and role names.
+- Rules that use this data (who can connect which server) live in `src/domain/guilds.ts`. Domain rules throw `DomainError` with an API error code, and `api/errors.ts` maps each code to its HTTP status.
+- Permissions in a server are worked out from the member's roles (and the server owner has every permission), as Discord does. Manage Server or Administrator counts as managing the server.
+
+Two options were rejected: the bot copying servers, roles, and members into PostgreSQL from Gateway events (more code, and the copy can fall behind), and the API asking the bot over Redis (a protocol of our own, and the API would depend on the bot running). The bot still uses Gateway events where something has to react to a change (story 014 clears cached access when roles change, story 019 flags members who leave).
+
 ## Validation: Zod
 
 **Status:** Accepted
@@ -268,6 +285,20 @@ Zod schemas in `packages/shared` validate API requests on the server and forms o
 
 - Game data (factions, races, classes, combat roles, professions) lives in `packages/shared/src/game.ts` as stable snake_case codes (`night_elf`, `first_aid`), with their English display names next to them. The database and the API use the codes.
 - Custom checks (e.g. a class that a race can't be) set the Zod issue message to an error code such as `CLASS_NOT_FOR_RACE`, never to text.
+
+### Offensive word filter
+
+**Status:** Accepted
+
+Names people choose (for now, the guild name) are checked against lists of offensive words, so the web form warns while typing and the server rejects them with the code `NAME_NOT_ALLOWED`.
+
+- It uses [`@2toad/profanity`](https://www.npmjs.com/package/@2toad/profanity) (MIT, no dependencies), which has word lists for 12 languages. We check English and Spanish; adding a language means adding its code to the list in `packages/shared`.
+- Only `packages/shared` imports the package, behind one function (`hasOffensiveWords`), so it can be replaced without touching callers.
+- Matching is on whole words with Unicode-aware boundaries (`wholeWord`, `unicodeWordBoundaries`), so words that only contain an offensive word (e.g. "vehículo") aren't blocked. Matching ignores case.
+- The package doesn't ignore accents (its list has "cabrón" but not "cabron"), so the wrapper also checks the name without accents against the lists without accents.
+- Limits: it only knows the forms in its lists (some plurals are missing) and doesn't catch tricks like `l33t` spellings or separators. Words can be added with `addWords` if needed.
+- It ships every language's list (about 94 kB before compression) in the web bundle, since the package can't load one language at a time.
+- A moderation service was rejected: it adds an external dependency, latency, and cost for a name only the guild's own members see. Writing our own lists (e.g. from LDNOOBW) was also considered.
 
 ## Testing: Vitest and Supertest
 
@@ -279,6 +310,7 @@ Vitest runs unit tests in both the web client and the server. Supertest runs HTT
 - Web tests run in jsdom.
 - **Test database:** server tests use a separate database in the same PostgreSQL container (`<POSTGRES_DB>_test`, from `TEST_DATABASE_URL`). A global setup drops and recreates it at the start of every run, and refuses to touch any database whose name doesn't end in `_test`. During tests, `DATABASE_URL` points at it.
 - **Test Redis:** server tests use Redis database 1 (`TEST_REDIS_URL`), which the global setup empties on every run and refuses to do for database 0, the one the app uses. During tests, `REDIS_URL` points at it. Job tests also give every test its own queue name.
+- Server test files run one at a time (`fileParallelism: false`), because they share the test database and empty its tables. Tests inside a file still run in order.
 - Tests run inside the Docker containers (`docker compose exec api pnpm test`), where the database is reachable and the environment variables are set.
 
 ## Internationalization: i18next

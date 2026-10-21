@@ -36,7 +36,12 @@
     "INTERNAL_ERROR": "Algo salió mal en el servidor. Inténtalo de nuevo más tarde.",
     "VALIDATION_ERROR": "Hay campos que corregir.",
     "API_UNAVAILABLE": "No se puede conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
-    "UNAUTHENTICATED": "Tu sesión ha terminado. Vuelve a iniciar sesión."
+    "UNAUTHENTICATED": "Tu sesión ha terminado. Vuelve a iniciar sesión.",
+    "FORBIDDEN": "No tienes permiso para hacer eso.",
+    "ALREADY_LEADS_GUILD": "Ya lideras una hermandad. Transfiere su liderazgo antes de crear otra.",
+    "DISCORD_SERVER_TAKEN": "Ese servidor de Discord ya está conectado a otra hermandad.",
+    "DISCORD_NOT_CONFIGURED": "Discord aún no está configurado en este servidor, así que no se pueden conectar hermandades.",
+    "DISCORD_UNAVAILABLE": "Discord no responde en este momento. Inténtalo de nuevo en un rato."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",
@@ -59,7 +64,10 @@
     "TOO_MANY_PRIMARY_PROFESSIONS_one": "Un personaje puede tener como máximo {{count}} profesión principal.",
     "TOO_MANY_PRIMARY_PROFESSIONS_other": "Un personaje puede tener como máximo {{count}} profesiones principales.",
     "CLASS_CANNOT_FILL_ROLE": "Esta clase no puede cubrir ese rol de combate.",
-    "INVALID_TIME_ZONE": "No es una zona horaria válida."
+    "INVALID_TIME_ZONE": "No es una zona horaria válida.",
+    "NAME_NOT_ALLOWED": "Este nombre contiene una palabra que no está permitida.",
+    "DISCORD_SERVER_NOT_MANAGEABLE": "El bot debe estar en este servidor y necesitas el permiso Gestionar servidor en él.",
+    "OFFICER_ROLE_NOT_FOUND": "Este rol no está en el servidor o no se puede usar como rol de Officer."
   },
   "auth": {
     "checking": "Comprobando tu sesión",

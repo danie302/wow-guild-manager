@@ -36,7 +36,12 @@
     "INTERNAL_ERROR": "Something went wrong on our side. Please try again later.",
     "VALIDATION_ERROR": "Some fields need fixing.",
     "API_UNAVAILABLE": "Can't reach the server. Check your connection and try again.",
-    "UNAUTHENTICATED": "Your session has ended. Please log in again."
+    "UNAUTHENTICATED": "Your session has ended. Please log in again.",
+    "FORBIDDEN": "You don't have permission to do that.",
+    "ALREADY_LEADS_GUILD": "You already lead a guild. Transfer its leadership before creating another.",
+    "DISCORD_SERVER_TAKEN": "That Discord server is already connected to another guild.",
+    "DISCORD_NOT_CONFIGURED": "Discord isn't set up on this server yet, so guilds can't be connected.",
+    "DISCORD_UNAVAILABLE": "Discord isn't responding right now. Please try again in a moment."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -59,7 +64,10 @@
     "TOO_MANY_PRIMARY_PROFESSIONS_one": "A character can have at most {{count}} primary profession.",
     "TOO_MANY_PRIMARY_PROFESSIONS_other": "A character can have at most {{count}} primary professions.",
     "CLASS_CANNOT_FILL_ROLE": "This class can't fill that combat role.",
-    "INVALID_TIME_ZONE": "Not a valid time zone."
+    "INVALID_TIME_ZONE": "Not a valid time zone.",
+    "NAME_NOT_ALLOWED": "This name contains a word that isn't allowed.",
+    "DISCORD_SERVER_NOT_MANAGEABLE": "The bot must be in this server, and you need the Manage Server permission in it.",
+    "OFFICER_ROLE_NOT_FOUND": "This role isn't in the server, or can't be used as the Officer role."
   },
   "auth": {
     "checking": "Checking your session",
