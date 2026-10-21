@@ -112,4 +112,30 @@ describe('EventFormPage', () => {
       slots: { tank: 4, healer: 10, dps: 26 },
     });
   });
+
+  it('creates a weekly series and opens it', async () => {
+    const series = {
+      ...saved,
+      id: '019a0c3e-5b1e-7c2a-9f3d-000000000601',
+      nextEventAt: saved.startsAt,
+      stopped: null,
+    };
+    const fetchMock = mockApi({
+      '/api/me': () => Response.json(me),
+      [`POST /api/guilds/${ashenId}/series`]: () => Response.json(series, { status: 201 }),
+      [`/api/guilds/${ashenId}/series/${series.id}`]: () => Response.json(series),
+    });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/new`);
+
+    await user.type(await screen.findByLabelText('Name'), 'Molten Core');
+    await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
+    await user.type(screen.getByLabelText('Time'), '16:00');
+    await user.click(screen.getByRole('checkbox', { name: 'Repeat every week' }));
+    await user.click(screen.getByRole('button', { name: 'Create weekly series' }));
+
+    expect(await screen.findByText(/^Every \w+ at 4:00 PM$/)).toBeInTheDocument();
+    const [url] = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!;
+    expect(url).toBe(`/api/guilds/${ashenId}/series`);
+  });
 });

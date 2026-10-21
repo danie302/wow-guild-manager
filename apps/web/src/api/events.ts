@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateEventInput, EventResponse, UpdateEventInput } from '@wgm/shared';
+import type {
+  CreateEventInput,
+  EventResponse,
+  SeriesResponse,
+  UpdateEventInput,
+} from '@wgm/shared';
 
 import { apiRequest } from './client';
 
@@ -60,5 +65,62 @@ export function useUpdateEvent(guildId: string, eventId: string) {
 export function useCancelEvent(guildId: string, eventId: string) {
   return useEventMutation(guildId, () =>
     apiRequest<EventResponse>(`/guilds/${guildId}/events/${eventId}/cancel`, { method: 'POST' }),
+  );
+}
+
+const seriesKey = (guildId: string) => ['guilds', guildId, 'series'] as const;
+
+/** The running weekly series, soonest next event first. */
+export function useSeriesList(guildId: string) {
+  return useQuery({
+    queryKey: [...seriesKey(guildId), 'list'],
+    queryFn: () => apiRequest<SeriesResponse[]>(`/guilds/${guildId}/series`),
+  });
+}
+
+export function useSeries(guildId: string, seriesId: string) {
+  return useQuery({
+    queryKey: [...seriesKey(guildId), seriesId],
+    queryFn: () => apiRequest<SeriesResponse>(`/guilds/${guildId}/series/${seriesId}`),
+    enabled: seriesId !== '',
+  });
+}
+
+/** A series change also changes its events, so both reload. */
+function useSeriesMutation<Input>(
+  guildId: string,
+  request: (input: Input) => Promise<SeriesResponse>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: request,
+    onSuccess: async (series) => {
+      queryClient.setQueryData([...seriesKey(guildId), series.id], series);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [...seriesKey(guildId), 'list'] }),
+        queryClient.invalidateQueries({ queryKey: eventsKey(guildId) }),
+      ]);
+    },
+  });
+}
+
+export function useCreateSeries(guildId: string) {
+  return useSeriesMutation(guildId, (input: CreateEventInput) =>
+    apiRequest<SeriesResponse>(`/guilds/${guildId}/series`, { method: 'POST', body: input }),
+  );
+}
+
+export function useUpdateSeries(guildId: string, seriesId: string) {
+  return useSeriesMutation(guildId, (input: UpdateEventInput) =>
+    apiRequest<SeriesResponse>(`/guilds/${guildId}/series/${seriesId}`, {
+      method: 'PUT',
+      body: input,
+    }),
+  );
+}
+
+export function useStopSeries(guildId: string, seriesId: string) {
+  return useSeriesMutation(guildId, () =>
+    apiRequest<SeriesResponse>(`/guilds/${guildId}/series/${seriesId}/stop`, { method: 'POST' }),
   );
 }

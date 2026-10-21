@@ -1,4 +1,4 @@
-import type { EventResponse } from '@wgm/shared';
+import type { EventResponse, SeriesResponse } from '@wgm/shared';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -34,7 +34,12 @@ const wsg: EventResponse = {
 
 /** The API, answering each list (upcoming, past, or a calendar range) with its events. */
 function eventsApi(
-  lists: { upcoming?: EventResponse[]; past?: EventResponse[]; range?: EventResponse[] },
+  lists: {
+    upcoming?: EventResponse[];
+    past?: EventResponse[];
+    range?: EventResponse[];
+    series?: SeriesResponse[];
+  },
   me = testUser,
 ) {
   const fetchMock = mockApi({ '/api/me': () => Response.json(me) });
@@ -42,6 +47,9 @@ function eventsApi(
   fetchMock.mockImplementation((input, init) => {
     const href = input instanceof Request ? input.url : input instanceof URL ? input.href : input;
     const url = new URL(href, 'http://localhost');
+    if (url.pathname === `/api/guilds/${ashenId}/series`) {
+      return Promise.resolve(Response.json(lists.series ?? []));
+    }
     if (url.pathname !== api) return handle(input, init);
     const scope = url.searchParams.get('scope');
     const events =
@@ -99,5 +107,29 @@ describe('EventsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Next month' }));
 
     expect(await screen.findByRole('grid', { name: 'December 2026' })).toBeInTheDocument();
+  });
+
+  it('lists the running series with their next event', async () => {
+    eventsApi({
+      upcoming: [{ ...mc, series: { id: 'series-1', name: 'Molten Core' } }],
+      series: [
+        {
+          ...mc,
+          id: 'series-1',
+          nextEventAt: mc.startsAt,
+          stopped: null,
+        },
+      ],
+    });
+
+    renderRoute(path);
+
+    expect(await screen.findByRole('heading', { name: 'Recurring events' })).toBeInTheDocument();
+    expect(screen.getByText('Every Tuesday at 7:00 PM')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Molten Core' })).toHaveAttribute(
+      'href',
+      `${path}/series/series-1`,
+    );
+    expect(screen.getByText(/Raid · 40 players · Weekly/)).toBeInTheDocument();
   });
 });

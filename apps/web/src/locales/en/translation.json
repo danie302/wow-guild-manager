@@ -374,7 +374,13 @@
     "create": "Create event",
     "cancel": "Cancel",
     "saveFailed": "Couldn't save the event.",
-    "readOnly": "This event has started or was cancelled, so it can't be edited."
+    "readOnly": "This event has started or was cancelled, so it can't be edited.",
+    "repeat": "Repeat every week",
+    "repeatHint": "A new event is created every 7 days at the same time, two weeks ahead. The time is kept in UTC, so it moves by an hour when daylight saving time changes.",
+    "createSeries": "Create weekly series",
+    "editSeriesTitle": "Edit the series {{name}}",
+    "nextDate": "Date of the next event",
+    "seriesStopped": "This series was stopped, so it can't be edited."
   },
   "eventPage": {
     "back": "Events",
@@ -390,6 +396,24 @@
     "cancelFailed": "Couldn't cancel the event.",
     "description": "Description",
     "slots": "Slots",
-    "createdBy": "Created by {{name}}."
+    "createdBy": "Created by {{name}}.",
+    "series": "Weekly series: {{name}}"
+  },
+  "series": {
+    "title": "Recurring events",
+    "recurring": "Weekly",
+    "every": "Every {{weekday}} at {{time}}",
+    "next": "Next event",
+    "nextOn": "Next: {{date}}",
+    "noNext": "No upcoming events.",
+    "dstHint": "Events repeat at the same UTC time, so their local time moves by an hour when daylight saving time changes. Editing the series changes all its future events, including ones edited on their own.",
+    "edit": "Edit series",
+    "stop": "Stop series",
+    "keep": "Keep series",
+    "stopTitle": "Stop the series {{name}}?",
+    "stopBody": "Its future events are removed and no more are created. Its past events stay.",
+    "stoppedTitle": "Stopped on {{date}} by {{name}}",
+    "stopFailed": "Couldn't stop the series.",
+    "notFound": "This series doesn't exist."
   }
 }

@@ -44,6 +44,11 @@ export function EventPage() {
           </Page.Text>
           <Page.Title>{data.name}</Page.Title>
           <Page.Text>{format.dateTime(startsAt, { dateStyle: 'full' })}</Page.Text>
+          {data.series && (
+            <Button to={guildPath(guildId, `events/series/${data.series.id}`)}>
+              {t('eventPage.series', { name: data.series.name })}
+            </Button>
+          )}
         </div>
         {changeable && (
           <div>

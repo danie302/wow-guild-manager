@@ -2,12 +2,13 @@ import { COMBAT_ROLE_NAMES, type EventResponse } from '@wgm/shared';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
-import { useEvents, type EventsQuery } from '../../api/events';
+import { useEvents, useSeriesList, type EventsQuery } from '../../api/events';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import {
   AgendaList,
   Button,
   ChoiceGroup,
+  DetailList,
   Loading,
   MonthCalendar,
   Notice,
@@ -26,6 +27,7 @@ import {
   type CalendarDay,
 } from '../../i18n/calendar';
 import { useFormat } from '../../i18n/format';
+import { everyWeekText } from './seriesText';
 
 type View = 'list' | 'calendar';
 type When = 'upcoming' | 'past';
@@ -83,6 +85,7 @@ export function EventsPage() {
             <ChoiceGroup.Option value="past">{t('events.past')}</ChoiceGroup.Option>
           </ChoiceGroup>
           <EventList guildId={guildId} when={when} />
+          <SeriesList guildId={guildId} />
         </>
       ) : (
         <EventCalendar
@@ -124,6 +127,7 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
               <>
                 {format.shortTime(startsAt)} · {t(`events.types.${event.type}`)} ·{' '}
                 {t('events.players', { count: event.size })}
+                {event.series && ` · ${t('series.recurring')}`}
                 <br />
                 {slotsText(event)}
               </>
@@ -133,6 +137,30 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
         );
       })}
     </AgendaList>
+  );
+}
+
+/** The running weekly series, each with when it repeats and its next event. */
+function SeriesList({ guildId }: { guildId: string }) {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const series = useSeriesList(guildId);
+  if (!series.data || series.data.length === 0) return null;
+  return (
+    <Page.Section title={t('series.title')}>
+      <DetailList>
+        {series.data.map((item) => (
+          <DetailList.Item key={item.id} label={everyWeekText(t, format, item.startsAt)}>
+            <Button to={guildPath(guildId, `events/series/${item.id}`)}>{item.name}</Button>{' '}
+            <Page.Text>
+              {item.nextEventAt
+                ? t('series.nextOn', { date: format.dateTime(new Date(item.nextEventAt)) })
+                : t('series.noNext')}
+            </Page.Text>
+          </DetailList.Item>
+        ))}
+      </DetailList>
+    </Page.Section>
   );
 }
 

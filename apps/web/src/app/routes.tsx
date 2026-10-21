@@ -9,6 +9,7 @@ import { NoAccessPage } from '../pages/NoAccessPage';
 import { EventFormPage } from '../pages/events/EventFormPage';
 import { EventPage } from '../pages/events/EventPage';
 import { EventsPage } from '../pages/events/EventsPage';
+import { SeriesPage } from '../pages/events/SeriesPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 import { RegistrationsPage } from '../pages/registrations/RegistrationsPage';
 import { MemberPage } from '../pages/roster/MemberPage';
@@ -44,6 +45,8 @@ export const routes: RouteObject[] = [
               { path: 'events/new', element: <EventFormPage /> },
               { path: 'events/:eventId', element: <EventPage /> },
               { path: 'events/:eventId/edit', element: <EventFormPage /> },
+              { path: 'events/series/:seriesId', element: <SeriesPage /> },
+              { path: 'events/series/:seriesId/edit', element: <EventFormPage /> },
               { path: 'roster', element: <RosterPage /> },
               { path: 'roster/:memberId', element: <MemberPage /> },
               { path: 'registrations', element: <RegistrationsPage /> },

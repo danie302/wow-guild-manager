@@ -15,6 +15,7 @@ import {
   type CreateEventInput,
   type EventResponse,
   type EventType,
+  type SeriesResponse,
   type ValidationIssue,
 } from '@wgm/shared';
 import { useState } from 'react';
@@ -22,10 +23,18 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
 import { ApiRequestError } from '../../api/client';
-import { useCreateEvent, useEvent, useUpdateEvent } from '../../api/events';
+import {
+  useCreateEvent,
+  useCreateSeries,
+  useEvent,
+  useSeries,
+  useUpdateEvent,
+  useUpdateSeries,
+} from '../../api/events';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
 import {
   Button,
+  Checkbox,
   ChoiceGroup,
   FormGrid,
   Loading,
@@ -62,29 +71,52 @@ function defaultSlots(type: EventType, size: number): Slots {
 
 const defaultSize: Record<EventType, number> = { raid: 40, dungeon: 5, pvp: 10 };
 
-/** Creates an event, or edits one (`events/:eventId/edit`) that hasn't started. */
+/**
+ * Creates an event or a weekly series (`events/new`), or edits an event that hasn't started
+ * (`events/:eventId/edit`) or a running series (`events/series/:seriesId/edit`).
+ */
 export function EventFormPage() {
   const { t } = useTranslation();
   const guildId = useGuildIdParam()!;
-  const eventId = useParams().eventId;
+  const { eventId, seriesId } = useParams();
   const event = useEvent(guildId, eventId ?? '');
+  const series = useSeries(guildId, seriesId ?? '');
 
-  if (!eventId) return <EventForm guildId={guildId} />;
-  if (event.isPending) return <Loading label={t('events.loading')} />;
-  if (event.isError) return <Notice tone="bad" title={t('events.loadFailed')} />;
-  if (event.data.cancelled || new Date(event.data.startsAt) <= new Date()) {
-    return <Notice tone="warn" title={t('eventForm.readOnly')} />;
+  if (!eventId && !seriesId) return <EventForm guildId={guildId} />;
+  const query = eventId ? event : series;
+  if (query.isPending) return <Loading label={t('events.loading')} />;
+  if (query.isError) return <Notice tone="bad" title={t('events.loadFailed')} />;
+  if (eventId) {
+    const data = event.data!;
+    if (data.cancelled || new Date(data.startsAt) <= new Date()) {
+      return <Notice tone="warn" title={t('eventForm.readOnly')} />;
+    }
+    return <EventForm guildId={guildId} editing={{ kind: 'event', value: data }} />;
   }
-  return <EventForm guildId={guildId} event={event.data} />;
+  if (series.data!.stopped) return <Notice tone="warn" title={t('eventForm.seriesStopped')} />;
+  return <EventForm guildId={guildId} editing={{ kind: 'series', value: series.data! }} />;
 }
 
-function EventForm({ guildId, event }: { guildId: string; event?: EventResponse }) {
+type Editing = { kind: 'event'; value: EventResponse } | { kind: 'series'; value: SeriesResponse };
+
+function EventForm({ guildId, editing }: { guildId: string; editing?: Editing }) {
   const { t } = useTranslation();
   const format = useFormat();
   const navigate = useNavigate();
-  const create = useCreateEvent(guildId);
-  const update = useUpdateEvent(guildId, event?.id ?? '');
-  const save = event ? update : create;
+  const event = editing?.value;
+  const editingSeries = editing?.kind === 'series';
+  const createEvent = useCreateEvent(guildId);
+  const createSeries = useCreateSeries(guildId);
+  const updateEvent = useUpdateEvent(guildId, editing?.kind === 'event' ? editing.value.id : '');
+  const updateSeries = useUpdateSeries(guildId, editingSeries ? editing.value.id : '');
+  const [repeat, setRepeat] = useState(false);
+  const save = editing
+    ? editingSeries
+      ? updateSeries
+      : updateEvent
+    : repeat
+      ? createSeries
+      : createEvent;
   const [submitted, setSubmitted] = useState(false);
   const [draft, setDraft] = useState<Draft>(() =>
     event
@@ -142,14 +174,21 @@ function EventForm({ guildId, event }: { guildId: string; event?: EventResponse 
   const submit = () => {
     setSubmitted(true);
     if (localIssues.length > 0) return;
-    const done = {
-      onSuccess: (saved: EventResponse) => void navigate(guildPath(guildId, `events/${saved.id}`)),
-    };
-    if (!event) return create.mutate(input, done);
+    const toEvent = { onSuccess: (saved: { id: string }) => open(`events/${saved.id}`) };
+    const toSeries = { onSuccess: (saved: { id: string }) => open(`events/series/${saved.id}`) };
+    if (!editing) {
+      if (repeat) createSeries.mutate(input, toSeries);
+      else createEvent.mutate(input, toEvent);
+      return;
+    }
     const { name, description, startsAt: start, size, slots } = input;
-    update.mutate({ name, description, startsAt: start, size, slots }, done);
+    const details = { name, description, startsAt: start, size, slots };
+    if (editingSeries) updateSeries.mutate(details, toSeries);
+    else updateEvent.mutate(details, toEvent);
   };
-  const back = () => void navigate(guildPath(guildId, event ? `events/${event.id}` : 'events'));
+  const open = (path: string) => void navigate(guildPath(guildId, path));
+  const back = () =>
+    open(!event ? 'events' : editingSeries ? `events/series/${event.id}` : `events/${event.id}`);
 
   return (
     <Page>
@@ -157,7 +196,11 @@ function EventForm({ guildId, event }: { guildId: string; event?: EventResponse 
         <div>
           <Button onClick={back}>{t('eventForm.back')}</Button>
           <Page.Title>
-            {event ? t('eventForm.editTitle', { name: event.name }) : t('eventForm.newTitle')}
+            {!event
+              ? t('eventForm.newTitle')
+              : editingSeries
+                ? t('eventForm.editSeriesTitle', { name: event.name })
+                : t('eventForm.editTitle', { name: event.name })}
           </Page.Title>
         </div>
       </Page.Header>
@@ -203,7 +246,7 @@ function EventForm({ guildId, event }: { guildId: string; event?: EventResponse 
             />
           </FormGrid.Wide>
           <TextField
-            label={t('eventForm.date')}
+            label={editingSeries ? t('eventForm.nextDate') : t('eventForm.date')}
             type="date"
             value={draft.date}
             onChange={(date) => change({ date })}
@@ -216,7 +259,13 @@ function EventForm({ guildId, event }: { guildId: string; event?: EventResponse 
             onChange={(time) => change({ time })}
             hint={t('eventForm.timeZone', { timeZone: format.timeZone })}
           />
+          {!event && (
+            <FormGrid.Wide>
+              <Checkbox label={t('eventForm.repeat')} checked={repeat} onChange={setRepeat} />
+            </FormGrid.Wide>
+          )}
         </FormGrid>
+        {(repeat || editingSeries) && <Page.Text>{t('eventForm.repeatHint')}</Page.Text>}
       </Page.Section>
 
       <Page.Section title={t('eventForm.size')}>
@@ -275,7 +324,11 @@ function EventForm({ guildId, event }: { guildId: string; event?: EventResponse 
       )}
       <div>
         <Button variant="primary" onClick={submit} disabled={save.isPending}>
-          {event ? t('eventForm.save') : t('eventForm.create')}
+          {event
+            ? t('eventForm.save')
+            : repeat
+              ? t('eventForm.createSeries')
+              : t('eventForm.create')}
         </Button>{' '}
         <Button onClick={back}>{t('eventForm.cancel')}</Button>
       </div>
