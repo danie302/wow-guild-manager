@@ -27,9 +27,15 @@ export const botConfigSchema = baseConfigSchema.extend({
   DISCORD_BOT_TOKEN: z.string().min(1),
 });
 
+export const workerConfigSchema = baseConfigSchema.extend({
+  /** Sends direct messages (e.g. about registrations). Without it, they aren't sent. */
+  DISCORD_BOT_TOKEN: z.string().min(1).optional(),
+});
+
 export type BaseConfig = z.infer<typeof baseConfigSchema>;
 export type ApiConfig = z.infer<typeof apiConfigSchema>;
 export type BotConfig = z.infer<typeof botConfigSchema>;
+export type WorkerConfig = z.infer<typeof workerConfigSchema>;
 
 export class ConfigError extends Error {
   override name = 'ConfigError';

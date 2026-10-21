@@ -90,7 +90,7 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 - There is no limit on the number of Officers.
 
 ### Characters
-- A character has a name, faction, class, race, level (1–60), and one or more professions.
+- A character has a name, faction, class, race, level (1–60), and its professions, if any. Professions are optional, since `/register` and the Battle.net lookup don't provide them.
 - The app doesn't restrict the characters in a name beyond it not being empty. The Battle.net lookup is what confirms a character exists.
 - Character names are unique across the whole game, since there are no realms. No two active characters can have the same name.
 - Professions are the Classic ones: Alchemy, Blacksmithing, Enchanting, Engineering, Herbalism, Leatherworking, Mining, Skinning, Tailoring, Cooking, First Aid, and Fishing.

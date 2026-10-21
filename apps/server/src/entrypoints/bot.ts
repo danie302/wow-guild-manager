@@ -4,10 +4,11 @@ import { watchDiscordChanges } from '../bot/cache-events.js';
 import { createBotClient, describeLoginError } from '../bot/client.js';
 import { syncMemberProfiles } from '../bot/member-profiles.js';
 import { syncOfficers } from '../bot/officer-sync.js';
-import { commands } from '../bot/commands/index.js';
+import { createCommands } from '../bot/commands/index.js';
 import { botConfigSchema, loadConfigOrExit } from '../config.js';
 import { createSequelize } from '../db/sequelize.js';
 import { discordCacheInvalidator } from '../integrations/discord/cached-directory.js';
+import { JobQueue, redisConnection } from '../jobs/index.js';
 import { createLogger } from '../logger.js';
 
 const config = loadConfigOrExit(botConfigSchema);
@@ -21,15 +22,18 @@ const redis = createClient({ url: config.REDIS_URL, disableOfflineQueue: true })
 redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis client error'));
 await redis.connect();
 
-const client = createBotClient({ logger, commands });
+// Commands add background jobs (e.g. looking up a registered character) through this queue.
+const jobs = new JobQueue({ connection: redisConnection(config.REDIS_URL) });
+
+const client = createBotClient({ logger, commands: createCommands({ jobs }) });
 watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
 syncOfficers(client, logger);
 syncMemberProfiles(client, logger);
 
 process.on('SIGTERM', () => {
   logger.info('Disconnecting from Discord');
-  void Promise.allSettled([client.destroy(), redis.close(), sequelize.close()]).then(() =>
-    process.exit(0),
+  void Promise.allSettled([client.destroy(), redis.close(), jobs.close(), sequelize.close()]).then(
+    () => process.exit(0),
   );
 });
 

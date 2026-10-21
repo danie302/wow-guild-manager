@@ -31,15 +31,21 @@ export const CHARACTER_ERROR_CODES = {
   wrongFaction: 'CHARACTER_WRONG_FACTION',
 } as const;
 
-/** A character as entered by hand or filled in from Battle.net. */
+/** Character names are stored with at most this many characters. */
+export const CHARACTER_NAME_MAX_LENGTH = 64;
+
+/** Any non-empty name: the Battle.net lookup is what confirms a character exists. */
+export const characterNameSchema = z.string().trim().min(1).max(CHARACTER_NAME_MAX_LENGTH);
+
+/** A character as entered by hand or filled in from Battle.net. Professions are optional. */
 export const characterSchema = z
   .object({
-    name: z.string().trim().min(1),
+    name: characterNameSchema,
     faction: z.enum(FACTIONS),
     race: z.enum(RACES),
     class: z.enum(CLASSES),
     level: z.number().int().min(MIN_LEVEL).max(MAX_LEVEL),
-    professions: z.array(z.enum(PROFESSIONS)).min(1),
+    professions: z.array(z.enum(PROFESSIONS)),
   })
   .superRefine((character, ctx) => {
     if (!racesFor(character.faction).includes(character.race)) {

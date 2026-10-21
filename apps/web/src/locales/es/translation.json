@@ -48,7 +48,8 @@
     "UNSUPPORTED_FILE_TYPE": "Este tipo de archivo no es compatible.",
     "INVALID_IMAGE": "No se pudo leer el archivo como imagen.",
     "MEMBER_ALREADY_ON_ROSTER": "Este usuario de Discord ya está en la plantilla.",
-    "GUILD_MASTER_CANNOT_BE_REMOVED": "No se puede quitar al Guild Master de la plantilla. Primero transfiere el liderazgo."
+    "GUILD_MASTER_CANNOT_BE_REMOVED": "No se puede quitar al Guild Master de la plantilla. Primero transfiere el liderazgo.",
+    "REGISTRATION_NOT_PENDING": "Este registro ya fue aprobado o rechazado."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",

@@ -3,9 +3,29 @@
     "ping": {
       "description": "Check that the bot is online",
       "reply": "Pong! The bot is online."
+    },
+    "register": {
+      "description": "Register one of your characters for this server's guild",
+      "nameOption": {
+        "name": "name",
+        "description": "The character's name"
+      },
+      "created": "**{{name}}** is registered. An Officer of {{guild}} will review it, and I'll send you a direct message when they do.",
+      "noGuild": "This Discord server isn't connected to a guild yet.",
+      "invalidName": "Enter a character name of up to {{max}} characters.",
+      "onRoster": "**{{name}}** is already on the roster of {{guild}}.",
+      "inAnotherGuild": "**{{name}}** is already in another guild. A character can only be in one guild at a time.",
+      "alreadyPending": "**{{name}}** already has a registration waiting for an Officer."
     }
   },
   "errors": {
     "generic": "Something went wrong. Please try again later."
+  },
+  "registrations": {
+    "directMessage": {
+      "approved": "Your character **{{name}}** was approved and added to the roster of {{guild}}.",
+      "rejected": "An Officer of {{guild}} rejected your registration of **{{name}}**.",
+      "wrongFaction": "Your registration of **{{name}}** in {{guild}} was rejected: {{name}} is {{faction}}, and {{guild}} is a {{guildFaction}} guild."
+    }
   }
 }

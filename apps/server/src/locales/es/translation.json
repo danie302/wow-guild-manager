@@ -3,9 +3,29 @@
     "ping": {
       "description": "Comprueba que el bot está en línea",
       "reply": "¡Pong! El bot está en línea."
+    },
+    "register": {
+      "description": "Registra uno de tus personajes en la hermandad de este servidor",
+      "nameOption": {
+        "name": "nombre",
+        "description": "El nombre del personaje"
+      },
+      "created": "**{{name}}** está registrado. Un Officer de {{guild}} lo revisará y te enviaré un mensaje directo cuando lo haga.",
+      "noGuild": "Este servidor de Discord todavía no está conectado a una hermandad.",
+      "invalidName": "Escribe un nombre de personaje de hasta {{max}} caracteres.",
+      "onRoster": "**{{name}}** ya está en la plantilla de {{guild}}.",
+      "inAnotherGuild": "**{{name}}** ya está en otra hermandad. Un personaje solo puede estar en una hermandad a la vez.",
+      "alreadyPending": "**{{name}}** ya tiene un registro esperando a un Officer."
     }
   },
   "errors": {
     "generic": "Algo salió mal. Inténtalo de nuevo más tarde."
+  },
+  "registrations": {
+    "directMessage": {
+      "approved": "Tu personaje **{{name}}** fue aprobado y añadido a la plantilla de {{guild}}.",
+      "rejected": "Un Officer de {{guild}} rechazó tu registro de **{{name}}**.",
+      "wrongFaction": "Tu registro de **{{name}}** en {{guild}} fue rechazado: {{name}} es {{faction}} y {{guild}} es una hermandad {{guildFaction}}."
+    }
   }
 }

@@ -13,6 +13,7 @@ const DOMAIN_ERROR_STATUS: Partial<Record<ApiError['code'], number>> = {
   DISCORD_SERVER_TAKEN: 409,
   MEMBER_ALREADY_ON_ROSTER: 409,
   GUILD_MASTER_CANNOT_BE_REMOVED: 409,
+  REGISTRATION_NOT_PENDING: 409,
   DISCORD_NOT_CONFIGURED: 503,
   DISCORD_UNAVAILABLE: 503,
 };
@@ -25,6 +26,20 @@ export function sendError(res: Response, status: number, error: ApiError): void 
 /** 400 with one code per invalid field, from a failed Zod parse of `input`. */
 export function sendValidationError(res: Response, error: z.ZodError, input: unknown): void {
   sendError(res, 400, { code: 'VALIDATION_ERROR', issues: toValidationIssues(error, input) });
+}
+
+/** The parsed body, or undefined after answering 400 with its issues. */
+export function parseBody<Schema extends z.ZodType>(
+  schema: Schema,
+  body: unknown,
+  res: Response,
+): z.output<Schema> | undefined {
+  const result = schema.safeParse(body);
+  if (!result.success) {
+    sendValidationError(res, result.error, body);
+    return undefined;
+  }
+  return result.data;
 }
 
 export const notFoundHandler: RequestHandler = (_req, res) => {

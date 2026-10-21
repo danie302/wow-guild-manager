@@ -32,11 +32,12 @@ function testQueue(): JobQueue {
   return queue;
 }
 
-function startWorker(queue: JobQueue, handlers: JobHandlers) {
+/** These tests only enqueue ping jobs, so the other handlers can be left out. */
+function startWorker(queue: JobQueue, handlers: Pick<JobHandlers, 'ping'>) {
   const { logger, lines } = createTestLogger();
   const worker: Worker = createJobWorker({
     connection,
-    handlers,
+    handlers: handlers as JobHandlers,
     logger,
     queueName: queue.queue.name,
   });
@@ -48,7 +49,7 @@ function startWorker(queue: JobQueue, handlers: JobHandlers) {
 function pingHandlers() {
   const runs: { message: string; at: number }[] = [];
   let notify: () => void = () => {};
-  const handlers: JobHandlers = {
+  const handlers: Pick<JobHandlers, 'ping'> = {
     ping: ({ message }) => {
       runs.push({ message, at: Date.now() });
       notify();

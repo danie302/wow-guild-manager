@@ -70,6 +70,7 @@ const app = createApp({
   },
   discord,
   storage: localFileStorage(config.UPLOADS_DIR),
+  jobs,
   trustProxy: production,
 });
 

@@ -48,7 +48,8 @@
     "UNSUPPORTED_FILE_TYPE": "This file type isn't supported.",
     "INVALID_IMAGE": "The file couldn't be read as an image.",
     "MEMBER_ALREADY_ON_ROSTER": "This Discord user is already on the roster.",
-    "GUILD_MASTER_CANNOT_BE_REMOVED": "The Guild Master can't be removed from the roster. Transfer leadership first."
+    "GUILD_MASTER_CANNOT_BE_REMOVED": "The Guild Master can't be removed from the roster. Transfer leadership first.",
+    "REGISTRATION_NOT_PENDING": "This registration was already approved or rejected."
   },
   "validation": {
     "REQUIRED": "Required.",

@@ -14,7 +14,6 @@ import {
   type RosterMember,
 } from '@wgm/shared';
 import express, { type RequestHandler, type Response } from 'express';
-import type { z } from 'zod';
 
 import { discordAvatarUrl } from '../auth/discord-oauth.js';
 import {
@@ -37,7 +36,7 @@ import {
   setMainCharacter,
 } from '../domain/roster.js';
 import { requireDiscord, type DiscordAccess } from './discord.js';
-import { sendValidationError } from './errors.js';
+import { parseBody } from './errors.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
 
@@ -68,7 +67,7 @@ export function membersRouter(discord: DiscordAccess | null) {
     requireDiscord(discord),
     async (req, res) => {
       const { guild } = currentGuild(res);
-      const input = parse(addMemberSchema, req.body, res);
+      const input = parseBody(addMemberSchema, req.body, res);
       if (!input) return;
       // Checks the user is on the server and takes their current name: one call, when adding.
       const profile = await discord!.directory.member(guild.discordServerId, input.discordUserId);
@@ -112,7 +111,7 @@ export function membersRouter(discord: DiscordAccess | null) {
     async (req, res) => {
       const { guild, access } = currentGuild(res);
       const member = currentMember(res);
-      const input = parse(changeRankSchema, req.body, res);
+      const input = parseBody(changeRankSchema, req.body, res);
       if (!input) return;
       if (!canChangeRankOf(access, (await rankResolver(guild))(member))) {
         throw new DomainError({ code: 'FORBIDDEN' });
@@ -160,7 +159,7 @@ export function membersRouter(discord: DiscordAccess | null) {
     requireMember,
     async (req, res) => {
       const { guild } = currentGuild(res);
-      const input = parse(setMainCharacterSchema, req.body, res);
+      const input = parseBody(setMainCharacterSchema, req.body, res);
       if (!input) return;
       await setMainCharacter(currentMember(res), input.characterId);
       res.json(await memberDetail(currentMember(res), guild));
@@ -174,7 +173,7 @@ export function membersRouter(discord: DiscordAccess | null) {
     requireMember,
     async (req, res) => {
       const { guild } = currentGuild(res);
-      const input = parse(officerNoteSchema, req.body, res);
+      const input = parseBody(officerNoteSchema, req.body, res);
       if (!input) return;
       await addOfficerNote(currentMember(res), currentUser(res), input.text);
       res.status(201).json(await memberDetail(currentMember(res), guild));
@@ -232,20 +231,6 @@ const requireMember: RequestHandler = async (req, res, next) => {
 
 function currentMember(res: Response): Member {
   return res.locals.member as Member;
-}
-
-/** Parses a body, or answers 400 with the issues and returns undefined. */
-function parse<Schema extends z.ZodType>(
-  schema: Schema,
-  body: unknown,
-  res: Response,
-): z.output<Schema> | undefined {
-  const result = schema.safeParse(body);
-  if (!result.success) {
-    sendValidationError(res, result.error, body);
-    return undefined;
-  }
-  return result.data;
 }
 
 function toRosterCharacter(character: Character): RosterCharacter {

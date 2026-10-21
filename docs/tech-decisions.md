@@ -305,6 +305,16 @@ A user is an Officer of a guild while they have its Officer role in its Discord 
 - Tests use `FakeCharacterLookup` (`apps/server/test/fake-character-lookup.ts`).
 - Equipment slots are a game table in `packages/shared` (`EQUIPMENT_SLOTS`), since the web app needs them for the gear check and the guild's enchant settings.
 
+### Character registrations and direct messages
+
+**Status:** Accepted (story 018)
+
+- `/register` saves a pending registration and answers right away; it never waits for Battle.net. It enqueues a `registration-lookup` job, and the worker looks the character up through `CharacterLookup` and saves what it found. A character of another faction than the guild's is rejected by that job, and the member gets a direct message.
+- Approving or rejecting in the web app enqueues a `registration-reviewed` job, and the worker sends the direct message. Discord REST calls stay off the request path.
+- Direct messages go through a `DirectMessenger` interface (`src/integrations/discord/direct-messages.ts`) that only the worker uses, with the bot token. A user who doesn't accept direct messages isn't an error (the job isn't retried); other failures are retried by BullMQ. Without `DISCORD_BOT_TOKEN` the worker skips them.
+- A direct message is written in the language the member last used with the bot (the registration stores the language of `/register`).
+- Approving adds the member if needed (or restores a removed one), then the character, in one transaction. Domain functions use `transaction()` from `src/db/transaction.ts`, which joins the current transaction when there is one, so they can be combined.
+
 ## IDs: UUID v7
 
 **Status:** Accepted

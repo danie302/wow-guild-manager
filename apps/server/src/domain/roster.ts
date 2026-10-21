@@ -17,6 +17,7 @@ import {
   RankChange,
   type User,
 } from '../db/models/index.js';
+import { transaction } from '../db/transaction.js';
 import { DomainError, DomainValidationError } from './errors.js';
 import { memberRank } from './ranks.js';
 
@@ -254,12 +255,4 @@ export async function recordMemberLocale(
   const guild = await Guild.findOne({ where: { discordServerId: serverId } });
   if (!guild) return;
   await Member.update({ locale }, { where: { guildId: guild.id, discordUserId } });
-}
-
-/**
- * Runs `work` in a new transaction; queries inside join it through CLS. Don't nest these: a
- * nested call starts a second transaction instead of joining the first.
- */
-function transaction<T>(work: () => Promise<T>): Promise<T> {
-  return Member.sequelize!.transaction(work);
 }

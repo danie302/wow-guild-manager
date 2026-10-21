@@ -29,6 +29,9 @@ describe('toValidationIssues', () => {
     expect(issuesFor(schema, { ...valid, name: '   ' })).toEqual([
       { field: 'name', code: 'REQUIRED' },
     ]);
+    expect(issuesFor(schema, { ...valid, kind: undefined })).toEqual([
+      { field: 'kind', code: 'REQUIRED' },
+    ]);
   });
 
   it('reports length and size limits with their count', () => {

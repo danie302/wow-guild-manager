@@ -61,4 +61,5 @@ None known. Every earlier difference was fixed in the design.
 - **No access (01b) and guild picker (01c)** name a specific Discord channel and role. The app uses generic copy, since a user without access isn't tied to one guild (story 014).
 - **Guild settings (12)** names the Discord server's owner. The app says instead that owning the server doesn't make someone the Guild Master, without reading the owner's name (story 013).
 - **Guild setup step 2** shows one server after adding the bot. The app instead lists every server where the bot is and the user can manage the server, and opens the bot invite in a new tab (story 012).
+- **Pending registrations (06)** only asks for class and race for characters not found in Battle.net. The app also asks for the level, and lets the Officer pick professions (optional) for every registration (story 018).
 - **Transferring leadership** keeps the old Guild Master on the roster as a Raider, and **disbanding** makes the bot leave the Discord server. Both are still assumptions in story 033.

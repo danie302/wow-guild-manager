@@ -63,8 +63,8 @@ describe('characterSchema', () => {
     expect(characterSchema.parse({ ...valid, name: '  Thrall ' }).name).toBe('Thrall');
   });
 
-  it('requires at least one profession', () => {
-    expect(errors({ ...valid, professions: [] })).not.toEqual([]);
+  it('allows a character without professions', () => {
+    expect(errors({ ...valid, professions: [] })).toEqual([]);
   });
 
   it('rejects a profession that is not in the list', () => {

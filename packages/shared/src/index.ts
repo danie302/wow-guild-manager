@@ -5,5 +5,6 @@ export * from './preferences.js';
 export * from './offensive-words.js';
 export * from './schemas/character.js';
 export * from './schemas/guild.js';
+export * from './schemas/registration.js';
 export * from './schemas/roster.js';
 export * from './validation.js';

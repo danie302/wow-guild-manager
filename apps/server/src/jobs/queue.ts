@@ -46,11 +46,16 @@ export interface RepeatSchedule {
   tz?: string;
 }
 
+/** Adding a job to run as soon as possible: what routes and bot commands need. Tests use a fake. */
+export interface JobEnqueuer {
+  enqueue<Name extends JobName>(name: Name, data: JobPayloads[Name]): Promise<void>;
+}
+
 /**
  * The typed way to add jobs, used by the API, the bot, and the worker. Job IDs must not contain
  * ":" (BullMQ uses it as a key separator), so use e.g. `tentative-deadline-42`.
  */
-export class JobQueue {
+export class JobQueue implements JobEnqueuer {
   readonly queue: Queue;
 
   constructor({ connection, queueName = QUEUE_NAME, defaultJobOptions }: JobQueueOptions) {

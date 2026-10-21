@@ -2,6 +2,7 @@ import express, { type Express } from 'express';
 import { pinoHttp } from 'pino-http';
 
 import type { DiscordOAuth } from '../auth/discord-oauth.js';
+import type { JobEnqueuer } from '../jobs/index.js';
 import type { Logger } from '../logger.js';
 import { memoryFileStorage, type FileStorage } from '../storage/file-storage.js';
 import { authRouter } from './auth.js';
@@ -11,6 +12,7 @@ import { guildsRouter } from './guilds.js';
 import { healthRouter, type HealthChecks } from './health.js';
 import { meRouter } from './me.js';
 import { membersRouter } from './members.js';
+import { registrationsRouter } from './registrations.js';
 import { sessionMiddleware, type SessionOptions } from './session.js';
 
 export interface AppDependencies {
@@ -22,6 +24,8 @@ export interface AppDependencies {
   storage?: FileStorage;
   /** Reading Discord with the bot token. Null (or left out) when it isn't set up. */
   discord?: DiscordAccess | null;
+  /** Adds background jobs. Tests that don't need it can leave it out (and lose those routes). */
+  jobs?: JobEnqueuer;
   /** Set behind a reverse proxy that terminates HTTPS, so secure cookies work. */
   trustProxy?: boolean;
 }
@@ -33,6 +37,7 @@ export function createApp({
   auth,
   discord = null,
   storage = memoryFileStorage(),
+  jobs,
   trustProxy,
 }: AppDependencies): Express {
   const app = express();
@@ -53,6 +58,7 @@ export function createApp({
     api.use(discordRouter(discord));
     api.use(guildsRouter(discord, storage));
     api.use(membersRouter(discord));
+    if (jobs) api.use(registrationsRouter(jobs));
   }
   app.use('/api', api);
 

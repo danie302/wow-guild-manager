@@ -75,7 +75,7 @@ describe('error responses', () => {
 
     const response = await request(app)
       .post('/characters')
-      .send({ faction: 'horde', race: 'orc', class: 'warrior', level: 60, professions: [] });
+      .send({ faction: 'horde', race: 'orc', class: 'warrior', level: 61, professions: [] });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -83,7 +83,7 @@ describe('error responses', () => {
         code: 'VALIDATION_ERROR',
         issues: [
           { field: 'name', code: 'REQUIRED' },
-          { field: 'professions', code: 'TOO_FEW', params: { count: 1 } },
+          { field: 'level', code: 'TOO_BIG', params: { count: 60 } },
         ],
       },
     });
