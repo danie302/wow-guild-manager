@@ -94,7 +94,8 @@
     "PRE_CONFIRMED_ROLE_FULL": "More pre-confirmed participants than the role has slots.",
     "PRE_CONFIRMED_CANNOT_JOIN": "This character isn't on the roster, or its member can't join raids.",
     "PRE_CONFIRMED_ROLE_NOT_ALLOWED": "This character's class can't fill that role.",
-    "PRE_CONFIRMED_TWICE": "Each member can be pre-confirmed with only one character."
+    "PRE_CONFIRMED_TWICE": "Each member can be pre-confirmed with only one character.",
+    "BANDS_OUT_OF_ORDER": "The Good threshold must be higher than the At risk threshold."
   },
   "auth": {
     "checking": "Checking your session",
@@ -226,12 +227,17 @@
     "signUps": "Sign-ups",
     "signUpsHelp": "The Guild Master and Officers can change these.",
     "tentativeDeadline": "Tentative deadline",
-    "tentativeDeadlineUnit": "Hours before the event (1–168).",
+    "tentativeDeadlineUnit": "hours before the event",
     "tentativeDeadlineRange": "Use 1–168 hours.",
     "reminder": "Reminder",
-    "reminderUnit": "Hours before the deadline (1–72).",
+    "reminderUnit": "hours before the deadline",
     "reminderRange": "Use 1–72 hours.",
-    "tentativeExample": "Tentative sign-ups close {{deadline}} hours before each event (unless it has its own deadline), and the reminder goes out {{reminder}} hours before it starts. Upcoming events whose new deadline would already have passed keep the old one."
+    "tentativeExample": "Tentative sign-ups close {{deadline}} hours before each event (unless it has its own deadline), and the reminder goes out {{reminder}} hours before it starts. Upcoming events whose new deadline would already have passed keep the old one.",
+    "bands": "Attendance bands",
+    "bandsHelp": "Members are grouped by their attendance rate. Only the Guild Master can change these.",
+    "bandsGood": "Good at or above",
+    "bandsRisk": "At risk below",
+    "bandsRange": "Use 0–100, with Good higher than At risk."
   },
   "roster": {
     "title": "Roster",
@@ -255,7 +261,8 @@
     "loadFailed": "The roster couldn't be loaded",
     "leftOnly": "Left Discord only",
     "leftDiscord": "Left Discord {{date}}",
-    "you": "You"
+    "you": "You",
+    "attendance": "Attendance (8 weeks)"
   },
   "addMember": {
     "title": "Add member",
@@ -430,7 +437,8 @@
     "tentativeDeadline": "Tentative deadline",
     "tentativeDeadlineGuild": "Guild default ({{hours}} h)",
     "tentativeDeadlineOwn": "Custom",
-    "tentativeDeadlineHours": "Hours before the start (1–168)"
+    "tentativeDeadlineHours": "Own deadline",
+    "tentativeDeadlineUnit": "hours before the start (1–168)"
   },
   "eventPage": {
     "back": "Events",
@@ -548,5 +556,40 @@
     "history": "Change history",
     "noHistory": "No corrections yet.",
     "addedTag": "Added"
+  },
+  "reports": {
+    "title": "Attendance report",
+    "memberTitle": "Attendance",
+    "loading": "Loading attendance",
+    "loadFailed": "Couldn't load the attendance.",
+    "period": "Period",
+    "periods": {
+      "4": "Last 4 weeks",
+      "8": "Last 8 weeks",
+      "all": "All time"
+    },
+    "type": "Event type",
+    "allTypes": "All types",
+    "summary": "Summary",
+    "average": "Guild average",
+    "bands": {
+      "good": "Good",
+      "watch": "Watch",
+      "at_risk": "At risk"
+    },
+    "goodRange": "{{n}}% or more",
+    "watchRange": "{{a}}–{{b}}%",
+    "riskRange": "below {{n}}%",
+    "member": "Member",
+    "rate": "Attendance rate",
+    "attended": "Attended",
+    "late": "Late",
+    "noShows": "No-shows",
+    "attendedOf": "{{attended}} of {{total}}",
+    "overall": "Overall",
+    "rates": "Attendance rates",
+    "counts": "Late arrivals and no-shows",
+    "history": "Attendance history",
+    "noHistory": "No attendance recorded in this period."
   }
 }

@@ -193,6 +193,10 @@ async function toGuildResponse(
     discordLocale: guild.discordLocale,
     tentativeDeadlineHours: guild.tentativeDeadlineHours,
     reminderHours: guild.reminderHours,
+    attendanceThresholds: {
+      good: guild.attendanceGoodThreshold,
+      atRisk: guild.attendanceRiskThreshold,
+    },
   };
 }
 

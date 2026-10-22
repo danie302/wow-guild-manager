@@ -147,6 +147,7 @@ describe('EventFormPage', () => {
       rank,
       baseRank: 'raider',
       leftDiscordAt: null,
+      attendanceRate: null,
       characters: [
         {
           id: `019a0c3e-5b1e-7c2a-9f3d-00000000110${name.length}`,
@@ -217,7 +218,7 @@ describe('EventFormPage', () => {
       'true',
     );
     await user.click(screen.getByRole('button', { name: 'Custom' }));
-    const hours = screen.getByLabelText('Hours before the start (1–168)');
+    const hours = screen.getByLabelText('Own deadline');
     await user.clear(hours);
     await user.type(hours, '48');
     await user.click(screen.getByRole('button', { name: 'Save' }));

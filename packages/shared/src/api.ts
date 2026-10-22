@@ -14,6 +14,9 @@ import type {
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
 import {
   EVENT_ERROR_CODES,
+  type AttendanceBand,
+  type AttendancePeriod,
+  type AttendanceRate,
   type AttendanceStatus,
   type EventType,
   type SignUpPlacement,
@@ -213,6 +216,8 @@ export interface GuildResponse {
   tentativeDeadlineHours: number;
   /** Hours before that deadline the reminder is sent. */
   reminderHours: number;
+  /** Attendance bands in percent: Good at or above `good`, At risk below `atRisk`. */
+  attendanceThresholds: { good: number; atRisk: number };
 }
 
 /** An IANA time zone name, normalized to the runtime's spelling. */
@@ -269,6 +274,8 @@ export interface RosterMember {
   characters: RosterCharacter[];
   /** When they left the guild's Discord server; null while they're in it. Officers only. */
   leftDiscordAt: string | null;
+  /** Their attendance rate over the last 8 weeks; null without records. */
+  attendanceRate: number | null;
 }
 
 export interface RankHistoryEntry {
@@ -386,6 +393,53 @@ export interface AttendanceResponse {
   records: AttendanceRecordResponse[];
   /** Newest first. */
   history: AttendanceChangeResponse[];
+}
+
+/**
+ * `GET /api/guilds/:guildId/members/:memberId/attendance?period=`: a member's attendance rate,
+ * overall and per event type, their late arrivals and no-shows, and their history, newest
+ * first.
+ */
+export interface MemberAttendanceResponse {
+  period: AttendancePeriod;
+  overall: AttendanceRate & { band: AttendanceBand | null };
+  byType: Record<EventType, AttendanceRate>;
+  late: number;
+  noShow: number;
+  history: {
+    eventId: string;
+    name: string;
+    type: EventType;
+    startsAt: string;
+    character: { name: string; class: CharacterClass };
+    status: AttendanceStatus;
+  }[];
+}
+
+/** One member on the attendance report. */
+export interface AttendanceReportRow extends AttendanceRate {
+  memberId: string;
+  discordName: string;
+  rank: Rank;
+  /** Null when they have no active character. */
+  main: { name: string; class: CharacterClass } | null;
+  late: number;
+  noShow: number;
+  band: AttendanceBand | null;
+}
+
+/**
+ * `GET /api/guilds/:guildId/attendance?period=&type=`: every member on the roster with their
+ * attendance in the period (and event type), the guild average, and how many are in each band.
+ */
+export interface AttendanceReportResponse {
+  period: AttendancePeriod;
+  type: EventType | 'all';
+  thresholds: { good: number; atRisk: number };
+  /** The average of the members' rates; null when nobody has records. */
+  average: number | null;
+  bands: Record<AttendanceBand, number>;
+  members: AttendanceReportRow[];
 }
 
 /** Why the bot couldn't post or update an event's Discord post. */

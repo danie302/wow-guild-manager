@@ -1,10 +1,21 @@
 import Box from '@mui/material/Box';
+import ButtonBase from '@mui/material/ButtonBase';
 import { Children, createContext, useContext, type ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { compactBreakpoint, token } from './tokens';
 
 const ColumnsContext = createContext<string>('1fr');
+
+/** Columns the list can be sorted by, by clicking their heading. */
+export interface ListTableSort {
+  /** Indexes of the sortable columns. */
+  columns: readonly number[];
+  /** The column it's sorted by now, and which way. */
+  column: number;
+  direction: 'asc' | 'desc';
+  onSort: (column: number) => void;
+}
 
 export interface ListTableProps {
   /** Accessible name of the list. */
@@ -16,6 +27,7 @@ export interface ListTableProps {
   children: ReactNode;
   /** Shown instead of the rows when there are none. */
   empty?: string;
+  sort?: ListTableSort;
 }
 
 /**
@@ -25,13 +37,14 @@ export interface ListTableProps {
  *   <ListTable.Row to="/…"><span>…</span><span>…</span></ListTable.Row>
  * </ListTable>
  */
-function ListTableRoot({ label, columns, widths, children, empty }: ListTableProps) {
+function ListTableRoot({ label, columns, widths, children, empty, sort }: ListTableProps) {
   const template = widths.join(' ');
   return (
     <ColumnsContext.Provider value={template}>
       <Box role="list" aria-label={label} sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box
-          aria-hidden
+          // Sortable headings are buttons, so they stay for screen readers.
+          aria-hidden={sort ? undefined : true}
           sx={{
             display: 'grid',
             gridTemplateColumns: template,
@@ -46,9 +59,30 @@ function ListTableRoot({ label, columns, widths, children, empty }: ListTablePro
             [`@media (max-width: ${compactBreakpoint}px)`]: { display: 'none' },
           }}
         >
-          {columns.map((column) => (
-            <span key={column}>{column}</span>
-          ))}
+          {columns.map((column, index) =>
+            sort?.columns.includes(index) ? (
+              <ButtonBase
+                key={column}
+                disableRipple
+                onClick={() => sort.onSort(index)}
+                aria-pressed={sort.column === index}
+                sx={{
+                  justifyContent: 'flex-start',
+                  font: 'inherit',
+                  letterSpacing: 'inherit',
+                  textTransform: 'inherit',
+                  color: sort.column === index ? token('tx') : 'inherit',
+                  '&:hover': { color: token('tx') },
+                  '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}` },
+                }}
+              >
+                {column}
+                {sort.column === index && (sort.direction === 'asc' ? ' ↑' : ' ↓')}
+              </ButtonBase>
+            ) : (
+              <span key={column}>{column}</span>
+            ),
+          )}
         </Box>
         {children}
         {empty && Children.toArray(children).length === 0 && (

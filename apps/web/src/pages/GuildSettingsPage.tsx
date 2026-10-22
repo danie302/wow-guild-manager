@@ -53,6 +53,8 @@ interface Form {
   /** As typed, so a half-typed number doesn't jump. */
   deadlineHours: string;
   reminderHours: string;
+  goodThreshold: string;
+  riskThreshold: string;
 }
 
 function formFrom(guild: GuildResponse): Form {
@@ -65,6 +67,8 @@ function formFrom(guild: GuildResponse): Form {
     discordLocale: guild.discordLocale,
     deadlineHours: String(guild.tentativeDeadlineHours),
     reminderHours: String(guild.reminderHours),
+    goodThreshold: String(guild.attendanceThresholds.good),
+    riskThreshold: String(guild.attendanceThresholds.atRisk),
   };
 }
 
@@ -139,6 +143,13 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   const reminderHours = hoursIn(form.reminderHours, REMINDER_HOURS);
   const deadlineChanged = form.deadlineHours !== String(guild.tentativeDeadlineHours);
   const reminderChanged = form.reminderHours !== String(guild.reminderHours);
+  const goodThreshold = hoursIn(form.goodThreshold, { min: 0, max: 100 });
+  const riskThreshold = hoursIn(form.riskThreshold, { min: 0, max: 100 });
+  const bandsValid =
+    goodThreshold !== null && riskThreshold !== null && goodThreshold > riskThreshold;
+  const bandsChanged =
+    form.goodThreshold !== String(guild.attendanceThresholds.good) ||
+    form.riskThreshold !== String(guild.attendanceThresholds.atRisk);
 
   const changes: GuildSettingsChanges = {};
   if (nameResult.success && nameResult.data !== guild.name) changes.name = nameResult.data;
@@ -152,6 +163,10 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   if (localeChanged) changes.discordLocale = form.discordLocale;
   if (deadlineChanged && deadlineHours !== null) changes.tentativeDeadlineHours = deadlineHours;
   if (reminderChanged && reminderHours !== null) changes.reminderHours = reminderHours;
+  if (bandsChanged && bandsValid) {
+    changes.attendanceGoodThreshold = goodThreshold;
+    changes.attendanceRiskThreshold = riskThreshold;
+  }
 
   const dirty =
     form.name !== guild.name ||
@@ -161,9 +176,14 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
     channelChanged ||
     localeChanged ||
     deadlineChanged ||
-    reminderChanged;
+    reminderChanged ||
+    bandsChanged;
   const valid =
-    nameResult.success && form.roleId !== null && deadlineHours !== null && reminderHours !== null;
+    nameResult.success &&
+    form.roleId !== null &&
+    deadlineHours !== null &&
+    reminderHours !== null &&
+    bandsValid;
 
   const blocker = useBlocker(dirty && !save.isPending);
   useEffect(() => {
@@ -364,19 +384,19 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
           <TextField
             label={t('guildSettings.tentativeDeadline')}
             type="number"
-            width={120}
+            width={90}
             value={form.deadlineHours}
             onChange={(value) => update({ deadlineHours: value })}
-            hint={t('guildSettings.tentativeDeadlineUnit')}
+            unit={t('guildSettings.tentativeDeadlineUnit')}
             error={deadlineHours === null ? t('guildSettings.tentativeDeadlineRange') : undefined}
           />
           <TextField
             label={t('guildSettings.reminder')}
             type="number"
-            width={120}
+            width={90}
             value={form.reminderHours}
             onChange={(value) => update({ reminderHours: value })}
-            hint={t('guildSettings.reminderUnit')}
+            unit={t('guildSettings.reminderUnit')}
             error={reminderHours === null ? t('guildSettings.reminderRange') : undefined}
           />
         </FormGrid>
@@ -388,6 +408,30 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
             })}
           </Page.Text>
         )}
+      </Page.Setting>
+
+      <Page.Setting title={t('guildSettings.bands')} description={t('guildSettings.bandsHelp')}>
+        <FormGrid>
+          <TextField
+            label={t('guildSettings.bandsGood')}
+            type="number"
+            width={90}
+            value={form.goodThreshold}
+            onChange={(value) => update({ goodThreshold: value })}
+            unit="%"
+            disabled={!isGuildMaster}
+          />
+          <TextField
+            label={t('guildSettings.bandsRisk')}
+            type="number"
+            width={90}
+            value={form.riskThreshold}
+            onChange={(value) => update({ riskThreshold: value })}
+            unit="%"
+            disabled={!isGuildMaster}
+            error={bandsValid ? undefined : t('guildSettings.bandsRange')}
+          />
+        </FormGrid>
       </Page.Setting>
 
       {save.isError && <SaveError error={save.error} />}

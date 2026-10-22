@@ -293,6 +293,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - **Present**, **Late**, and **Left early** count as attended.
 - **Bench**, **Absent with notice**, and **No-show** count as not attended.
 - Attendance rate = attended events ÷ all events the member has an attendance record for, within the chosen period.
+- A member with no attendance records in the period has no rate (shown as "—") and isn't in any band, nor in the guild average.
 
 ### Attendance bands
 - Members are grouped by their attendance rate into three bands: **Good**, **Watch**, and **At risk**.

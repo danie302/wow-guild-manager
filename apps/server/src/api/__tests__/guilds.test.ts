@@ -200,6 +200,7 @@ describe('POST /api/guilds', () => {
       discordLocale: 'en',
       tentativeDeadlineHours: 24,
       reminderHours: 12,
+      attendanceThresholds: { good: 90, atRisk: 75 },
     });
     const me = await agent.get('/api/me');
     expect(body(me).guilds).toEqual([

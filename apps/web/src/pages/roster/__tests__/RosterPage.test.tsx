@@ -28,6 +28,7 @@ function rosterMember(
     baseRank: 'raider',
     characters,
     leftDiscordAt: null,
+    attendanceRate: null,
   } satisfies RosterMember;
 }
 

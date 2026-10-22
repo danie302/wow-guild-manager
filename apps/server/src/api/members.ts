@@ -1,5 +1,6 @@
 import {
   addMemberSchema,
+  attendancePeriodQuerySchema,
   changeRankSchema,
   officerNoteSchema,
   ROSTER_ERROR_CODES,
@@ -43,6 +44,7 @@ import { requireDiscord, type DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
+import { memberAttendance, rosterRates } from '../domain/reports.js';
 
 const SEARCH_LIMIT = 10;
 
@@ -65,8 +67,23 @@ export function membersRouter(discord: DiscordAccess | null, jobs: JobEnqueuer |
       order: [['discordName', 'ASC']],
     });
     const rankOf = await rankResolver(guild);
-    res.json(members.map((member) => toRosterMember(member, rankOf(member))));
+    const rates = await rosterRates(members.map((member) => member.id));
+    res.json(members.map((member) => toRosterMember(member, rankOf(member), rates.get(member.id))));
   });
+
+  // A member's attendance in a period (last 8 weeks by default).
+  router.get(
+    `${base}/:memberId/attendance`,
+    requireUser,
+    requireGuildPermission('viewAttendance'),
+    requireMember,
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const query = parseBody(attendancePeriodQuerySchema, req.query, res);
+      if (!query) return;
+      res.json(await memberAttendance(currentMember(res), guild, query.period));
+    },
+  );
 
   router.post(
     base,
@@ -295,7 +312,7 @@ function toRosterCharacter(character: Character): RosterCharacter {
   };
 }
 
-function toRosterMember(member: Member, rank: Rank): RosterMember {
+function toRosterMember(member: Member, rank: Rank, attendanceRate?: number | null): RosterMember {
   const characters = (member.characters ?? [])
     .filter((character) => !character.removedAt)
     .sort((a, b) => Number(b.isMain) - Number(a.isMain) || a.name.localeCompare(b.name));
@@ -308,6 +325,7 @@ function toRosterMember(member: Member, rank: Rank): RosterMember {
     baseRank: member.rank,
     characters: characters.map(toRosterCharacter),
     leftDiscordAt: member.leftDiscordAt?.toISOString() ?? null,
+    attendanceRate: attendanceRate ?? null,
   };
 }
 
@@ -327,7 +345,11 @@ async function memberDetail(member: Member, guild: Guild): Promise<MemberDetailR
   const fresh = await member.reload();
   fresh.characters = characters;
   return {
-    ...toRosterMember(fresh, (await rankResolver(guild))(fresh)),
+    ...toRosterMember(
+      fresh,
+      (await rankResolver(guild))(fresh),
+      (await rosterRates([fresh.id])).get(fresh.id),
+    ),
     rankHistory: history.map((change) => ({
       id: change.id,
       fromRank: change.fromRank,

@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AddMemberInput,
+  AttendancePeriod,
+  AttendanceReportResponse,
+  EventType,
+  MemberAttendanceResponse,
   AddMemberResponse,
   BaseRank,
   CharacterInput,
@@ -18,6 +22,32 @@ export function useRoster(guildId: string) {
   return useQuery({
     queryKey: rosterKey(guildId),
     queryFn: () => apiRequest<RosterMember[]>(`/guilds/${guildId}/members`),
+  });
+}
+
+/** A member's attendance in a period. */
+export function useMemberAttendance(guildId: string, memberId: string, period: AttendancePeriod) {
+  return useQuery({
+    queryKey: [...memberKey(guildId, memberId), 'attendance', period],
+    queryFn: () =>
+      apiRequest<MemberAttendanceResponse>(
+        `/guilds/${guildId}/members/${memberId}/attendance?period=${period}`,
+      ),
+  });
+}
+
+/** Every member's attendance in a period and event type, to compare them. */
+export function useAttendanceReport(
+  guildId: string,
+  period: AttendancePeriod,
+  type: EventType | 'all',
+) {
+  return useQuery({
+    queryKey: ['guilds', guildId, 'attendance', period, type],
+    queryFn: () =>
+      apiRequest<AttendanceReportResponse>(
+        `/guilds/${guildId}/attendance?${new URLSearchParams({ period, type }).toString()}`,
+      ),
   });
 }
 

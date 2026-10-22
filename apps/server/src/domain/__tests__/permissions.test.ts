@@ -23,6 +23,8 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   manageParticipants: { guildMaster: true, officer: true },
   setTentativeTimes: { guildMaster: true, officer: true },
   recordAttendance: { guildMaster: true, officer: true },
+  viewAttendance: { guildMaster: true, officer: true },
+  setAttendanceBands: { guildMaster: true, officer: false },
   preConfirmParticipants: { guildMaster: true, officer: false },
 };
 

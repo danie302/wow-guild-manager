@@ -43,6 +43,7 @@ import {
 } from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
+import { MemberAttendance } from './MemberAttendance';
 import {
   CharacterFields,
   characterIssues,
@@ -297,6 +298,8 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
               }))}
             />
           </Page.Block>
+
+          <MemberAttendance guildId={guildId} memberId={member.id} />
 
           <Page.Block title={t('member.notes')} description={t('member.notesPrivate')}>
             {member.officerNotes.map((entry) => (

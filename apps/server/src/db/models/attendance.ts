@@ -27,6 +27,7 @@ export class Attendance extends Model<
   declare characterId: ForeignKey<Character['id']>;
   declare status: AttendanceStatus;
 
+  declare event?: NonAttribute<Event>;
   declare member?: NonAttribute<Member>;
   declare character?: NonAttribute<Character>;
 

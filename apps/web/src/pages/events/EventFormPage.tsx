@@ -333,7 +333,8 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
         <TextField
           label={t('eventForm.tentativeDeadlineHours')}
           type="number"
-          width={120}
+          width={90}
+          unit={t('eventForm.tentativeDeadlineUnit')}
           value={draft.ownDeadline}
           onChange={(ownDeadline) => change({ ownDeadline })}
           error={errorFor('tentativeDeadlineHours')}

@@ -40,6 +40,10 @@ export const PERMISSIONS = {
   manageEvents: ['guild_master', 'officer'],
   /** Set the guild's Tentative deadline and reminder time. */
   setTentativeTimes: ['guild_master', 'officer'],
+  /** See the attendance report and each member's attendance. */
+  viewAttendance: ['guild_master', 'officer'],
+  /** Set the attendance band thresholds. */
+  setAttendanceBands: ['guild_master'],
   /** Record and correct attendance. */
   recordAttendance: ['guild_master', 'officer'],
   /** Remove event participants and replace Tentative ones with waitlisted characters. */

@@ -31,6 +31,7 @@ export const testGuild: GuildResponse = {
   discordLocale: 'en',
   tentativeDeadlineHours: 24,
   reminderHours: 12,
+  attendanceThresholds: { good: 90, atRisk: 75 },
 };
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>;

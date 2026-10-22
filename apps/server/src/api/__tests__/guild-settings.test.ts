@@ -337,6 +337,25 @@ describe('the Tentative deadline and reminder', () => {
   });
 });
 
+describe('the attendance bands', () => {
+  it('lets the Guild Master set them, in order, and not Officers', async () => {
+    const { gmAgent, officerAgent, save } = await setup();
+
+    const saved = await save(gmAgent)
+      .field('attendanceGoodThreshold', '85')
+      .field('attendanceRiskThreshold', '60');
+    const outOfOrder = await save(gmAgent).field('attendanceRiskThreshold', '90');
+    const officer = await save(officerAgent).field('attendanceGoodThreshold', '95');
+
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ attendanceThresholds: { good: 85, atRisk: 60 } });
+    expect(body(outOfOrder).error.issues).toEqual([
+      { field: 'attendanceGoodThreshold', code: 'BANDS_OUT_OF_ORDER' },
+    ]);
+    expect(officer.status).toBe(403);
+  });
+});
+
 describe('the guild image', () => {
   it('stores the upload as a 256×256 WebP without its metadata, and serves it', async () => {
     const { gmAgent, officerAgent, save } = await setup();

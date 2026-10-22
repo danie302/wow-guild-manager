@@ -22,6 +22,7 @@ const jaina: MemberDetailResponse = {
   rank: 'raider',
   baseRank: 'raider',
   leftDiscordAt: null,
+  attendanceRate: null,
   characters: [
     {
       id: '019a0c3e-5b1e-7c2a-9f3d-000000000201',

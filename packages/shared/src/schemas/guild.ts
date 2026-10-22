@@ -10,6 +10,8 @@ export const GUILD_NAME_MAX_LENGTH = 50;
 /** Error codes for the guild checks, used as issue messages like the character ones. */
 export const GUILD_ERROR_CODES = {
   nameNotAllowed: 'NAME_NOT_ALLOWED',
+  /** The Good threshold must be higher than the At risk one. */
+  bandsOutOfOrder: 'BANDS_OUT_OF_ORDER',
   discordServerNotManageable: 'DISCORD_SERVER_NOT_MANAGEABLE',
   officerRoleNotFound: 'OFFICER_ROLE_NOT_FOUND',
   /** The bot can't see, write, or post embeds in the channel, or it isn't a text channel. */
@@ -65,6 +67,9 @@ export const updateGuildSchema = z
       .max(TENTATIVE_DEADLINE_HOURS.max),
     /** Hours before the deadline that the reminder goes out. */
     reminderHours: z.coerce.number().int().min(REMINDER_HOURS.min).max(REMINDER_HOURS.max),
+    /** Attendance band thresholds in percent: Good at or above, At risk below. */
+    attendanceGoodThreshold: z.coerce.number().int().min(0).max(100),
+    attendanceRiskThreshold: z.coerce.number().int().min(0).max(100),
     /** "true" removes the guild image. */
     removeImage: z.literal('true'),
   })

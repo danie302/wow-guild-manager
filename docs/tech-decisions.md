@@ -373,6 +373,7 @@ The gear checks (and, later, registering characters from Discord) read character
 - `attendance` has one record per member and event, with the character they came with; `attendance_changes` has every correction (old and new status, who, when). The event stores when attendance was first saved and by whom (`attendance_recorded_at`).
 - Until the first save, nothing is stored: `GET .../attendance` answers with a draft pre-filled from the sign-ups. `PUT .../attendance` takes the whole list; the first save stores it as is, and later saves record each status change and each added member as a correction. Members can't be taken off after the first save. Saves lock the event, so two take turns.
 - Roster members who didn't sign up can be added; they come with their main.
+- The attendance rate, bands, and periods are shared code (`attendanceRate`, `attendanceBand`, `attendancePeriodStart` in `packages/shared`), so the web app colors rates the same way the server groups them. Reports are worked out on each request from the `attendance` table (`src/domain/reports.ts`); there's no stored rate to keep in step. A period counts events by their start time.
 
 ## IDs: UUID v7
 

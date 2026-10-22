@@ -1,4 +1,5 @@
 import {
+  attendanceBand,
   CLASS_NAMES,
   CLASSES,
   PROFESSION_NAMES,
@@ -26,8 +27,10 @@ import {
   Page,
   Tag,
   TextField,
+  RateBar,
 } from '../../components/ui';
 import { useFormat } from '../../i18n/format';
+import { BAND_COLOR, rateText } from '../attendanceText';
 import { AddMemberDialog } from './AddMemberDialog';
 
 /** Lowercase without accents, so searching "jaina" finds "Jainá". */
@@ -154,8 +157,9 @@ export function RosterPage() {
           t('roster.rank'),
           t('roster.characters'),
           t('roster.professions'),
+          t('roster.attendance'),
         ]}
-        widths={['1.3fr', '0.8fr', '1.6fr', '1.3fr']}
+        widths={['1.3fr', '0.8fr', '1.6fr', '1.3fr', '1fr']}
         empty={t('roster.empty')}
       >
         {members.map((member) => {
@@ -192,6 +196,16 @@ export function RosterPage() {
               <Page.Text>
                 {main?.professions.map((profession) => PROFESSION_NAMES[profession]).join(', ')}
               </Page.Text>
+              <RateBar
+                value={member.attendanceRate}
+                label={rateText(format, member.attendanceRate)}
+                color={(() => {
+                  const band = guild.data
+                    ? attendanceBand(member.attendanceRate, guild.data.attendanceThresholds)
+                    : null;
+                  return band ? BAND_COLOR[band] : 'mt';
+                })()}
+              />
             </ListTable.Row>
           );
         })}

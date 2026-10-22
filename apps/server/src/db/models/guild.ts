@@ -35,6 +35,9 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   declare tentativeDeadlineHours: CreationOptional<number>;
   /** Hours before that deadline the reminder is sent (1–72). */
   declare reminderHours: CreationOptional<number>;
+  /** Attendance bands in percent: Good at or above, At risk below (see domain/reports.ts). */
+  declare attendanceGoodThreshold: CreationOptional<number>;
+  declare attendanceRiskThreshold: CreationOptional<number>;
 
   declare guildMaster?: NonAttribute<User>;
 
@@ -54,6 +57,8 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
         discordLocale: { type: DataTypes.STRING(2), allowNull: false, defaultValue: 'en' },
         tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 24 },
         reminderHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 12 },
+        attendanceGoodThreshold: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 90 },
+        attendanceRiskThreshold: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 75 },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

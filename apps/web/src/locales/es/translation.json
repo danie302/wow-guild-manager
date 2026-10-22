@@ -94,7 +94,8 @@
     "PRE_CONFIRMED_ROLE_FULL": "Hay más participantes preconfirmados que plazas en el rol.",
     "PRE_CONFIRMED_CANNOT_JOIN": "Este personaje no está en el roster, o su miembro no puede ir a raids.",
     "PRE_CONFIRMED_ROLE_NOT_ALLOWED": "La clase de este personaje no puede cubrir ese rol.",
-    "PRE_CONFIRMED_TWICE": "Cada miembro solo puede preconfirmarse con un personaje."
+    "PRE_CONFIRMED_TWICE": "Cada miembro solo puede preconfirmarse con un personaje.",
+    "BANDS_OUT_OF_ORDER": "El umbral de Bien debe ser mayor que el de En riesgo."
   },
   "auth": {
     "checking": "Comprobando tu sesión",
@@ -226,12 +227,17 @@
     "signUps": "Inscripciones",
     "signUpsHelp": "El Guild Master y los Officers pueden cambiar esto.",
     "tentativeDeadline": "Plazo para Provisional",
-    "tentativeDeadlineUnit": "Horas antes del evento (1–168).",
+    "tentativeDeadlineUnit": "horas antes del evento",
     "tentativeDeadlineRange": "Usa de 1 a 168 horas.",
     "reminder": "Recordatorio",
-    "reminderUnit": "Horas antes del plazo (1–72).",
+    "reminderUnit": "horas antes del plazo",
     "reminderRange": "Usa de 1 a 72 horas.",
-    "tentativeExample": "Las inscripciones provisionales cierran {{deadline}} horas antes de cada evento (salvo que tenga su propio plazo), y el recordatorio se envía {{reminder}} horas antes del inicio. Los próximos eventos cuyo nuevo plazo ya habría pasado conservan el anterior."
+    "tentativeExample": "Las inscripciones provisionales cierran {{deadline}} horas antes de cada evento (salvo que tenga su propio plazo), y el recordatorio se envía {{reminder}} horas antes del inicio. Los próximos eventos cuyo nuevo plazo ya habría pasado conservan el anterior.",
+    "bands": "Grupos de asistencia",
+    "bandsHelp": "Los miembros se agrupan según su porcentaje de asistencia. Solo el Guild Master puede cambiar esto.",
+    "bandsGood": "Bien desde",
+    "bandsRisk": "En riesgo por debajo de",
+    "bandsRange": "Usa de 0 a 100, con Bien por encima de En riesgo."
   },
   "roster": {
     "title": "Plantilla",
@@ -255,7 +261,8 @@
     "loadFailed": "No se pudo cargar la plantilla",
     "leftOnly": "Solo los que salieron de Discord",
     "leftDiscord": "Salió de Discord el {{date}}",
-    "you": "Tú"
+    "you": "Tú",
+    "attendance": "Asistencia (8 semanas)"
   },
   "addMember": {
     "title": "Añadir miembro",
@@ -430,7 +437,8 @@
     "tentativeDeadline": "Plazo para Provisional",
     "tentativeDeadlineGuild": "Valor de la hermandad ({{hours}} h)",
     "tentativeDeadlineOwn": "Personalizado",
-    "tentativeDeadlineHours": "Horas antes del inicio (1–168)"
+    "tentativeDeadlineHours": "Plazo propio",
+    "tentativeDeadlineUnit": "horas antes del inicio (1–168)"
   },
   "eventPage": {
     "back": "Eventos",
@@ -548,5 +556,40 @@
     "history": "Historial de cambios",
     "noHistory": "Todavía no hay correcciones.",
     "addedTag": "Añadido"
+  },
+  "reports": {
+    "title": "Informe de asistencia",
+    "memberTitle": "Asistencia",
+    "loading": "Cargando la asistencia",
+    "loadFailed": "No se pudo cargar la asistencia.",
+    "period": "Periodo",
+    "periods": {
+      "4": "Últimas 4 semanas",
+      "8": "Últimas 8 semanas",
+      "all": "Desde siempre"
+    },
+    "type": "Tipo de evento",
+    "allTypes": "Todos los tipos",
+    "summary": "Resumen",
+    "average": "Media de la hermandad",
+    "bands": {
+      "good": "Bien",
+      "watch": "Vigilar",
+      "at_risk": "En riesgo"
+    },
+    "goodRange": "{{n}} % o más",
+    "watchRange": "{{a}}–{{b}} %",
+    "riskRange": "menos del {{n}} %",
+    "member": "Miembro",
+    "rate": "Asistencia",
+    "attended": "Asistió",
+    "late": "Tarde",
+    "noShows": "No se presentó",
+    "attendedOf": "{{attended}} de {{total}}",
+    "overall": "General",
+    "rates": "Porcentajes de asistencia",
+    "counts": "Llegadas tarde y ausencias sin aviso",
+    "history": "Historial de asistencia",
+    "noHistory": "No hay asistencia registrada en este periodo."
   }
 }

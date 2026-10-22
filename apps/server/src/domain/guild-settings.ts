@@ -87,6 +87,18 @@ export async function updateGuildSettings(
   const changesReminder =
     input.reminderHours !== undefined && input.reminderHours !== guild.reminderHours;
   if (changesDeadline || changesReminder) require('setTentativeTimes');
+  const good = input.attendanceGoodThreshold ?? guild.attendanceGoodThreshold;
+  const atRisk = input.attendanceRiskThreshold ?? guild.attendanceRiskThreshold;
+  const changesBands =
+    good !== guild.attendanceGoodThreshold || atRisk !== guild.attendanceRiskThreshold;
+  if (changesBands) {
+    require('setAttendanceBands');
+    if (good <= atRisk) {
+      throw new DomainValidationError([
+        { field: 'attendanceGoodThreshold', code: GUILD_ERROR_CODES.bandsOutOfOrder },
+      ]);
+    }
+  }
 
   // The new image is stored before the update, and removed again if the update fails.
   const newImageKey = image ? `guilds/${guild.id}/${randomUUID()}.webp` : undefined;
@@ -102,6 +114,7 @@ export async function updateGuildSettings(
         ...(changesLocale && { discordLocale: input.discordLocale }),
         ...(changesDeadline && { tentativeDeadlineHours: input.tentativeDeadlineHours }),
         ...(changesReminder && { reminderHours: input.reminderHours }),
+        ...(changesBands && { attendanceGoodThreshold: good, attendanceRiskThreshold: atRisk }),
         ...(newImageKey ? { imageKey: newImageKey } : input.removeImage && { imageKey: null }),
       }),
     );

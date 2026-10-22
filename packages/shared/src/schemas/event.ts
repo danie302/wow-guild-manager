@@ -223,3 +223,59 @@ export const saveAttendanceSchema = z
   .strict();
 
 export type SaveAttendanceInput = z.infer<typeof saveAttendanceSchema>;
+
+/** The periods an attendance rate covers: the last 4 or 8 weeks, or all time. */
+export const ATTENDANCE_PERIODS = ['4', '8', 'all'] as const;
+export type AttendancePeriod = (typeof ATTENDANCE_PERIODS)[number];
+export const DEFAULT_ATTENDANCE_PERIOD: AttendancePeriod = '8';
+
+/** When a period starts, or null for all time. */
+export function attendancePeriodStart(period: AttendancePeriod, now = new Date()): Date | null {
+  return period === 'all' ? null : new Date(now.getTime() - Number(period) * 7 * 86_400_000);
+}
+
+/** Attended events, all events with a record, and the rate (null without records). */
+export interface AttendanceRate {
+  attended: number;
+  total: number;
+  rate: number | null;
+}
+
+/** Present, Late, and Left early count as attended; the rest don't. */
+export function attendanceRate(statuses: readonly AttendanceStatus[]): AttendanceRate {
+  const attended = statuses.filter((status) => ATTENDED_STATUSES.includes(status)).length;
+  return {
+    attended,
+    total: statuses.length,
+    rate: statuses.length === 0 ? null : attended / statuses.length,
+  };
+}
+
+/** Attendance bands, from the guild's thresholds in percent. */
+export const ATTENDANCE_BANDS = ['good', 'watch', 'at_risk'] as const;
+export type AttendanceBand = (typeof ATTENDANCE_BANDS)[number];
+export const DEFAULT_ATTENDANCE_THRESHOLDS = { good: 90, atRisk: 75 } as const;
+
+/** Good at or above the Good threshold, At risk below the At risk one, Watch in between. */
+export function attendanceBand(
+  rate: number | null,
+  thresholds: { good: number; atRisk: number },
+): AttendanceBand | null {
+  if (rate === null) return null;
+  const percent = rate * 100;
+  if (percent >= thresholds.good) return 'good';
+  return percent < thresholds.atRisk ? 'at_risk' : 'watch';
+}
+
+/** Query of a member's attendance: the period (last 8 weeks by default). */
+export const attendancePeriodQuerySchema = z
+  .object({ period: z.enum(ATTENDANCE_PERIODS).default(DEFAULT_ATTENDANCE_PERIOD) })
+  .strict();
+
+/** Query of `GET /api/guilds/:guildId/attendance`: the period and the event type. */
+export const attendanceReportQuerySchema = z
+  .object({
+    period: z.enum(ATTENDANCE_PERIODS).default(DEFAULT_ATTENDANCE_PERIOD),
+    type: z.enum([...EVENT_TYPES, 'all']).default('all'),
+  })
+  .strict();

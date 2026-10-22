@@ -75,6 +75,8 @@ export interface GuildSettingsChanges {
   discordLocale?: Locale;
   tentativeDeadlineHours?: number;
   reminderHours?: number;
+  attendanceGoodThreshold?: number;
+  attendanceRiskThreshold?: number;
 }
 
 /** Saves every change in one request, so they all apply or none does. */
@@ -97,6 +99,12 @@ export function useSaveGuildSettings(guildId: string) {
       }
       if (changes.reminderHours !== undefined) {
         form.set('reminderHours', String(changes.reminderHours));
+      }
+      if (changes.attendanceGoodThreshold !== undefined) {
+        form.set('attendanceGoodThreshold', String(changes.attendanceGoodThreshold));
+      }
+      if (changes.attendanceRiskThreshold !== undefined) {
+        form.set('attendanceRiskThreshold', String(changes.attendanceRiskThreshold));
       }
       return apiRequest<GuildResponse>(`/guilds/${guildId}`, { method: 'PATCH', body: form });
     },

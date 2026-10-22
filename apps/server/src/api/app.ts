@@ -15,6 +15,7 @@ import { healthRouter, type HealthChecks } from './health.js';
 import { meRouter } from './me.js';
 import { membersRouter } from './members.js';
 import { registrationsRouter } from './registrations.js';
+import { reportsRouter } from './reports.js';
 import { sessionMiddleware, type SessionOptions } from './session.js';
 
 export interface AppDependencies {
@@ -62,6 +63,7 @@ export function createApp({
     api.use(membersRouter(discord, jobs ?? null));
     api.use(eventsRouter(jobs ?? null, discord));
     api.use(seriesRouter(jobs ?? null));
+    api.use(reportsRouter());
     if (jobs) api.use(registrationsRouter(jobs));
   }
   app.use('/api', api);

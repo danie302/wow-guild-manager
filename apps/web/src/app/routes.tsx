@@ -11,6 +11,7 @@ import { EventPage } from '../pages/events/EventPage';
 import { EventsPage } from '../pages/events/EventsPage';
 import { SeriesPage } from '../pages/events/SeriesPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
+import { AttendanceReportPage } from '../pages/reports/AttendanceReportPage';
 import { RegistrationsPage } from '../pages/registrations/RegistrationsPage';
 import { MemberPage } from '../pages/roster/MemberPage';
 import { RosterPage } from '../pages/roster/RosterPage';
@@ -50,7 +51,7 @@ export const routes: RouteObject[] = [
               { path: 'roster', element: <RosterPage /> },
               { path: 'roster/:memberId', element: <MemberPage /> },
               { path: 'registrations', element: <RegistrationsPage /> },
-              { path: 'attendance', element: <PlaceholderPage titleKey="nav.attendance" /> },
+              { path: 'attendance', element: <AttendanceReportPage /> },
               { path: 'settings', element: <GuildSettingsPage /> },
             ],
           },
