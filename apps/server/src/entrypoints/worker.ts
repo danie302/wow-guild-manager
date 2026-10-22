@@ -4,6 +4,7 @@ import { createCharacterLookup } from '../integrations/character-lookup/characte
 import { createRestAppEmojis, postEmojiSource } from '../integrations/discord/app-emojis.js';
 import { createRestChannelMessages } from '../integrations/discord/channel-messages.js';
 import { createRestDirectMessenger } from '../integrations/discord/direct-messages.js';
+import { createRestServerExit } from '../integrations/discord/server-exit.js';
 import { createJobHandlers } from '../jobs/handlers/index.js';
 import { createJobWorker, JobQueue, redisConnection } from '../jobs/index.js';
 import { allUpcomingEventIds, scheduleEventJobs } from '../jobs/event-jobs.js';
@@ -35,6 +36,7 @@ const worker = createJobWorker({
       ? createRestChannelMessages(config.DISCORD_BOT_TOKEN)
       : null,
     jobs,
+    serverExit: config.DISCORD_BOT_TOKEN ? createRestServerExit(config.DISCORD_BOT_TOKEN) : null,
     emojis: postEmojiSource(
       config.DISCORD_BOT_TOKEN ? createRestAppEmojis(config.DISCORD_BOT_TOKEN) : null,
       logger,

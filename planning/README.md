@@ -109,7 +109,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 
 | Story | Title | Status | Depends on |
 |---|---|---|---|
-| [033](story-033-leadership-and-disband.md) | Leadership transfer and disbanding | Not started | 014, 016 |
+| [033](story-033-leadership-and-disband.md) | Leadership transfer and disbanding | Done | 014, 016 |
 | [034](story-034-dashboard.md) | Dashboard | Not started | 018, 019, 024, 026, 031 |
 
 ### Member access

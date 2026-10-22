@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateGuildInput,
+  TransferCandidate,
   DiscordChannelsResponse,
   DiscordRolesResponse,
   DiscordServersResponse,
@@ -115,4 +116,37 @@ export function useSaveGuildSettings(guildId: string) {
       await queryClient.invalidateQueries({ queryKey: ['guilds', guildId, 'events'] });
     },
   });
+}
+
+/** Who the Guild Master can hand the guild to. */
+export function useTransferCandidates(guildId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['guilds', guildId, 'transfer-candidates'],
+    queryFn: () => apiRequest<TransferCandidate[]>(`/guilds/${guildId}/transfer-candidates`),
+    enabled,
+  });
+}
+
+/** The guild changes hands or goes away: the user's guilds and access reload. */
+function useLeadershipMutation<Input>(guildId: string, request: (input: Input) => Promise<void>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: request,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      await queryClient.invalidateQueries({ queryKey: ['guilds', guildId] });
+    },
+  });
+}
+
+export function useTransferLeadership(guildId: string) {
+  return useLeadershipMutation(guildId, (memberId: string) =>
+    apiRequest<void>(`/guilds/${guildId}/transfer`, { method: 'POST', body: { memberId } }),
+  );
+}
+
+export function useDisbandGuild(guildId: string) {
+  return useLeadershipMutation(guildId, (name: string) =>
+    apiRequest<void>(`/guilds/${guildId}/disband`, { method: 'POST', body: { name } }),
+  );
 }

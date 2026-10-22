@@ -177,6 +177,14 @@ export interface DiscordRoleOption {
   color: string | null;
 }
 
+/** `GET /api/guilds/:guildId/transfer-candidates`: who can become Guild Master. */
+export interface TransferCandidate {
+  memberId: string;
+  discordName: string;
+  /** The guild they already lead, if any: they can't take this one too. */
+  leads: string | null;
+}
+
 /** `GET /api/discord/servers/:serverId/roles`: roles that can grant Officer, highest first. */
 export interface DiscordRolesResponse {
   roles: DiscordRoleOption[];

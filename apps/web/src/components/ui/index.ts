@@ -31,6 +31,7 @@ export { DetailHeader } from './DetailHeader';
 export type { DetailHeaderProps } from './DetailHeader';
 export { DetailList } from './DetailList';
 export type { DetailListItemProps } from './DetailList';
+export { DangerZone } from './DangerZone';
 export { Dialog } from './Dialog';
 export { DiscordMessage } from './DiscordMessage';
 export type { DiscordMessageProps } from './DiscordMessage';

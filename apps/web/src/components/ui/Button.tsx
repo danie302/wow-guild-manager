@@ -76,25 +76,41 @@ export function Button({
         textDecoration: 'none',
         whiteSpace: 'nowrap',
         alignSelf: text ? 'flex-start' : undefined,
-        bgcolor: primary ? token('ac') : 'transparent',
+        // A primary danger button is filled red, e.g. "Disband guild".
+        bgcolor: primary ? (tone === 'danger' ? token('bad') : token('ac')) : 'transparent',
         color: primary
-          ? token('ac-on')
+          ? tone === 'danger'
+            ? token('bg')
+            : token('ac-on')
           : tone === 'danger'
             ? token('bad')
             : text
               ? token('mt')
               : token('tx'),
-        border: primary || text ? 0 : `1px solid ${token('dv')}`,
+        border: primary || text ? 0 : `1px solid ${tone === 'danger' ? token('bad') : token('dv')}`,
         '& .MuiButton-startIcon, & .MuiButton-endIcon': { m: 0 },
         '&:hover': text
           ? { color: token('tx'), bgcolor: 'transparent' }
           : {
-              bgcolor: primary ? token('ac-h') : tone === 'danger' ? token('bad-bg') : token('sf2'),
+              bgcolor: primary
+                ? tone === 'danger'
+                  ? token('bad')
+                  : token('ac-h')
+                : tone === 'danger'
+                  ? token('bad-bg')
+                  : token('sf2'),
+              ...(primary && tone === 'danger' && { filter: 'brightness(1.1)' }),
             },
         '&.Mui-focusVisible': { outline: `2px solid ${token('ac')}`, outlineOffset: 2 },
         '&.Mui-disabled': {
           opacity: 0.6,
-          color: primary ? token('ac-on') : tone === 'danger' ? token('bad') : token('mt'),
+          color: primary
+            ? tone === 'danger'
+              ? token('bg')
+              : token('ac-on')
+            : tone === 'danger'
+              ? token('bad')
+              : token('mt'),
         },
       }}
     >

@@ -95,7 +95,8 @@
     "PRE_CONFIRMED_CANNOT_JOIN": "This character isn't on the roster, or its member can't join raids.",
     "PRE_CONFIRMED_ROLE_NOT_ALLOWED": "This character's class can't fill that role.",
     "PRE_CONFIRMED_TWICE": "Each member can be pre-confirmed with only one character.",
-    "BANDS_OUT_OF_ORDER": "The Good threshold must be higher than the At risk threshold."
+    "BANDS_OUT_OF_ORDER": "The Good threshold must be higher than the At risk threshold.",
+    "NAME_DOESNT_MATCH": "That isn't the guild's name."
   },
   "auth": {
     "checking": "Checking your session",
@@ -591,5 +592,24 @@
     "counts": "Late arrivals and no-shows",
     "history": "Attendance history",
     "noHistory": "No attendance recorded in this period."
+  },
+  "danger": {
+    "title": "Danger zone",
+    "description": "Only the Guild Master sees this section. These apply right away, without Save.",
+    "transfer": "Transfer leadership",
+    "transferHelp": "The new Guild Master gets full control of the guild. You stay on the roster as a Raider.",
+    "newLeader": "New Guild Master",
+    "pickLeader": "Choose a member",
+    "someLead": "Members who already lead a guild can't take this one",
+    "leads": "{{name}} – leads {{guild}}",
+    "transferTitle": "Make {{name}} the Guild Master?",
+    "transferBody": "{{name}} gets full control of {{guild}}, including this section. You stay on the roster as a Raider. Only the new Guild Master can transfer it back.",
+    "disband": "Disband guild",
+    "disbandHelp": "Deletes the roster, events, and attendance permanently.",
+    "disbandTitle": "Disband {{guild}}?",
+    "disbandBody": "The roster, all events, and all attendance records are deleted permanently, and the bot leaves the Discord server. This can't be undone.",
+    "typeName": "Type {{guild}} to confirm",
+    "keep": "Cancel",
+    "failed": "Couldn't do it"
   }
 }

@@ -42,6 +42,8 @@ export interface JobPayloads {
   'pre-confirmed': { signUpId: string };
   /** Tells a member the date or time of events they're signed up for changed, in one message. */
   'events-rescheduled': { memberId: string; eventIds: string[] };
+  /** The bot leaves the Discord server of a disbanded guild (unless another guild uses it). */
+  'leave-server': { discordServerId: string };
   /** Deletes the post of an event that no longer exists (a stopped series' future events). */
   'event-post-delete': { channelId: string; messageId: string };
 }

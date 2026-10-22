@@ -1,5 +1,8 @@
 import {
   createGuildSchema,
+  disbandGuildSchema,
+  transferLeadershipSchema,
+  type TransferCandidate,
   GUILD_IMAGE_MAX_BYTES,
   GUILD_IMAGE_TYPES,
   updateGuildSchema,
@@ -12,6 +15,7 @@ import multer from 'multer';
 import type { Guild } from '../db/models/index.js';
 import { guildImageUrl, updateGuildSettings } from '../domain/guild-settings.js';
 import { createGuild } from '../domain/guilds.js';
+import { disbandGuild, transferCandidates, transferLeadership } from '../domain/leadership.js';
 import { replaceGuildOfficers } from '../domain/officers.js';
 import { applyGuildDeadline } from '../domain/tentative.js';
 import { enqueueEventPosts, enqueueUpcomingEventPosts } from '../jobs/event-posts.js';
@@ -22,7 +26,7 @@ import type { Logger } from '../logger.js';
 import type { FileStorage } from '../storage/file-storage.js';
 import { InvalidImageError } from '../storage/guild-image.js';
 import { requireDiscord, type DiscordAccess } from './discord.js';
-import { sendError, sendValidationError } from './errors.js';
+import { parseBody, sendError, sendValidationError } from './errors.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
 
@@ -128,6 +132,53 @@ export function guildsRouter(
         throw err;
       }
       res.json(await toGuildResponse(guild, access, discord, req.log));
+    },
+  );
+
+  // Who the Guild Master can hand the guild to, and the guild each already leads.
+  router.get(
+    '/guilds/:guildId/transfer-candidates',
+    requireUser,
+    requireGuildPermission('transferLeadership'),
+    async (_req, res) => {
+      const { guild } = currentGuild(res);
+      res.json(
+        (await transferCandidates(guild)).map(({ member, leads }) => ({
+          memberId: member.id,
+          discordName: member.discordName,
+          leads,
+        })) satisfies TransferCandidate[],
+      );
+    },
+  );
+
+  // Applies right away, outside the settings page's Save.
+  router.post(
+    '/guilds/:guildId/transfer',
+    requireUser,
+    requireGuildPermission('transferLeadership'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const input = parseBody(transferLeadershipSchema, req.body, res);
+      if (!input) return;
+      await transferLeadership(guild, currentUser(res), input.memberId);
+      res.status(204).end();
+    },
+  );
+
+  // Deletes the guild and all of its data; the bot then leaves its Discord server.
+  router.post(
+    '/guilds/:guildId/disband',
+    requireUser,
+    requireGuildPermission('disbandGuild'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const input = parseBody(disbandGuildSchema, req.body, res);
+      if (!input) return;
+      const { discordServerId, imageKey } = await disbandGuild(guild, input.name);
+      if (imageKey) await storage.delete(imageKey);
+      if (jobs) await jobs.enqueue('leave-server', { discordServerId });
+      res.status(204).end();
     },
   );
 

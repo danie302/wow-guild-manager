@@ -56,11 +56,11 @@ A tool for a guild's leadership. The Guild Master and Officers use the web app t
 - Faction is chosen when the guild is created. Only characters of the same faction can be on its roster.
 - Each guild is connected to one Discord server.
 - When connecting the server, the Guild Master chooses which Discord role grants the Officer rank. Members with that role are Officers in the app, and lose Officer access as soon as the role is removed in Discord.
-- The Guild Master can transfer leadership to another roster member who doesn't already lead a guild. The previous Guild Master stays on the roster as a Raider.
+- The Guild Master can transfer leadership to another roster member who doesn't already lead a guild. The previous Guild Master stays on the roster as a Raider (still an Officer if they have the Officer role in Discord). Both changes go in the rank history.
 - The Guild Master can't be removed from the roster. They must transfer leadership first.
 - Being the owner of the Discord server doesn't make someone the Guild Master.
 - Only the Guild Master can disband the guild.
-- Disbanding deletes the guild and all of its data: roster, events, and attendance. The bot leaves the guild's Discord server.
+- Disbanding deletes the guild and all of its data: roster, events, and attendance. The bot leaves the guild's Discord server; the event posts already in its channel stay as they are.
 
 ### Guild settings
 - Each guild has a name and an image.

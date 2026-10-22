@@ -10,6 +10,8 @@ export const GUILD_NAME_MAX_LENGTH = 50;
 /** Error codes for the guild checks, used as issue messages like the character ones. */
 export const GUILD_ERROR_CODES = {
   nameNotAllowed: 'NAME_NOT_ALLOWED',
+  /** The name typed to confirm disbanding isn't the guild's. */
+  nameDoesntMatch: 'NAME_DOESNT_MATCH',
   /** The Good threshold must be higher than the At risk one. */
   bandsOutOfOrder: 'BANDS_OUT_OF_ORDER',
   discordServerNotManageable: 'DISCORD_SERVER_NOT_MANAGEABLE',
@@ -89,3 +91,9 @@ export const GUILD_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 export type CreateGuildInput = z.infer<typeof createGuildSchema>;
 export type GuildDiscordInput = z.infer<typeof guildDiscordSchema>;
+
+/** Body of `POST /api/guilds/:guildId/transfer`: the member who becomes Guild Master. */
+export const transferLeadershipSchema = z.object({ memberId: z.uuid() }).strict();
+
+/** Body of `POST /api/guilds/:guildId/disband`: the guild's name, typed to confirm. */
+export const disbandGuildSchema = z.object({ name: z.string().max(100) }).strict();

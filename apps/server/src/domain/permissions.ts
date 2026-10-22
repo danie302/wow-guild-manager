@@ -14,6 +14,10 @@ export const PERMISSIONS = {
   connectDiscordServer: ['guild_master'],
   /** Choose the Discord role that grants Officer. */
   chooseOfficerRole: ['guild_master'],
+  /** Hand the guild to another member. */
+  transferLeadership: ['guild_master'],
+  /** Delete the guild and all of its data. */
+  disbandGuild: ['guild_master'],
   /** Choose the Discord channel where the bot posts events. */
   chooseEventsChannel: ['guild_master'],
   /** Choose the language of the guild's public Discord messages. */

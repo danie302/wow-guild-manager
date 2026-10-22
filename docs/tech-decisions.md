@@ -375,6 +375,13 @@ The gear checks (and, later, registering characters from Discord) read character
 - Roster members who didn't sign up can be added; they come with their main.
 - The attendance rate, bands, and periods are shared code (`attendanceRate`, `attendanceBand`, `attendancePeriodStart` in `packages/shared`), so the web app colors rates the same way the server groups them. Reports are worked out on each request from the `attendance` table (`src/domain/reports.ts`); there's no stored rate to keep in step. A period counts events by their start time.
 
+### Leadership transfer and disbanding
+
+**Status:** Accepted (story 033)
+
+- The guild points at its Guild Master's app user (`guilds.guild_master_user_id`, unique, so nobody leads two guilds). Transferring to a member who never logged in creates their `users` record from the roster; their first Discord login finds it by Discord ID.
+- Disbanding deletes the `guilds` row, and foreign keys cascade to everything else (roster, characters, events, sign-ups, attendance). The route deletes the guild image, and the worker's `leave-server` job makes the bot leave the Discord server, unless a new guild already uses it again. Jobs still queued for the guild's events find nothing and do nothing.
+
 ## IDs: UUID v7
 
 **Status:** Accepted

@@ -95,7 +95,8 @@
     "PRE_CONFIRMED_CANNOT_JOIN": "Este personaje no está en el roster, o su miembro no puede ir a raids.",
     "PRE_CONFIRMED_ROLE_NOT_ALLOWED": "La clase de este personaje no puede cubrir ese rol.",
     "PRE_CONFIRMED_TWICE": "Cada miembro solo puede preconfirmarse con un personaje.",
-    "BANDS_OUT_OF_ORDER": "El umbral de Bien debe ser mayor que el de En riesgo."
+    "BANDS_OUT_OF_ORDER": "El umbral de Bien debe ser mayor que el de En riesgo.",
+    "NAME_DOESNT_MATCH": "Ese no es el nombre de la hermandad."
   },
   "auth": {
     "checking": "Comprobando tu sesión",
@@ -591,5 +592,24 @@
     "counts": "Llegadas tarde y ausencias sin aviso",
     "history": "Historial de asistencia",
     "noHistory": "No hay asistencia registrada en este periodo."
+  },
+  "danger": {
+    "title": "Zona de peligro",
+    "description": "Solo el Guild Master ve esta sección. Se aplica al momento, sin Guardar.",
+    "transfer": "Transferir el liderazgo",
+    "transferHelp": "El nuevo Guild Master obtiene el control total de la hermandad. Tú sigues en el roster como Raider.",
+    "newLeader": "Nuevo Guild Master",
+    "pickLeader": "Elige un miembro",
+    "someLead": "Los miembros que ya lideran una hermandad no pueden tomar esta",
+    "leads": "{{name}} – lidera {{guild}}",
+    "transferTitle": "¿Hacer Guild Master a {{name}}?",
+    "transferBody": "{{name}} obtiene el control total de {{guild}}, incluida esta sección. Tú sigues en el roster como Raider. Solo el nuevo Guild Master puede devolvértelo.",
+    "disband": "Disolver la hermandad",
+    "disbandHelp": "Borra el roster, los eventos y la asistencia para siempre.",
+    "disbandTitle": "¿Disolver {{guild}}?",
+    "disbandBody": "El roster, todos los eventos y todos los registros de asistencia se borran para siempre, y el bot sale del servidor de Discord. No se puede deshacer.",
+    "typeName": "Escribe {{guild}} para confirmar",
+    "keep": "Cancelar",
+    "failed": "No se pudo hacer"
   }
 }

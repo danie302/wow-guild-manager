@@ -9,7 +9,10 @@ import {
   type Sequelize,
 } from 'sequelize';
 
-/** Someone who has logged into the web app with Discord. */
+/**
+ * Someone who has logged into the web app with Discord, or who was made Guild Master before
+ * their first login (their login finds this record by Discord ID).
+ */
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<string>;
   declare discordId: string;

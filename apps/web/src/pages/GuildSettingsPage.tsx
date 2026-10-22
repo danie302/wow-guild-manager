@@ -39,6 +39,7 @@ import {
   TextField,
 } from '../components/ui';
 import { LOCALE_NAMES } from '../i18n';
+import { GuildDangerZone } from './GuildDangerZone';
 import { apiErrorMessage, validationIssueMessage } from '../i18n/api-errors';
 
 /** The form's values. `image` is kept, replaced by a chosen file, or removed. */
@@ -455,6 +456,8 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
           saveDisabled={!valid || save.isPending}
         />
       )}
+
+      {isGuildMaster && <GuildDangerZone guild={guild} />}
 
       <ConfirmDialog
         open={blocker.state === 'blocked'}
