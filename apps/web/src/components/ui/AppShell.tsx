@@ -6,6 +6,7 @@ import { NavLink } from 'react-router';
 import { Icon, type IconName } from './Icon';
 import { SelectMenu } from './Select';
 import { compactBreakpoint, token } from './tokens';
+import { visuallyHidden } from './visuallyHidden';
 
 interface AppShellContextValue {
   /** Narrow screens: the sidebar becomes a top bar and the navigation a row. */
@@ -152,7 +153,7 @@ function Switcher({ label, value, options, onChange }: AppShellSwitcherProps) {
   const labelId = useId();
   return (
     <Box sx={{ p: '0 16px 12px', flex: 'none' }}>
-      <Box component="span" id={labelId} sx={visuallyHiddenLabel}>
+      <Box component="span" id={labelId} sx={visuallyHidden}>
         {label}
       </Box>
       <SelectMenu
@@ -165,15 +166,6 @@ function Switcher({ label, value, options, onChange }: AppShellSwitcherProps) {
     </Box>
   );
 }
-
-const visuallyHiddenLabel = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
 
 export interface AppShellNavProps {
   /** Accessible name of the navigation landmark. */

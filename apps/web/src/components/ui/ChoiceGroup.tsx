@@ -4,6 +4,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { createContext, useContext, useId, type ReactNode } from 'react';
 
 import { controlRadius, token } from './tokens';
+import { visuallyHidden } from './visuallyHidden';
 
 const SmallContext = createContext(false);
 
@@ -99,14 +100,5 @@ function Option({ value, children, ...groupProps }: ChoiceGroupOptionProps) {
     </ToggleButton>
   );
 }
-
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
 
 export const ChoiceGroup = Object.assign(ChoiceGroupRoot, { Option });

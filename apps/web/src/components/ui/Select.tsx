@@ -5,6 +5,7 @@ import MuiSelect from '@mui/material/Select';
 import { useId } from 'react';
 
 import { controlRadius, token } from './tokens';
+import { visuallyHidden } from './visuallyHidden';
 
 export interface SelectProps {
   label: string;
@@ -155,12 +156,3 @@ export function SelectMenu({
     </MuiSelect>
   );
 }
-
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;

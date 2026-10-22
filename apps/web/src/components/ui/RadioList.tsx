@@ -4,6 +4,7 @@ import RadioGroup from '@mui/material/RadioGroup';
 import { createContext, useContext, useId, type ReactNode } from 'react';
 
 import { token } from './tokens';
+import { visuallyHidden } from './visuallyHidden';
 
 interface RadioListContextValue {
   name: string;
@@ -121,14 +122,5 @@ function Option({ value, imageUrl, detail, disabled, children }: RadioListOption
     </Box>
   );
 }
-
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
 
 export const RadioList = Object.assign(RadioListRoot, { Option });

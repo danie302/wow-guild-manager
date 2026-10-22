@@ -3,6 +3,7 @@ import InputBase from '@mui/material/InputBase';
 import { useId } from 'react';
 
 import { controlRadius, token } from './tokens';
+import { visuallyHidden } from './visuallyHidden';
 
 export interface TextFieldProps {
   label: string;
@@ -118,12 +119,3 @@ export function TextField({
     </Box>
   );
 }
-
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;
