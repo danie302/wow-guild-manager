@@ -99,7 +99,12 @@ function Brand({ title, subtitle, initials, imageUrl }: AppShellBrandProps) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', p: '18px 16px', flex: 'none' }}>
       {imageUrl ? (
-        <Box component="img" src={imageUrl} alt="" sx={{ width: 30, height: 30, flex: 'none' }} />
+        <Box
+          component="img"
+          src={imageUrl}
+          alt=""
+          sx={{ width: 30, height: 30, flex: 'none', borderRadius: '50%', objectFit: 'cover' }}
+        />
       ) : (
         <Box
           sx={{
@@ -108,6 +113,8 @@ function Brand({ title, subtitle, initials, imageUrl }: AppShellBrandProps) {
             display: 'grid',
             placeItems: 'center',
             flex: 'none',
+            // Round like the image, so the brand looks the same with or without one.
+            borderRadius: '50%',
             bgcolor: token('ac'),
             color: token('ac-on'),
             fontWeight: 800,

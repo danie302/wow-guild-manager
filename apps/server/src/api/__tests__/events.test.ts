@@ -1,4 +1,9 @@
-import type { EventDiscordPostResponse, EventResponse, SignUpResponse } from '@wgm/shared';
+import type {
+  AttendanceResponse,
+  EventDiscordPostResponse,
+  EventResponse,
+  SignUpResponse,
+} from '@wgm/shared';
 import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
@@ -323,5 +328,61 @@ describe('managing participants', () => {
         })
       ).status,
     ).toBe(404);
+  });
+});
+
+describe('attendance', () => {
+  it('is closed before the event starts, then saves and shows corrections', async () => {
+    const { agent, base, guild } = await setup();
+    const id = event(await agent.post(base).send({ ...raid, startsAt: inDays(3) })).id;
+    const member = await Member.create({
+      guildId: guild.id,
+      discordUserId: '200000000000000002',
+      discordName: 'Thrall',
+      discordAvatar: null,
+      rank: 'raider',
+    });
+    const character = await Character.create({
+      memberId: member.id,
+      name: 'Thrall',
+      faction: 'horde',
+      race: 'orc',
+      characterClass: 'shaman',
+      level: 60,
+      professions: [],
+      isMain: true,
+    });
+    await SignUp.create({
+      eventId: id,
+      memberId: member.id,
+      characterId: character.id,
+      role: 'healer',
+      status: 'confirmed',
+      placement: 'slot',
+      signedUpAt: new Date(),
+    });
+
+    const closed = (await agent.get(`${base}/${id}/attendance`)).body as AttendanceResponse;
+    expect(closed).toMatchObject({ open: false, recorded: null, records: [] });
+
+    await Event.update({ startsAt: new Date(Date.now() - 60 * 1000) }, { where: { id } });
+    const draft = (await agent.get(`${base}/${id}/attendance`)).body as AttendanceResponse;
+    expect(draft.records).toMatchObject([
+      { memberId: member.id, status: 'present', signedUp: true },
+    ]);
+
+    await agent
+      .put(`${base}/${id}/attendance`)
+      .send({ records: [{ memberId: member.id, status: 'present' }] });
+    const corrected = (
+      await agent
+        .put(`${base}/${id}/attendance`)
+        .send({ records: [{ memberId: member.id, status: 'no_show' }] })
+    ).body as AttendanceResponse;
+
+    expect(corrected.recorded).toMatchObject({ by: 'User 0001' });
+    expect(corrected.history).toMatchObject([
+      { memberId: member.id, from: 'present', to: 'no_show', by: 'User 0001' },
+    ]);
   });
 });

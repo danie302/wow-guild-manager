@@ -14,6 +14,7 @@ import type {
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
 import {
   EVENT_ERROR_CODES,
+  type AttendanceStatus,
   type EventType,
   type SignUpPlacement,
   type SignUpStatus,
@@ -91,7 +92,9 @@ export type ApiError =
         // Only Tentative participants can be replaced.
         | 'SIGN_UP_NOT_TENTATIVE'
         // The replacement isn't on the waitlist of that role (anymore).
-        | 'NOT_ON_WAITLIST';
+        | 'NOT_ON_WAITLIST'
+        // Attendance opens when the event starts.
+        | 'ATTENDANCE_NOT_OPEN';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
@@ -346,6 +349,43 @@ export interface SignUpResponse {
 /** `GET /api/guilds/:guildId/series/:seriesId/sign-ups`: each future event's sign-ups. */
 export interface SeriesSignUpsResponse {
   events: { id: string; startsAt: string; signUps: SignUpResponse[] }[];
+}
+
+/** One member on an event's attendance list. */
+export interface AttendanceRecordResponse {
+  memberId: string;
+  discordName: string;
+  character: { id: string; name: string; class: CharacterClass; race: Race };
+  /** Their sign-up's role; null for a Declined sign-up or a member added to the list. */
+  role: CombatRole | null;
+  /** False for a member added to the list who didn't sign up. */
+  signedUp: boolean;
+  status: AttendanceStatus;
+}
+
+/** A correction after attendance was first saved; `from` is null when a member was added. */
+export interface AttendanceChangeResponse {
+  id: string;
+  memberId: string;
+  character: { name: string; class: CharacterClass };
+  from: AttendanceStatus | null;
+  to: AttendanceStatus;
+  /** Null when that account no longer exists. */
+  by: string | null;
+  at: string;
+}
+
+/**
+ * `GET /api/guilds/:guildId/events/:eventId/attendance`. Before the first save, `records` is
+ * the draft pre-filled from the sign-ups and `recorded` is null.
+ */
+export interface AttendanceResponse {
+  /** Attendance opens when the event starts; a cancelled event has none. */
+  open: boolean;
+  recorded: { at: string; by: string | null } | null;
+  records: AttendanceRecordResponse[];
+  /** Newest first. */
+  history: AttendanceChangeResponse[];
 }
 
 /** Why the bot couldn't post or update an event's Discord post. */

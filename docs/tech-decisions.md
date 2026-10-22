@@ -366,6 +366,14 @@ The gear checks (and, later, registering characters from Discord) read character
 - The check re-reads the event and does nothing if it was cancelled, moved later, or (for the 48-hour check) the 24-hour one is already due, so a late job never alerts twice. Who to mention is worked out when it runs (`src/domain/missing-roles.ts`), from the database only.
 - The alert is one message per event and check, posted by the worker as a reply to the event's post. `allowed_mentions` lists exactly the mentioned users (never `@everyone` or roles), and the mentions are cut short to fit Discord's limits (2000 characters, 100 users).
 
+### Attendance
+
+**Status:** Accepted (story 028)
+
+- `attendance` has one record per member and event, with the character they came with; `attendance_changes` has every correction (old and new status, who, when). The event stores when attendance was first saved and by whom (`attendance_recorded_at`).
+- Until the first save, nothing is stored: `GET .../attendance` answers with a draft pre-filled from the sign-ups. `PUT .../attendance` takes the whole list; the first save stores it as is, and later saves record each status change and each added member as a correction. Members can't be taken off after the first save. Saves lock the event, so two take turns.
+- Roster members who didn't sign up can be added; they come with their main.
+
 ## IDs: UUID v7
 
 **Status:** Accepted

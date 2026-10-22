@@ -16,7 +16,7 @@ import {
   Button,
   ChoiceGroup,
   ComboBox,
-  FormGrid,
+  FormRow,
   Notice,
   Page,
   Select,
@@ -100,8 +100,9 @@ export function PreConfirmSection({
 
   return (
     <Page.Block title={t('eventForm.preConfirmed')} description={t('eventForm.preConfirmedHelp')}>
-      <FormGrid>
+      <FormRow>
         <ComboBox
+          variant="field"
           label={t('eventForm.preConfirmedMember')}
           value={memberId}
           options={members.map((candidate) => ({
@@ -128,30 +129,32 @@ export function PreConfirmSection({
           />
         )}
         {character && roles.length > 0 && (
-          <ChoiceGroup
-            label={t('eventForm.preConfirmedRole')}
-            // No role picked yet shows none selected.
-            value={role as CombatRole}
-            onChange={(next: CombatRole) => setRole(next)}
-          >
-            {roles.map((candidate) => (
-              <ChoiceGroup.Option key={candidate} value={candidate}>
-                {COMBAT_ROLE_NAMES[candidate]}
-              </ChoiceGroup.Option>
-            ))}
-          </ChoiceGroup>
+          <FormRow.Fit>
+            <ChoiceGroup
+              label={t('eventForm.preConfirmedRole')}
+              // No role picked yet shows none selected.
+              value={role as CombatRole}
+              onChange={(next: CombatRole) => setRole(next)}
+            >
+              {roles.map((candidate) => (
+                <ChoiceGroup.Option key={candidate} value={candidate}>
+                  {COMBAT_ROLE_NAMES[candidate]}
+                </ChoiceGroup.Option>
+              ))}
+            </ChoiceGroup>
+          </FormRow.Fit>
         )}
-      </FormGrid>
+        <FormRow.Fit>
+          <Button variant="primary" size="medium" onClick={add} disabled={!role || full(role)}>
+            {t('eventForm.preConfirmedAdd')}
+          </Button>
+        </FormRow.Fit>
+      </FormRow>
       {role && full(role) && (
         <Page.Text>
           {t('eventForm.preConfirmedRoleFull', { role: COMBAT_ROLE_NAMES[role] })}
         </Page.Text>
       )}
-      <Page.Inline>
-        <Button variant="primary" onClick={add} disabled={!role || full(role)}>
-          {t('eventForm.preConfirmedAdd')}
-        </Button>
-      </Page.Inline>
       {error && <Notice tone="bad" title={error} />}
       {value.length > 0 && (
         <ActionList label={t('eventForm.preConfirmed')}>

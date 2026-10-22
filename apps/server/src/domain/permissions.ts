@@ -40,6 +40,8 @@ export const PERMISSIONS = {
   manageEvents: ['guild_master', 'officer'],
   /** Set the guild's Tentative deadline and reminder time. */
   setTentativeTimes: ['guild_master', 'officer'],
+  /** Record and correct attendance. */
+  recordAttendance: ['guild_master', 'officer'],
   /** Remove event participants and replace Tentative ones with waitlisted characters. */
   manageParticipants: ['guild_master', 'officer'],
   /** Pre-confirm participants when creating a raid. */

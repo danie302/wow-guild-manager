@@ -54,7 +54,8 @@
     "EVENT_CANCELLED": "This event was cancelled, so it can't be changed.",
     "SERIES_STOPPED": "This recurring series was stopped, so it can't be changed.",
     "SIGN_UP_NOT_TENTATIVE": "Only Tentative participants can be replaced, and this one has confirmed or left the slot.",
-    "NOT_ON_WAITLIST": "That character is no longer on the waitlist for this role."
+    "NOT_ON_WAITLIST": "That character is no longer on the waitlist for this role.",
+    "ATTENDANCE_NOT_OPEN": "Attendance opens when the event starts."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -513,5 +514,39 @@
   "languages": {
     "en": "English",
     "es": "Spanish"
+  },
+  "attendance": {
+    "tab": "Attendance",
+    "title": "Attendance",
+    "loading": "Loading attendance",
+    "loadFailed": "Couldn't load the attendance.",
+    "cancelled": "This event was cancelled. There is no attendance to record.",
+    "locked": "Attendance opens when the event starts.",
+    "starts": "Starts {{date}}",
+    "status": {
+      "present": "Present",
+      "late": "Late",
+      "left_early": "Left early",
+      "bench": "Bench",
+      "absent_with_notice": "Absent with notice",
+      "no_show": "No-show"
+    },
+    "statusOf": "Attendance of {{name}}",
+    "notSaved": "Not saved yet",
+    "unsaved": "Unsaved changes",
+    "saved": "Saved on {{date}} by {{name}}",
+    "allPresent": "Mark everyone Present",
+    "save": "Save attendance",
+    "saveFailed": "Couldn't save the attendance.",
+    "empty": "Nobody signed up for this event.",
+    "added": "added, not signed up",
+    "takeOff": "Take off",
+    "addMember": "Add a member who came",
+    "addHint": "For roster members who didn't sign up. They're added with their main.",
+    "noMember": "No roster member matches.",
+    "add": "Add",
+    "history": "Change history",
+    "noHistory": "No corrections yet.",
+    "addedTag": "Added"
   }
 }

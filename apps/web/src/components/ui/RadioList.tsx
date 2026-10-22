@@ -84,7 +84,12 @@ function Option({ value, imageUrl, detail, disabled, children }: RadioListOption
       {/* The row itself shows the choice, so the radio is only for keyboards and screen readers. */}
       <Radio value={value} disabled={disabled} disableRipple sx={visuallyHidden} />
       {imageUrl ? (
-        <Box component="img" src={imageUrl} alt="" sx={{ width: 32, height: 32, flex: 'none' }} />
+        <Box
+          component="img"
+          src={imageUrl}
+          alt=""
+          sx={{ width: 32, height: 32, flex: 'none', borderRadius: '50%', objectFit: 'cover' }}
+        />
       ) : (
         <Box
           aria-hidden
@@ -92,6 +97,7 @@ function Option({ value, imageUrl, detail, disabled, children }: RadioListOption
             width: 32,
             height: 32,
             flex: 'none',
+            borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
             fontWeight: 800,

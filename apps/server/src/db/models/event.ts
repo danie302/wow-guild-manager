@@ -39,6 +39,9 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare tentativeDeadlineHours: CreationOptional<number | null>;
   /** When Tentative participants must have confirmed (see domain/tentative.ts). */
   declare tentativeDeadlineAt: Date;
+  /** When attendance was first saved, and by whom; null until then. */
+  declare attendanceRecordedAt: CreationOptional<Date | null>;
+  declare attendanceRecordedByUserId: CreationOptional<ForeignKey<User['id']> | null>;
   /** Its Discord post; null until the worker posts it (jobs/handlers/event-posts.ts). */
   declare discordChannelId: CreationOptional<string | null>;
   declare discordMessageId: CreationOptional<string | null>;
@@ -46,6 +49,7 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare discordPostError: CreationOptional<DiscordPostError | null>;
 
   declare guild?: NonAttribute<Guild>;
+  declare attendanceRecordedBy?: NonAttribute<User | null>;
   declare createdBy?: NonAttribute<User | null>;
   declare cancelledBy?: NonAttribute<User | null>;
   declare series?: NonAttribute<EventSeries | null>;
@@ -72,6 +76,8 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
         seriesId: { type: DataTypes.UUID, allowNull: true },
         tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: true },
         tentativeDeadlineAt: { type: DataTypes.DATE, allowNull: false },
+        attendanceRecordedAt: { type: DataTypes.DATE, allowNull: true },
+        attendanceRecordedByUserId: { type: DataTypes.UUID, allowNull: true },
         discordChannelId: { type: DataTypes.STRING(20), allowNull: true },
         discordMessageId: { type: DataTypes.STRING(20), allowNull: true },
         discordPostError: { type: DataTypes.STRING(30), allowNull: true },
@@ -87,5 +93,6 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
     Event.belongsTo(User, { foreignKey: 'createdByUserId', as: 'createdBy' });
     Event.belongsTo(User, { foreignKey: 'cancelledByUserId', as: 'cancelledBy' });
     Event.belongsTo(EventSeries, { foreignKey: 'seriesId', as: 'series' });
+    Event.belongsTo(User, { foreignKey: 'attendanceRecordedByUserId', as: 'attendanceRecordedBy' });
   }
 }

@@ -1,5 +1,6 @@
 import type { Sequelize } from 'sequelize';
 
+import { Attendance, AttendanceChange } from './attendance.js';
 import { Character } from './character.js';
 import { Event } from './event.js';
 import { EventSeries } from './event-series.js';
@@ -13,6 +14,8 @@ import { SignUp } from './sign-up.js';
 import { User } from './user.js';
 
 export {
+  Attendance,
+  AttendanceChange,
   Character,
   Event,
   EventSeries,
@@ -42,6 +45,8 @@ export function initModels(sequelize: Sequelize): void {
   Event.initModel(sequelize);
   EventSeries.initModel(sequelize);
   SignUp.initModel(sequelize);
+  Attendance.initModel(sequelize);
+  AttendanceChange.initModel(sequelize);
 
   Guild.associate();
   GuildOfficer.associate();
@@ -53,4 +58,6 @@ export function initModels(sequelize: Sequelize): void {
   Event.associate();
   EventSeries.associate();
   SignUp.associate();
+  Attendance.associate();
+  AttendanceChange.associate();
 }

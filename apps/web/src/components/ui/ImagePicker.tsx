@@ -54,7 +54,13 @@ export function ImagePicker({
             component="img"
             src={imageUrl}
             alt={label}
-            sx={{ width: 72, height: 72, objectFit: 'cover', border: `1px solid ${token('ln')}` }}
+            sx={{
+              width: 72,
+              height: 72,
+              objectFit: 'cover',
+              borderRadius: '50%',
+              border: `1px solid ${token('ln')}`,
+            }}
           />
         ) : (
           <Box
@@ -62,6 +68,7 @@ export function ImagePicker({
             sx={{
               width: 72,
               height: 72,
+              borderRadius: '50%',
               display: 'grid',
               placeItems: 'center',
               fontSize: 22,

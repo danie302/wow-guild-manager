@@ -196,3 +196,30 @@ export function signUpsLosingSlots<T extends SlotHolder>(
 
 /** Body of `POST /api/guilds/:guildId/events/:eventId/sign-ups/:signUpId/replace`. */
 export const replaceParticipantSchema = z.object({ replacementId: z.uuid() }).strict();
+
+/** Attendance statuses. Present, Late, and Left early count as attended. */
+export const ATTENDANCE_STATUSES = [
+  'present',
+  'late',
+  'left_early',
+  'bench',
+  'absent_with_notice',
+  'no_show',
+] as const;
+export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
+
+export const ATTENDED_STATUSES: readonly AttendanceStatus[] = ['present', 'late', 'left_early'];
+
+/**
+ * Body of `PUT /api/guilds/:guildId/events/:eventId/attendance`: the whole list. Before the
+ * first save it replaces the draft; after it, members can't be taken off.
+ */
+export const saveAttendanceSchema = z
+  .object({
+    records: z
+      .array(z.object({ memberId: z.uuid(), status: z.enum(ATTENDANCE_STATUSES) }).strict())
+      .max(500),
+  })
+  .strict();
+
+export type SaveAttendanceInput = z.infer<typeof saveAttendanceSchema>;

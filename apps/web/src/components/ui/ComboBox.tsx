@@ -35,6 +35,11 @@ export interface ComboBoxProps {
   onInputChange?: (text: string) => void;
   /** Shown in the field while it's empty. */
   placeholder?: string;
+  /**
+   * `field`: a small muted label like a form's other fields (e.g. beside a Select in a
+   * FormRow), instead of the bold label of a setting.
+   */
+  variant?: 'field';
 }
 
 /** Lowercase, without accents, and with "_" and "/" as spaces, so "sao paulo" finds "São_Paulo". */
@@ -67,13 +72,26 @@ export function ComboBox({
   disabled,
   onInputChange,
   placeholder,
+  variant,
 }: ComboBoxProps) {
   const id = useId();
   const selected = options.find((option) => option.value === value) ?? null;
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0, maxWidth: 420 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: variant === 'field' ? '6px' : '8px',
+        minWidth: 0,
+        maxWidth: 420,
+      }}
+    >
       {!hideLabel && (
-        <Box component="label" htmlFor={id} sx={{ fontWeight: 700 }}>
+        <Box
+          component="label"
+          htmlFor={id}
+          sx={variant === 'field' ? { fontSize: 12, color: token('mt') } : { fontWeight: 700 }}
+        >
           {label}
         </Box>
       )}

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AttendanceResponse,
   CreateEventInput,
+  SaveAttendanceInput,
   EventDiscordPostResponse,
   EventResponse,
   SeriesResponse,
@@ -91,6 +93,29 @@ export function useReplaceParticipant(guildId: string, eventId: string) {
         { method: 'POST', body: { replacementId } },
       ),
   );
+}
+
+/** The event's attendance list, or the draft pre-filled from its sign-ups. */
+export function useAttendance(guildId: string, eventId: string) {
+  return useQuery({
+    queryKey: [...eventKey(guildId, eventId), 'attendance'],
+    queryFn: () =>
+      apiRequest<AttendanceResponse>(`/guilds/${guildId}/events/${eventId}/attendance`),
+  });
+}
+
+export function useSaveAttendance(guildId: string, eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SaveAttendanceInput) =>
+      apiRequest<AttendanceResponse>(`/guilds/${guildId}/events/${eventId}/attendance`, {
+        method: 'PUT',
+        body: input,
+      }),
+    onSuccess: (attendance) => {
+      queryClient.setQueryData([...eventKey(guildId, eventId), 'attendance'], attendance);
+    },
+  });
 }
 
 /** Every change answers with the event, which replaces the cached one; the lists reload. */

@@ -24,6 +24,7 @@ import {
 } from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
+import { AttendanceTab } from './AttendanceTab';
 import { DiscordPostTab } from './DiscordPostTab';
 import { everyWeekText, whenText } from './eventText';
 import { SignUpSections } from './SignUpSections';
@@ -140,6 +141,11 @@ export function EventPage() {
             : undefined
         }
         tabs={[
+          {
+            value: 'attendance',
+            label: t('attendance.tab'),
+            content: <AttendanceTab guildId={guildId} event={data} />,
+          },
           {
             value: 'post',
             label: t('eventPage.post.tab'),

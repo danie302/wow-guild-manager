@@ -40,6 +40,7 @@ export type { FilterChipOption, FilterChipsProps } from './FilterChips';
 export { FormColumns } from './FormColumns';
 export type { FormColumnsProps } from './FormColumns';
 export { FormGrid } from './FormGrid';
+export { FormRow } from './FormRow';
 export { Icon } from './Icon';
 export { IconLabel } from './IconLabel';
 export { LinkCard } from './LinkCard';

@@ -1,5 +1,7 @@
 import {
   eventListQuerySchema,
+  saveAttendanceSchema,
+  type AttendanceResponse,
   replaceParticipantSchema,
   uuidSchema,
   type CreateEventInput,
@@ -12,6 +14,12 @@ import express from 'express';
 import { Op, type WhereOptions } from 'sequelize';
 
 import { Event, EventSeries, SignUp, User, type Guild } from '../db/models/index.js';
+import {
+  attendanceHistory,
+  attendanceList,
+  attendanceOpen,
+  saveAttendance,
+} from '../domain/attendance.js';
 import { DomainError } from '../domain/errors.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
 import { can } from '../domain/permissions.js';
@@ -166,6 +174,40 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     },
   );
 
+  // The attendance list: saved records, or a draft pre-filled from the sign-ups.
+  router.get(
+    `${base}/:eventId/attendance`,
+    requireUser,
+    requireGuildPermission('recordAttendance'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const event = await Event.findOne({
+        where: { id: eventId(req.params.eventId), guildId: guild.id },
+        include: [{ model: User, as: 'attendanceRecordedBy', attributes: ['name'] }],
+      });
+      if (!event) throw new DomainError({ code: 'NOT_FOUND' });
+      res.json(await toAttendanceResponse(event));
+    },
+  );
+
+  // Saves the whole list; after the first save, each change is recorded as a correction.
+  router.put(
+    `${base}/:eventId/attendance`,
+    requireUser,
+    requireGuildPermission('recordAttendance'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const input = parseBody(saveAttendanceSchema, req.body, res);
+      if (!input) return;
+      const id = eventId(req.params.eventId);
+      await saveAttendance(guild, id, input, currentUser(res));
+      const event = await Event.findByPk(id, {
+        include: [{ model: User, as: 'attendanceRecordedBy', attributes: ['name'] }],
+      });
+      res.json(await toAttendanceResponse(event!));
+    },
+  );
+
   // The message the bot posts for the event, for the event page's preview.
   router.get(
     `${base}/:eventId/discord-post`,
@@ -240,6 +282,46 @@ const people = [
   { model: User, as: 'cancelledBy', attributes: ['name'] },
   { model: EventSeries, as: 'series', attributes: ['id', 'name'] },
 ];
+
+async function toAttendanceResponse(event: Event): Promise<AttendanceResponse> {
+  const open = attendanceOpen(event);
+  return {
+    open,
+    recorded: event.attendanceRecordedAt
+      ? {
+          at: event.attendanceRecordedAt.toISOString(),
+          by: event.attendanceRecordedBy?.name ?? null,
+        }
+      : null,
+    records: open
+      ? (await attendanceList(event)).map((row) => ({
+          memberId: row.member.id,
+          discordName: row.member.discordName,
+          character: {
+            id: row.character.id,
+            name: row.character.name,
+            class: row.character.characterClass,
+            race: row.character.race,
+          },
+          role: row.role,
+          signedUp: row.signedUp,
+          status: row.status,
+        }))
+      : [],
+    history: (await attendanceHistory(event.id)).map((change) => ({
+      id: change.id,
+      memberId: change.attendance!.memberId,
+      character: {
+        name: change.attendance!.character!.name,
+        class: change.attendance!.character!.characterClass,
+      },
+      from: change.fromStatus,
+      to: change.toStatus,
+      by: change.changedBy?.name ?? null,
+      at: change.createdAt.toISOString(),
+    })),
+  };
+}
 
 export function toSignUpResponse(signUp: SignUp): SignUpResponse {
   return {

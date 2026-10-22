@@ -278,6 +278,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 ### Recording attendance
 - Once an event starts, the Guild Master or an Officer records attendance for every member who signed up, including waitlisted ones. Cancelled events have no attendance.
 - The list is pre-filled from the sign-ups: Confirmed and Tentative participants start as Present, waitlisted characters start as Bench, and Declined sign-ups start as Absent with notice.
+- Roster members who didn't sign up but took part (e.g. called in at the last minute) can be added to the list with their main character. Before the first save, an added member can be taken off the list again; after it, they stay, and their addition is recorded in the change history.
 - Attendance statuses:
   - **Present**: attended the whole event.
   - **Late**: arrived after the start time.
