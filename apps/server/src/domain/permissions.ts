@@ -38,6 +38,10 @@ export const PERMISSIONS = {
   viewEvents: ['guild_master', 'officer'],
   /** Create, edit, and cancel events. */
   manageEvents: ['guild_master', 'officer'],
+  /** Remove event participants and replace Tentative ones with waitlisted characters. */
+  manageParticipants: ['guild_master', 'officer'],
+  /** Pre-confirm participants when creating a raid. */
+  preConfirmParticipants: ['guild_master'],
 } as const satisfies Record<string, readonly GuildAccess[]>;
 
 export type GuildAction = keyof typeof PERMISSIONS;

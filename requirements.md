@@ -259,7 +259,10 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - When an event's date or time changes (edited on its own or through its recurring series), its participants (in a slot or on the waitlist) get a direct message. A series edit sends each member one message listing all their changed events. Other edits (name, description) only update the post.
 - A participant can withdraw at any time by setting their status to Declined. This releases their spot.
 - In every event type, a Tentative participant who hasn't changed to Confirmed by the event's Tentative deadline is replaced by the next waitlisted character with the same combat role. If nobody is waitlisted for that role, they keep their spot.
-- The Guild Master and Officers can also replace a Tentative participant with a waitlisted character manually at any time.
+- The Guild Master and Officers can also replace a Tentative participant with a waitlisted character manually at any time. They pick any waitlisted character of the same combat role; the Tentative participant moves to the end of that waitlist, and both get a direct message.
+- The Guild Master and Officers can remove a participant from an event in the web app, after confirming. Their sign-up is deleted (they can sign up again from Discord), their spot goes to the earliest waitlisted character of that role, and they get a direct message saying who removed them. These changes can't be undone.
+- There's no separate way to move a waitlisted character into an open slot: open slots always go to the waitlist right away.
+- When the Guild Master creates a one-time raid (not a recurring series), they can pre-confirm participants: each is a character and a combat role it can fill, from members whose rank can join raids. They start as Confirmed in a slot, within the role's slots, and get a direct message.
 
 ### Reminders and alerts
 - Tentative participants get a direct message at the guild's reminder time before the Tentative deadline, reminding them to confirm. Someone who signs up as Tentative after the reminder time gets the reminder right away.

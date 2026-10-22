@@ -20,6 +20,8 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   editCharacters: { guildMaster: true, officer: true },
   viewEvents: { guildMaster: true, officer: true },
   manageEvents: { guildMaster: true, officer: true },
+  manageParticipants: { guildMaster: true, officer: true },
+  preConfirmParticipants: { guildMaster: true, officer: false },
 };
 
 describe('permissions', () => {

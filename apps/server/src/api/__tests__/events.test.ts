@@ -7,6 +7,7 @@ import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
 import { Character, Event, Member, SignUp, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
+import { replaceGuildOfficers } from '../../domain/officers.js';
 
 const gm = '200000000000000001';
 const day = 24 * 60 * 60 * 1000;
@@ -235,7 +236,7 @@ describe('sign-ups of an event', () => {
     expect(listed.body).toEqual([
       {
         id: signUp.id,
-        character: { id: character.id, name: 'Thrall', class: 'shaman' },
+        character: { id: character.id, name: 'Thrall', class: 'shaman', race: 'orc' },
         role: 'healer',
         status: 'tentative',
         placement: 'slot',
@@ -253,5 +254,68 @@ describe('sign-ups of an event', () => {
 
     expect(jobs.payloads('moved-to-waitlist')).toEqual([{ signUpId: signUp.id }]);
     expect(jobs.payloads('events-rescheduled')).toEqual([{ memberId: member.id, eventIds: [id] }]);
+  });
+});
+
+describe('managing participants', () => {
+  async function warrior(guildId: string, discordUserId: string) {
+    const member = await Member.create({
+      guildId,
+      discordUserId,
+      discordName: 'Grommash',
+      discordAvatar: null,
+      rank: 'raider',
+    });
+    return Character.create({
+      memberId: member.id,
+      name: `Grom${discordUserId.slice(-2)}`,
+      faction: 'horde',
+      race: 'orc',
+      characterClass: 'warrior',
+      level: 60,
+      professions: [],
+      isMain: true,
+    });
+  }
+  const raidWith = (characterId: string) => ({
+    ...raid,
+    startsAt: inDays(3),
+    preConfirmed: [{ characterId, role: 'tank' }],
+  });
+
+  it('lets only the Guild Master pre-confirm, and tells the participants', async () => {
+    const { app, agent, jobs, base, guild } = await setup();
+    const character = await warrior(guild.id, '200000000000000010');
+    await replaceGuildOfficers(guild.id, ['200000000000000002']);
+    const officer = await loginAs(app, '200000000000000002');
+
+    const refused = await officer.post(base).send(raidWith(character.id));
+    const created = await agent.post(base).send(raidWith(character.id));
+
+    expect(refused.status).toBe(403);
+    expect(created.status).toBe(201);
+    const [preConfirmed] = await SignUp.findAll({ where: { eventId: event(created).id } });
+    expect(jobs.payloads('pre-confirmed')).toEqual([{ signUpId: preConfirmed!.id }]);
+  });
+
+  it('removes a participant and tells them who did it', async () => {
+    const { agent, jobs, base, guild } = await setup();
+    const character = await warrior(guild.id, '200000000000000010');
+    const id = event(await agent.post(base).send(raidWith(character.id))).id;
+    const [participant] = (await agent.get(`${base}/${id}/sign-ups`)).body as SignUpResponse[];
+
+    const response = await agent.delete(`${base}/${id}/sign-ups/${participant!.id}`);
+
+    expect(response.body).toEqual([]);
+    expect(jobs.payloads('participant-removed')).toEqual([
+      { memberId: character.memberId, eventId: id, byUserId: expect.any(String) as string },
+    ]);
+    expect(
+      (
+        await agent.post(`${base}/${id}/sign-ups/${participant!.id}/replace`).send({
+          replacementId: participant!.id,
+        })
+      ).status,
+    ).toBe(404);
   });
 });

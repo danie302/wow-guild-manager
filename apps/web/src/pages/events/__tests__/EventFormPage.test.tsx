@@ -1,9 +1,9 @@
-import type { EventResponse, SignUpResponse } from '@wgm/shared';
-import { screen } from '@testing-library/react';
+import type { EventResponse, RosterMember, SignUpResponse } from '@wgm/shared';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { ashenId, mockApi, testUser } from '../../../test/api';
+import { ashenId, mockApi, testGuild, testUser } from '../../../test/api';
 import { renderRoute } from '../../../test/render';
 
 const api = `/api/guilds/${ashenId}/events`;
@@ -135,10 +135,79 @@ describe('EventFormPage', () => {
     });
   });
 
+  it('lets the Guild Master pre-confirm participants of a new raid', async () => {
+    const raider = (name: string, rank: RosterMember['rank']): RosterMember => ({
+      id: `019a0c3e-5b1e-7c2a-9f3d-00000000100${name.length}`,
+      discordUserId: `2000000000000000${name.length}`,
+      discordName: name,
+      avatarUrl: '',
+      rank,
+      baseRank: 'raider',
+      leftDiscordAt: null,
+      characters: [
+        {
+          id: `019a0c3e-5b1e-7c2a-9f3d-00000000110${name.length}`,
+          name: `${name}char`,
+          faction: 'horde',
+          race: 'orc',
+          class: 'warrior',
+          level: 60,
+          professions: [],
+          isMain: true,
+        },
+      ],
+    });
+    const fetchMock = mockApi({
+      '/api/me': () => Response.json(me),
+      [`/api/guilds/${ashenId}/members`]: () =>
+        Response.json([raider('Saurfang', 'raider'), raider('Peon', 'member')]),
+      [`POST ${api}`]: () => Response.json(saved, { status: 201 }),
+      [`${api}/${eventId}`]: () => Response.json(saved),
+    });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/new`);
+
+    await user.type(await screen.findByLabelText('Name'), 'Molten Core');
+    await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
+    await user.type(screen.getByLabelText('Time'), '16:00');
+    const member = screen.getByRole('combobox', { name: 'Member' });
+    await waitFor(() => expect(member).toBeEnabled());
+    await user.click(member);
+    // Members can't join raids, so they aren't offered.
+    expect(screen.queryByRole('option', { name: /Peon/ })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('option', { name: /Saurfang/ }));
+    await user.click(screen.getByRole('button', { name: 'Tank' }));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+    await user.click(screen.getByRole('button', { name: 'Create event' }));
+
+    await screen.findByRole('heading', { name: 'Molten Core' });
+    expect(bodyOf(fetchMock, 'POST')).toMatchObject({
+      preConfirmed: [{ characterId: '019a0c3e-5b1e-7c2a-9f3d-000000001108', role: 'tank' }],
+    });
+  });
+
+  it("doesn't offer pre-confirming to Officers, or for a dungeon", async () => {
+    mockApi({
+      '/api/me': () => Response.json(me),
+      [`/api/guilds/${ashenId}`]: () => Response.json({ ...testGuild, access: 'officer' }),
+    });
+    renderRoute(`/guilds/${ashenId}/events/new`);
+
+    await screen.findByLabelText('Name');
+    expect(
+      screen.queryByRole('region', { name: 'Pre-confirmed participants' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('warns who moves to the waitlist when a role gets fewer slots', async () => {
     const tank = (name: string, minute: number): SignUpResponse => ({
       id: `019a0c3e-5b1e-7c2a-9f3d-0000000006${minute}`,
-      character: { id: `019a0c3e-5b1e-7c2a-9f3d-0000000007${minute}`, name, class: 'warrior' },
+      character: {
+        id: `019a0c3e-5b1e-7c2a-9f3d-0000000007${minute}`,
+        name,
+        class: 'warrior',
+        race: 'orc',
+      },
       role: 'tank',
       status: 'confirmed',
       placement: 'slot',

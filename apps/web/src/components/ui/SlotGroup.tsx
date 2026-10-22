@@ -117,4 +117,115 @@ function OpenRow({ number, label, hint }: { number: number; label: string; hint?
   );
 }
 
-export const SlotGroup = Object.assign(SlotGroupRoot, { Row, OpenRow });
+/** The parts of a row: who, a detail, a status, and actions at the end. */
+function Name({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      component="span"
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: '1 1 150px' }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+function Detail({ children }: { children: ReactNode }) {
+  return (
+    <Box component="span" sx={{ fontSize: 13, color: token('mt'), flex: '1 1 150px' }}>
+      {children}
+    </Box>
+  );
+}
+
+function Status({ children }: { children: ReactNode }) {
+  return (
+    <Box component="span" sx={{ flex: '0 0 auto', minWidth: 100 }}>
+      {children}
+    </Box>
+  );
+}
+
+function Actions({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      component="span"
+      sx={{ display: 'flex', justifyContent: 'flex-end', gap: '4px', ml: 'auto' }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** The role's waitlist under its slots, in order. */
+function Waitlist({
+  label,
+  count,
+  children,
+}: {
+  label: string;
+  count: string;
+  children: ReactNode;
+}) {
+  return (
+    <Box
+      component="section"
+      aria-label={label}
+      sx={{ display: 'flex', flexDirection: 'column', mt: 1.5, bgcolor: token('sf') }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, p: '8px 8px 6px' }}>
+        <Box
+          component="span"
+          sx={{
+            fontSize: 11.5,
+            letterSpacing: '.08em',
+            textTransform: 'uppercase',
+            color: token('mt'),
+            fontWeight: 700,
+          }}
+        >
+          {label}
+        </Box>
+        <Box component="span" sx={{ fontSize: 12, fontWeight: 700 }}>
+          {count}
+        </Box>
+      </Box>
+      {children}
+    </Box>
+  );
+}
+
+/** A waitlisted character, with its place in line. */
+function WaitlistRow({ position, children }: { position: number; children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '4px 12px',
+        p: '5px 8px',
+        minHeight: 40,
+        borderTop: `1px solid ${token('ln')}`,
+      }}
+    >
+      <Box
+        component="span"
+        sx={{ fontSize: 12, fontWeight: 800, color: token('mt'), width: 22, flex: 'none' }}
+      >
+        #{position}
+      </Box>
+      {children}
+    </Box>
+  );
+}
+
+export const SlotGroup = Object.assign(SlotGroupRoot, {
+  Row,
+  OpenRow,
+  Name,
+  Detail,
+  Status,
+  Actions,
+  Waitlist,
+  WaitlistRow,
+});

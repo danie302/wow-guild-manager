@@ -31,7 +31,7 @@ The visual design for the web app, made in Claude Design. Last downloaded on 202
 | 13 | User settings (time zone, language, theme) | 011, 035 |
 | — | Member view: the read-only versions of Events, Event detail (with "Your gear check"), Roster, and the member's own page. Pick "member" in the prototype's Login outcome setting. | 036 |
 
-Shared patterns: a confirmation dialog for picking someone from the waitlist, and a toast with **Undo** after removing, replacing, or promoting a participant.
+Shared patterns: a confirmation dialog for picking someone from the waitlist. The design's toast with **Undo** and its **Move to slot** button aren't built (see below).
 
 To see each kind of user in the prototype, change **Login outcome** (officer, gm, member, new-guild, no-role) in Claude Design's Tweaks panel, then sign out and log in again.
 
@@ -53,6 +53,7 @@ The tokens below are implemented in `apps/web/src/components/ui/tokens.ts` (stor
 ## Differences from the requirements
 
 - **Event detail, Discord post tab (09)** shows Tank, Healer, DPS, Tentative, and Declined buttons on the post. The app has **Sign up** and **Declined** buttons instead: Sign up opens a message only the member sees, with a character select, a combat role select, and Confirmed and Tentative buttons (story 023, decided on 2026-10-21).
+- **Event detail, Sign-ups tab (09)** has **Move to slot** (and dragging) and a toast with **Undo** after removing, replacing, or promoting. The app has neither: open slots always go to the waitlist right away (story 024), and removing asks for confirmation instead of offering Undo. Replacing works only on Tentative participants (story 025, decided on 2026-10-21).
 - **The event post's layout (09)** lists each role as numbered lines ("1. Name"). The app lays it out like Raid-Helper instead: a header with the leader, sign-up count, date, time, and time left, then a column per role with class icons, sign-up numbers across the event, and names (story 023, decided on 2026-10-21).
 
 ### Notes for implementation

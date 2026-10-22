@@ -1,5 +1,6 @@
 import {
   COMBAT_ROLES,
+  EVENT_ERROR_CODES,
   rolesFor,
   signUpsLosingSlots,
   uuidSchema,
@@ -10,8 +11,9 @@ import {
 } from '@wgm/shared';
 import { Op, Transaction } from 'sequelize';
 
-import { Character, Event, SignUp, type Guild, type Member } from '../db/models/index.js';
+import { Character, Event, Member, SignUp, type Guild } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
+import { DomainError, DomainValidationError } from './errors.js';
 import { memberRank } from './ranks.js';
 import { memberOnServer } from './roster.js';
 
@@ -26,12 +28,23 @@ export interface SignUpChanges {
   movedToWaitlist: string[];
   /** Participants of events whose date or time changed. */
   rescheduled: { memberId: string; eventId: string }[];
+  /** Tentative participants replaced by a waitlisted character (now at the end of the waitlist). */
+  replaced: string[];
+  /** Participants an Officer or the Guild Master removed from an event. */
+  removed: { memberId: string; eventId: string; byUserId: string }[];
   /** Events whose sign-ups changed outside a sign-up, so their posts need updating. */
   eventIds: string[];
 }
 
 export function noSignUpChanges(): SignUpChanges {
-  return { promoted: [], movedToWaitlist: [], rescheduled: [], eventIds: [] };
+  return {
+    promoted: [],
+    movedToWaitlist: [],
+    rescheduled: [],
+    replaced: [],
+    removed: [],
+    eventIds: [],
+  };
 }
 
 export function mergeSignUpChanges(...all: SignUpChanges[]): SignUpChanges {
@@ -39,6 +52,8 @@ export function mergeSignUpChanges(...all: SignUpChanges[]): SignUpChanges {
     promoted: all.flatMap((changes) => changes.promoted),
     movedToWaitlist: all.flatMap((changes) => changes.movedToWaitlist),
     rescheduled: all.flatMap((changes) => changes.rescheduled),
+    replaced: all.flatMap((changes) => changes.replaced),
+    removed: all.flatMap((changes) => changes.removed),
     eventIds: [...new Set(all.flatMap((changes) => changes.eventIds))],
   };
 }
@@ -103,6 +118,126 @@ export async function releaseSignUps(
     }
     return mergeSignUpChanges(...all);
   });
+}
+
+/**
+ * The Guild Master pre-confirms participants of a new raid: each character must be active on
+ * the roster, its member able to join raids and still in the Discord server, its class able to
+ * fill the role, and each member at most once. The roles' slots were checked with the input.
+ */
+export async function preConfirm(
+  guild: Guild,
+  event: Event,
+  entries: { characterId: string; role: CombatRole }[],
+  now: Date,
+): Promise<void> {
+  const invalid = (
+    index: number,
+    code: (typeof EVENT_ERROR_CODES)[keyof typeof EVENT_ERROR_CODES],
+  ) => new DomainValidationError([{ field: `preConfirmed.${index}`, code }]);
+  const members = new Set<string>();
+  for (const [index, entry] of entries.entries()) {
+    const character = await Character.findOne({
+      where: { id: entry.characterId, removedAt: null },
+      include: [{ model: Member, as: 'member', where: { guildId: guild.id, removedAt: null } }],
+    });
+    const member = character?.member;
+    if (
+      !character ||
+      !member ||
+      member.leftDiscordAt ||
+      !canJoin(await memberRank(member, guild), event.type)
+    ) {
+      throw invalid(index, EVENT_ERROR_CODES.preConfirmedCannotJoin);
+    }
+    if (!rolesFor(character.characterClass).includes(entry.role)) {
+      throw invalid(index, EVENT_ERROR_CODES.preConfirmedRoleNotAllowed);
+    }
+    if (members.has(member.id)) throw invalid(index, EVENT_ERROR_CODES.preConfirmedTwice);
+    members.add(member.id);
+    await SignUp.create({
+      eventId: event.id,
+      memberId: member.id,
+      characterId: character.id,
+      role: entry.role,
+      status: 'confirmed',
+      placement: 'slot',
+      signedUpAt: now,
+    });
+  }
+}
+
+/**
+ * The Guild Master or an Officer removes a participant (in a slot or on the waitlist) from an
+ * event that hasn't started. Their sign-up is deleted, so they can sign up again, and their
+ * spot goes to the waitlist.
+ */
+export async function removeParticipant(
+  guild: Guild,
+  eventId: string,
+  signUpId: string,
+  by: { id: string },
+  now = new Date(),
+): Promise<SignUpChanges> {
+  return transaction(async () => {
+    const event = await openEvent(guild, eventId, now);
+    const signUp = await SignUp.findOne({
+      where: { id: signUpId, eventId: event.id, placement: { [Op.ne]: null } },
+    });
+    if (!signUp) throw new DomainError({ code: 'NOT_FOUND' });
+    await signUp.destroy();
+    const changes = await balanceSlots(event);
+    changes.removed.push({ memberId: signUp.memberId, eventId: event.id, byUserId: by.id });
+    return changes;
+  });
+}
+
+/**
+ * The Guild Master or an Officer replaces a Tentative participant with any waitlisted
+ * character of the same role: they swap, and the Tentative participant goes to the end of the
+ * waitlist.
+ */
+export async function replaceTentative(
+  guild: Guild,
+  eventId: string,
+  signUpId: string,
+  replacementId: string,
+  now = new Date(),
+): Promise<SignUpChanges> {
+  return transaction(async () => {
+    const event = await openEvent(guild, eventId, now);
+    const [target, replacement] = await Promise.all([
+      SignUp.findOne({ where: { id: signUpId, eventId: event.id } }),
+      SignUp.findOne({ where: { id: replacementId, eventId: event.id } }),
+    ]);
+    if (!target || !replacement) throw new DomainError({ code: 'NOT_FOUND' });
+    if (target.placement !== 'slot' || target.status !== 'tentative') {
+      throw new DomainError({ code: 'SIGN_UP_NOT_TENTATIVE' });
+    }
+    if (replacement.placement !== 'waitlist' || replacement.role !== target.role) {
+      throw new DomainError({ code: 'NOT_ON_WAITLIST' });
+    }
+    await target.update({ placement: 'waitlist', signedUpAt: now });
+    await replacement.update({ placement: 'slot' });
+    return {
+      ...noSignUpChanges(),
+      promoted: [replacement.id],
+      replaced: [target.id],
+    };
+  });
+}
+
+/** The guild's event, locked; it must not have started or been cancelled. */
+async function openEvent(guild: Guild, eventId: string, now: Date): Promise<Event> {
+  if (!uuidSchema.safeParse(eventId).success) throw new DomainError({ code: 'NOT_FOUND' });
+  const event = await Event.findOne({
+    where: { id: eventId, guildId: guild.id },
+    lock: Transaction.LOCK.UPDATE,
+  });
+  if (!event) throw new DomainError({ code: 'NOT_FOUND' });
+  if (event.cancelledAt) throw new DomainError({ code: 'EVENT_CANCELLED' });
+  if (event.startsAt <= now) throw new DomainError({ code: 'EVENT_STARTED' });
+  return event;
 }
 
 /** Who can join each type of event, from "Who can join events" in requirements.md. */
@@ -285,7 +420,13 @@ export async function decline(
 export async function eventSignUps(eventId: string): Promise<SignUp[]> {
   return SignUp.findAll({
     where: { eventId },
-    include: [{ model: Character, as: 'character', attributes: ['id', 'name', 'characterClass'] }],
+    include: [
+      {
+        model: Character,
+        as: 'character',
+        attributes: ['id', 'name', 'characterClass', 'race'],
+      },
+    ],
     order: [
       ['signedUpAt', 'ASC'],
       ['id', 'ASC'],

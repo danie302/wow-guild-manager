@@ -13,7 +13,7 @@ import type { z } from 'zod';
 import { Event, type Guild, type User } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
 import { DomainError, DomainValidationError } from './errors.js';
-import { balanceSlots, participantIds, type SignUpChanges } from './sign-ups.js';
+import { balanceSlots, participantIds, preConfirm, type SignUpChanges } from './sign-ups.js';
 
 /**
  * How many hours before an event Tentative sign-ups close, until story 026 makes it a guild
@@ -26,7 +26,11 @@ export function tentativeDeadline(event: Pick<Event, 'startsAt'>): Date {
   return new Date(event.startsAt.getTime() - DEFAULT_TENTATIVE_DEADLINE_HOURS * 60 * 60 * 1000);
 }
 
-/** Creates an event. It must start in the future. */
+/**
+ * Creates an event. It must start in the future. A raid can come with pre-confirmed
+ * participants (checked here; only the Guild Master may send them, which the route checks):
+ * they start as Confirmed in a slot.
+ */
 export async function createEvent(
   guild: Guild,
   input: CreateEventInput,
@@ -35,11 +39,15 @@ export async function createEvent(
 ): Promise<Event> {
   const event = parseInput(createEventSchema, input);
   checkStartsInFuture(event.startsAt, now);
-  return Event.create({
-    guildId: guild.id,
-    type: event.type,
-    ...eventColumns(event),
-    createdByUserId: createdBy.id,
+  return transaction(async () => {
+    const created = await Event.create({
+      guildId: guild.id,
+      type: event.type,
+      ...eventColumns(event),
+      createdByUserId: createdBy.id,
+    });
+    await preConfirm(guild, created, event.preConfirmed ?? [], now);
+    return created;
   });
 }
 

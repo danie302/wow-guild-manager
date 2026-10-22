@@ -53,6 +53,46 @@ export function useEventSignUps(guildId: string, eventId: string) {
   });
 }
 
+/** Changes to the participants answer with the event's sign-ups; the preview reloads. */
+function useParticipantMutation<Input>(
+  guildId: string,
+  eventId: string,
+  request: (input: Input) => Promise<SignUpResponse[]>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: request,
+    onSuccess: async (signUps) => {
+      queryClient.setQueryData([...eventKey(guildId, eventId), 'sign-ups'], signUps);
+      await queryClient.invalidateQueries({
+        queryKey: [...eventKey(guildId, eventId), 'discord-post'],
+      });
+    },
+  });
+}
+
+/** Removes a participant; their spot goes to the waitlist. */
+export function useRemoveParticipant(guildId: string, eventId: string) {
+  return useParticipantMutation(guildId, eventId, (signUpId: string) =>
+    apiRequest<SignUpResponse[]>(`/guilds/${guildId}/events/${eventId}/sign-ups/${signUpId}`, {
+      method: 'DELETE',
+    }),
+  );
+}
+
+/** Gives a Tentative participant's slot to a waitlisted character of the same role. */
+export function useReplaceParticipant(guildId: string, eventId: string) {
+  return useParticipantMutation(
+    guildId,
+    eventId,
+    ({ signUpId, replacementId }: { signUpId: string; replacementId: string }) =>
+      apiRequest<SignUpResponse[]>(
+        `/guilds/${guildId}/events/${eventId}/sign-ups/${signUpId}/replace`,
+        { method: 'POST', body: { replacementId } },
+      ),
+  );
+}
+
 /** Every change answers with the event, which replaces the cached one; the lists reload. */
 function useEventMutation<Input>(
   guildId: string,

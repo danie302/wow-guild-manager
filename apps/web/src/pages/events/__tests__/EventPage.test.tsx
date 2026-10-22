@@ -1,4 +1,4 @@
-import type { EventDiscordPostResponse, EventResponse } from '@wgm/shared';
+import type { EventDiscordPostResponse, EventResponse, SignUpResponse } from '@wgm/shared';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -169,5 +169,101 @@ describe('EventPage', () => {
       'href',
       `/guilds/${ashenId}/settings`,
     );
+  });
+
+  describe('participants', () => {
+    const signUp = (
+      n: number,
+      name: string,
+      role: SignUpResponse['role'],
+      placement: SignUpResponse['placement'],
+      status: SignUpResponse['status'] = 'confirmed',
+    ): SignUpResponse => ({
+      id: `019a0c3e-5b1e-7c2a-9f3d-00000000080${n}`,
+      character: {
+        id: `019a0c3e-5b1e-7c2a-9f3d-00000000090${n}`,
+        name,
+        class: 'warrior',
+        race: 'orc',
+      },
+      role,
+      status,
+      placement,
+      signedUpAt: `${nextYear}-11-01T10:0${n}:00.000Z`,
+    });
+    const signUps = [
+      signUp(1, 'Saurfang', 'tank', 'slot', 'tentative'),
+      signUp(2, 'Grommash', 'tank', 'slot'),
+      signUp(3, 'Rexxar', 'tank', 'waitlist'),
+      signUp(4, 'Cairne', null, null, 'declined'),
+    ];
+    const small = {
+      ...saved,
+      size: 5,
+      type: 'pvp' as const,
+      slots: { tank: 2, healer: 1, dps: 2 },
+    };
+
+    it('shows participants by role, the waitlist, and who declined', async () => {
+      mockApi({
+        [`${api}/${eventId}`]: () => Response.json(small),
+        [`${api}/${eventId}/sign-ups`]: () => Response.json(signUps),
+      });
+      renderRoute(`/guilds/${ashenId}/events/${eventId}`);
+
+      const tanks = await screen.findByRole('region', { name: 'Tanks' });
+      expect(await within(tanks).findByText('Saurfang')).toBeInTheDocument();
+      expect(within(tanks).getByText('Tentative')).toBeInTheDocument();
+      expect(within(tanks).getByText('2/2 filled')).toBeInTheDocument();
+      const waitlist = within(tanks).getByRole('region', { name: 'Waitlist' });
+      expect(within(waitlist).getByText('Rexxar')).toBeInTheDocument();
+      expect(within(waitlist).getByText('#1')).toBeInTheDocument();
+      const declined = screen.getByRole('region', { name: 'Declined (1)' });
+      expect(within(declined).getByText('Cairne')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('region', { name: 'Healers' })).getByText('No one on the waitlist'),
+      ).toBeInTheDocument();
+    });
+
+    it('removes a participant after asking', async () => {
+      const fetchMock = mockApi({
+        [`${api}/${eventId}`]: () => Response.json(small),
+        [`${api}/${eventId}/sign-ups`]: () => Response.json(signUps),
+        [`DELETE ${api}/${eventId}/sign-ups/${signUps[1]!.id}`]: () =>
+          Response.json([signUps[0], { ...signUps[2], placement: 'slot' }, signUps[3]]),
+      });
+      const user = userEvent.setup();
+      renderRoute(`/guilds/${ashenId}/events/${eventId}`);
+
+      const tanks = await screen.findByRole('region', { name: 'Tanks' });
+      await within(tanks).findByText('Grommash');
+      await user.click(within(tanks).getAllByRole('button', { name: 'Remove' })[1]!);
+      const dialog = await screen.findByRole('dialog', { name: 'Remove Grommash from the event?' });
+      await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
+
+      expect(await within(tanks).findByText('Rexxar')).toBeInTheDocument();
+      expect(within(tanks).queryByText('Grommash')).not.toBeInTheDocument();
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(true);
+    });
+
+    it('replaces a Tentative participant with a waitlisted character', async () => {
+      const fetchMock = mockApi({
+        [`${api}/${eventId}`]: () => Response.json(small),
+        [`${api}/${eventId}/sign-ups`]: () => Response.json(signUps),
+        [`POST ${api}/${eventId}/sign-ups/${signUps[0]!.id}/replace`]: () => Response.json(signUps),
+      });
+      const user = userEvent.setup();
+      renderRoute(`/guilds/${ashenId}/events/${eventId}`);
+
+      const tanks = await screen.findByRole('region', { name: 'Tanks' });
+      await user.click(await within(tanks).findByRole('button', { name: 'Replace' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Replace Saurfang' });
+      await user.click(within(dialog).getByRole('button', { name: 'Give the spot' }));
+
+      const call = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.endsWith('/replace'),
+      );
+      expect(JSON.parse(call![1]!.body as string)).toEqual({ replacementId: signUps[2]!.id });
+    });
   });
 });

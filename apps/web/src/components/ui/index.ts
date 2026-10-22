@@ -57,6 +57,8 @@ export type { MeterListItem } from './MeterList';
 export { MonthCalendar } from './MonthCalendar';
 export type { MonthCalendarDay, MonthCalendarEntry, MonthCalendarProps } from './MonthCalendar';
 export type { LoadingProps, NoticeProps } from './Notice';
+export { NameList } from './NameList';
+export type { NameListProps } from './NameList';
 export { Page } from './Page';
 export { PageColumns } from './PageColumns';
 export type { PageColumnsProps } from './PageColumns';

@@ -150,6 +150,8 @@ describe('notifySignUpChanges', () => {
         { memberId: 'm1', eventId: 'e2' },
         { memberId: 'm2', eventId: 'e1' },
       ],
+      replaced: [],
+      removed: [],
       eventIds: ['e3'],
     });
 

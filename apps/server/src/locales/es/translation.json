@@ -101,6 +101,10 @@
     "promoted": "Se liberó una plaza en **{{event}}** ({{time}}): {{character}} entra como {{role}}. Si ya no puedes ir, pulsa Rechazado en el evento.",
     "movedToWaitlist": "**{{event}}** ({{time}}) ahora tiene menos plazas de {{role}}, así que {{character}} pasó al principio de la lista de espera. Recuperas una plaza si se libera alguna.",
     "rescheduled_one": "Cambió la hora de un evento en el que estás inscrito:",
-    "rescheduled_other": "Cambió la hora de {{count}} eventos en los que estás inscrito:"
+    "rescheduled_other": "Cambió la hora de {{count}} eventos en los que estás inscrito:",
+    "replaced": "**{{event}}** ({{time}}): {{character}} estaba como Provisional, así que su plaza pasó a alguien de la lista de espera. Ahora {{character}} está al final de la lista de espera de {{role}} y obtiene una plaza si se libera alguna.",
+    "preConfirmed": "Estás preconfirmado en **{{event}}** ({{time}}) con {{character}} como {{role}}. Si no puedes ir, pulsa Rechazado en el evento.",
+    "removed": "{{name}} te quitó de **{{event}}** ({{time}}). Puedes volver a inscribirte desde el mensaje del evento.",
+    "someone": "Un Officer"
   }
 }

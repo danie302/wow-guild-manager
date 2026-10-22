@@ -1,11 +1,27 @@
+import { CLASS_NAMES, RACE_NAMES, type SignUpResponse } from '@wgm/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
 import { ApiRequestError } from '../../api/client';
-import { useCancelEvent, useEvent } from '../../api/events';
+import {
+  useCancelEvent,
+  useEvent,
+  useEventSignUps,
+  useRemoveParticipant,
+  useReplaceParticipant,
+} from '../../api/events';
 import { guildPath, useGuildIdParam } from '../../app/guildSelection';
-import { Button, ConfirmDialog, DetailHeader, Loading, Notice, Page } from '../../components/ui';
+import {
+  ActionList,
+  Button,
+  ConfirmDialog,
+  DetailHeader,
+  Dialog,
+  Loading,
+  Notice,
+  Page,
+} from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
 import { DiscordPostTab } from './DiscordPostTab';
@@ -24,7 +40,12 @@ export function EventPage() {
   const eventId = useParams().eventId!;
   const event = useEvent(guildId, eventId);
   const cancel = useCancelEvent(guildId, eventId);
+  const signUps = useEventSignUps(guildId, eventId);
+  const removeParticipant = useRemoveParticipant(guildId, eventId);
+  const replaceParticipant = useReplaceParticipant(guildId, eventId);
   const [confirming, setConfirming] = useState(false);
+  const [removing, setRemoving] = useState<SignUpResponse | null>(null);
+  const [replacing, setReplacing] = useState<SignUpResponse | null>(null);
 
   if (event.isPending) return <Loading label={t('events.loading')} />;
   if (event.error instanceof ApiRequestError && event.error.status === 404) {
@@ -90,9 +111,24 @@ export function EventPage() {
           {apiErrorText(t, cancel.error)}
         </Notice>
       )}
+      {(removeParticipant.error ?? replaceParticipant.error) && (
+        <Notice tone="bad" title={t('eventPage.participantFailed')}>
+          {apiErrorText(t, (removeParticipant.error ?? replaceParticipant.error)!)}
+        </Notice>
+      )}
 
       <SignUpSections
         slots={data.slots}
+        signUps={signUps.data}
+        actions={
+          changeable
+            ? {
+                onRemove: setRemoving,
+                onReplace: setReplacing,
+                busy: removeParticipant.isPending || replaceParticipant.isPending,
+              }
+            : undefined
+        }
         tabs={[
           {
             value: 'post',
@@ -115,6 +151,57 @@ export function EventPage() {
       >
         {t('eventPage.cancelBody')}
       </ConfirmDialog>
+
+      <ConfirmDialog
+        open={removing !== null}
+        title={t('eventPage.removeTitle', { name: removing?.character.name })}
+        confirmLabel={t('eventPage.remove')}
+        cancelLabel={t('eventPage.keepParticipant')}
+        onCancel={() => setRemoving(null)}
+        onConfirm={() => {
+          removeParticipant.mutate(removing!.id);
+          setRemoving(null);
+        }}
+      >
+        {t('eventPage.removeBody', { name: removing?.character.name })}
+      </ConfirmDialog>
+
+      <Dialog
+        open={replacing !== null}
+        title={t('eventPage.replaceTitle', { name: replacing?.character.name })}
+        description={t('eventPage.replaceBody', { name: replacing?.character.name })}
+        onClose={() => setReplacing(null)}
+        actions={
+          <Button size="medium" onClick={() => setReplacing(null)}>
+            {t('eventPage.keepParticipant')}
+          </Button>
+        }
+      >
+        <ActionList label={t('eventPage.waitlist')}>
+          {(signUps.data ?? [])
+            .filter((s) => s.placement === 'waitlist' && s.role === replacing?.role)
+            .map((candidate, index) => (
+              <ActionList.Item
+                key={candidate.id}
+                title={`#${index + 1} ${candidate.character.name}`}
+                detail={`${CLASS_NAMES[candidate.character.class]} · ${RACE_NAMES[candidate.character.race]}`}
+                actions={
+                  <Button
+                    onClick={() => {
+                      replaceParticipant.mutate({
+                        signUpId: replacing!.id,
+                        replacementId: candidate.id,
+                      });
+                      setReplacing(null);
+                    }}
+                  >
+                    {t('eventPage.pick')}
+                  </Button>
+                }
+              />
+            ))}
+        </ActionList>
+      </Dialog>
     </Page>
   );
 }

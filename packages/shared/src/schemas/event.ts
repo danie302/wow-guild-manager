@@ -25,6 +25,16 @@ export const EVENT_ERROR_CODES = {
   slotsDontAddUp: 'SLOTS_DONT_ADD_UP',
   /** The start time has already passed. */
   startsInPast: 'EVENT_STARTS_IN_PAST',
+  /** Pre-confirmed participants on something other than a one-time raid. */
+  preConfirmedNotAllowed: 'PRE_CONFIRMED_NOT_ALLOWED',
+  /** More pre-confirmed participants in a role than it has slots. */
+  preConfirmedRoleFull: 'PRE_CONFIRMED_ROLE_FULL',
+  /** The character isn't on the roster, or its member can't join raids. */
+  preConfirmedCannotJoin: 'PRE_CONFIRMED_CANNOT_JOIN',
+  /** The character's class can't fill that role. */
+  preConfirmedRoleNotAllowed: 'PRE_CONFIRMED_ROLE_NOT_ALLOWED',
+  /** Two characters of the same member. */
+  preConfirmedTwice: 'PRE_CONFIRMED_TWICE',
 } as const;
 
 const slotCount = z.number().int().min(0).max(PVP_MAX_SIZE);
@@ -64,13 +74,47 @@ export function eventSlotIssues(
   return issues;
 }
 
-/** Body of `POST /api/guilds/:guildId/events`. */
+/** A participant the Guild Master pre-confirms when creating a raid: a character and its role. */
+export const preConfirmedSchema = z
+  .object({ characterId: z.uuid(), role: z.enum(COMBAT_ROLES) })
+  .strict();
+
+export type PreConfirmedInput = z.infer<typeof preConfirmedSchema>;
+
+/**
+ * Body of `POST /api/guilds/:guildId/events`. `preConfirmed` is only for one-time raids, and
+ * only the Guild Master can send it; the server checks each character.
+ */
 export const createEventSchema = z
-  .object({ type: z.enum(EVENT_TYPES), ...eventDetails })
+  .object({
+    type: z.enum(EVENT_TYPES),
+    ...eventDetails,
+    preConfirmed: z.array(preConfirmedSchema).max(PVP_MAX_SIZE).optional(),
+  })
   .strict()
   .superRefine((event, ctx) => {
     for (const { field, code } of eventSlotIssues(event.type, event)) {
       ctx.addIssue({ code: 'custom', path: [field], message: code });
+    }
+    const preConfirmed = event.preConfirmed ?? [];
+    if (preConfirmed.length === 0) return;
+    if (event.type !== 'raid') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['preConfirmed'],
+        message: EVENT_ERROR_CODES.preConfirmedNotAllowed,
+      });
+      return;
+    }
+    for (const role of COMBAT_ROLES) {
+      if (preConfirmed.filter((p) => p.role === role).length > event.slots[role]) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['preConfirmed'],
+          message: EVENT_ERROR_CODES.preConfirmedRoleFull,
+        });
+        return;
+      }
     }
   });
 
@@ -136,3 +180,6 @@ export function signUpsLosingSlots<T extends SlotHolder>(
     return holders.slice(slots[role]);
   });
 }
+
+/** Body of `POST /api/guilds/:guildId/events/:eventId/sign-ups/:signUpId/replace`. */
+export const replaceParticipantSchema = z.object({ replacementId: z.uuid() }).strict();

@@ -1,5 +1,6 @@
 import {
   createEventSchema,
+  EVENT_ERROR_CODES,
   eventSlotIssues,
   SERIES_WEEKS_AHEAD,
   updateEventSchema,
@@ -28,6 +29,11 @@ export async function createSeries(
   now = new Date(),
 ): Promise<EventSeries> {
   const details = parseInput(createEventSchema, input);
+  if (details.preConfirmed?.length) {
+    throw new DomainValidationError([
+      { field: 'preConfirmed', code: EVENT_ERROR_CODES.preConfirmedNotAllowed },
+    ]);
+  }
   checkStartsInFuture(details.startsAt, now);
   return transaction(async () => {
     const series = await EventSeries.create({

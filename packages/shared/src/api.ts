@@ -87,7 +87,11 @@ export type ApiError =
         // The event was cancelled, so it can't be edited or cancelled again.
         | 'EVENT_CANCELLED'
         // The recurring series was stopped, so it can't be edited or stopped again.
-        | 'SERIES_STOPPED';
+        | 'SERIES_STOPPED'
+        // Only Tentative participants can be replaced.
+        | 'SIGN_UP_NOT_TENTATIVE'
+        // The replacement isn't on the waitlist of that role (anymore).
+        | 'NOT_ON_WAITLIST';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
@@ -323,7 +327,7 @@ export interface EventResponse {
  */
 export interface SignUpResponse {
   id: string;
-  character: { id: string; name: string; class: CharacterClass };
+  character: { id: string; name: string; class: CharacterClass; race: Race };
   role: CombatRole | null;
   status: SignUpStatus;
   placement: SignUpPlacement | null;

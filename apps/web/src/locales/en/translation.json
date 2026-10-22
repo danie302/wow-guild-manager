@@ -52,7 +52,9 @@
     "REGISTRATION_NOT_PENDING": "This registration was already approved or rejected.",
     "EVENT_STARTED": "This event has started, so it can't be changed or cancelled.",
     "EVENT_CANCELLED": "This event was cancelled, so it can't be changed.",
-    "SERIES_STOPPED": "This recurring series was stopped, so it can't be changed."
+    "SERIES_STOPPED": "This recurring series was stopped, so it can't be changed.",
+    "SIGN_UP_NOT_TENTATIVE": "Only Tentative participants can be replaced, and this one has confirmed or left the slot.",
+    "NOT_ON_WAITLIST": "That character is no longer on the waitlist for this role."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -86,7 +88,12 @@
     "DUNGEON_SLOTS_FIXED": "A dungeon always has the standard 5-player group, and its slots can't change.",
     "SLOTS_DONT_ADD_UP": "The slots of the three combat roles must add up to the size.",
     "EVENT_STARTS_IN_PAST": "Pick a date and time in the future.",
-    "EVENTS_CHANNEL_NOT_USABLE": "The bot can't see, write, or post embeds in this channel. Choose another one or fix its permissions in Discord."
+    "EVENTS_CHANNEL_NOT_USABLE": "The bot can't see, write, or post embeds in this channel. Choose another one or fix its permissions in Discord.",
+    "PRE_CONFIRMED_NOT_ALLOWED": "Participants can only be pre-confirmed for a one-time raid.",
+    "PRE_CONFIRMED_ROLE_FULL": "More pre-confirmed participants than the role has slots.",
+    "PRE_CONFIRMED_CANNOT_JOIN": "This character isn't on the roster, or its member can't join raids.",
+    "PRE_CONFIRMED_ROLE_NOT_ALLOWED": "This character's class can't fill that role.",
+    "PRE_CONFIRMED_TWICE": "Each member can be pre-confirmed with only one character."
   },
   "auth": {
     "checking": "Checking your session",
@@ -401,7 +408,15 @@
     "losingSlots_one": "Saving moves 1 participant to the front of the waitlist, and they get a direct message:",
     "losingSlots_other": "Saving moves {{count}} participants to the front of the waitlist, and they get a direct message:",
     "losingSlotName": "{{name}} ({{role}})",
-    "losingSlotsOn": "{{date}}: {{names}}"
+    "losingSlotsOn": "{{date}}: {{names}}",
+    "preConfirmed": "Pre-confirmed participants",
+    "preConfirmedHelp": "They start as Confirmed and take a slot, and get a direct message. Only the Guild Master sees this.",
+    "preConfirmedMember": "Member",
+    "preConfirmedCharacter": "Character",
+    "preConfirmedRole": "Role",
+    "preConfirmedAdd": "Add",
+    "preConfirmedNoMember": "No member matches. Only Raiders, Officers, and the Guild Master can join raids.",
+    "preConfirmedRoleFull": "All {{role}} slots are taken."
   },
   "eventPage": {
     "back": "Events",
@@ -438,7 +453,24 @@
       },
       "open": "Open in Discord",
       "app": "APP"
-    }
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "tentative": "Tentative",
+      "declined": "Declined"
+    },
+    "remove": "Remove",
+    "replace": "Replace",
+    "pick": "Give the spot",
+    "waitlist": "Waitlist",
+    "nextOnWaitlist": "Next on the waitlist: {{name}}",
+    "declined": "Declined ({{count}})",
+    "removeTitle": "Remove {{name}} from the event?",
+    "removeBody": "Their sign-up is deleted and their spot goes to the first on the waitlist. They get a direct message saying you removed them, and can sign up again from Discord.",
+    "keepParticipant": "Cancel",
+    "replaceTitle": "Replace {{name}}",
+    "replaceBody": "Pick someone from the waitlist to take the spot. {{name}} moves to the end of the waitlist, and both get a direct message.",
+    "participantFailed": "Couldn't change the participants."
   },
   "series": {
     "title": "Recurring events",

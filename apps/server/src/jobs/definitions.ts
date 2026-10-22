@@ -22,6 +22,12 @@ export interface JobPayloads {
   'waitlist-promoted': { signUpId: string };
   /** Tells a member their character lost its slot because the role's slots went down. */
   'moved-to-waitlist': { signUpId: string };
+  /** Tells a Tentative participant they were replaced and are now at the end of the waitlist. */
+  'replaced-by-waitlist': { signUpId: string };
+  /** Tells a member who removed them from an event. */
+  'participant-removed': { memberId: string; eventId: string; byUserId: string };
+  /** Tells a member the Guild Master pre-confirmed their character for a new raid. */
+  'pre-confirmed': { signUpId: string };
   /** Tells a member the date or time of events they're signed up for changed, in one message. */
   'events-rescheduled': { memberId: string; eventIds: string[] };
   /** Deletes the post of an event that no longer exists (a stopped series' future events). */

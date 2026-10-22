@@ -52,7 +52,9 @@ import {
 import { apiErrorText, validationIssueMessage } from '../../i18n/api-errors';
 import { fromZonedFields, toZonedFields } from '../../i18n/calendar';
 import { useFormat } from '../../i18n/format';
+import { useGuild } from '../../api/guilds';
 import { roleColor } from './eventText';
+import { PreConfirmSection, type PreConfirmed } from './PreConfirmSection';
 
 type Slots = Record<CombatRole, number>;
 
@@ -117,6 +119,8 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
   const updateEvent = useUpdateEvent(guildId, editing?.kind === 'event' ? editing.value.id : '');
   const updateSeries = useUpdateSeries(guildId, editingSeries ? editing.value.id : '');
   const [repeat, setRepeat] = useState(false);
+  const [preConfirmed, setPreConfirmed] = useState<PreConfirmed[]>([]);
+  const isGuildMaster = useGuild(guildId).data?.access === 'guild_master';
   const save = editing
     ? editingSeries
       ? updateSeries
@@ -149,6 +153,8 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     change({ type, size, slots: defaultSlots(type, size) });
 
   const startsAt = fromZonedFields(draft.date, draft.time, format.timeZone);
+  // Only the Guild Master pre-confirms, and only for a one-time raid.
+  const canPreConfirm = isGuildMaster && !editing && !repeat && draft.type === 'raid';
   const input: CreateEventInput = {
     type: draft.type,
     name: draft.name,
@@ -156,6 +162,10 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     startsAt: startsAt?.toISOString() ?? '',
     size: draft.size,
     slots: draft.slots,
+    ...(canPreConfirm &&
+      preConfirmed.length > 0 && {
+        preConfirmed: preConfirmed.map(({ characterId, role }) => ({ characterId, role })),
+      }),
   };
   const parsed = createEventSchema.safeParse(input);
   const localIssues: ValidationIssue[] = [
@@ -370,6 +380,16 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
       </Page.Header>
 
       <FormColumns panel={slots}>{fields}</FormColumns>
+
+      {canPreConfirm && (
+        <PreConfirmSection
+          guildId={guildId}
+          slots={draft.slots}
+          value={preConfirmed}
+          onChange={setPreConfirmed}
+          error={errorFor('preConfirmed')}
+        />
+      )}
 
       {losingCount > 0 && (
         <Notice tone="warn" title={t('eventForm.losingSlots', { count: losingCount })}>

@@ -1,5 +1,6 @@
 import {
   eventListQuerySchema,
+  replaceParticipantSchema,
   uuidSchema,
   type CreateEventInput,
   type EventDiscordPostResponse,
@@ -10,10 +11,11 @@ import {
 import express from 'express';
 import { Op, type WhereOptions } from 'sequelize';
 
-import { Event, EventSeries, User, type Guild, type SignUp } from '../db/models/index.js';
+import { Event, EventSeries, SignUp, User, type Guild } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
-import { eventSignUps } from '../domain/sign-ups.js';
+import { can } from '../domain/permissions.js';
+import { eventSignUps, removeParticipant, replaceTentative } from '../domain/sign-ups.js';
 import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
 import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
@@ -62,10 +64,25 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
   });
 
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
-    const { guild } = currentGuild(res);
+    const { guild, access } = currentGuild(res);
     // createEvent checks the event (and answers with its issues).
-    const event = await createEvent(guild, req.body as CreateEventInput, currentUser(res));
-    if (jobs) await enqueueEventPosts(jobs, [event.id]);
+    const input = req.body as CreateEventInput;
+    // Only the Guild Master pre-confirms participants; createEvent checks the rest.
+    if (input?.preConfirmed?.length && !can(access, 'preConfirmParticipants')) {
+      throw new DomainError({ code: 'FORBIDDEN' });
+    }
+    const event = await createEvent(guild, input, currentUser(res));
+    if (jobs) {
+      await enqueueEventPosts(jobs, [event.id]);
+      const preConfirmed = await SignUp.findAll({
+        attributes: ['id'],
+        where: { eventId: event.id },
+      });
+      await jobs.enqueueMany(
+        'pre-confirmed',
+        preConfirmed.map((signUp) => ({ signUpId: signUp.id })),
+      );
+    }
     res.status(201).json(await eventResponse(event.id, guild));
   });
 
@@ -97,6 +114,52 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       });
       if (!event) throw new DomainError({ code: 'NOT_FOUND' });
       res.json((await eventSignUps(event.id)).map(toSignUpResponse));
+    },
+  );
+
+  // Removes a participant (slot or waitlist); their spot goes to the waitlist.
+  router.delete(
+    `${base}/:eventId/sign-ups/:signUpId`,
+    requireUser,
+    requireGuildPermission('manageParticipants'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const id = eventId(req.params.eventId);
+      const changes = await removeParticipant(
+        guild,
+        id,
+        eventId(req.params.signUpId),
+        currentUser(res),
+      );
+      if (jobs) {
+        await enqueueEventPosts(jobs, [id]);
+        await notifySignUpChanges(jobs, changes);
+      }
+      res.json((await eventSignUps(id)).map(toSignUpResponse));
+    },
+  );
+
+  // Gives a Tentative participant's slot to a waitlisted character of the same role.
+  router.post(
+    `${base}/:eventId/sign-ups/:signUpId/replace`,
+    requireUser,
+    requireGuildPermission('manageParticipants'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const body = parseBody(replaceParticipantSchema, req.body, res);
+      if (!body) return;
+      const id = eventId(req.params.eventId);
+      const changes = await replaceTentative(
+        guild,
+        id,
+        eventId(req.params.signUpId),
+        body.replacementId,
+      );
+      if (jobs) {
+        await enqueueEventPosts(jobs, [id]);
+        await notifySignUpChanges(jobs, changes);
+      }
+      res.json((await eventSignUps(id)).map(toSignUpResponse));
     },
   );
 
@@ -177,6 +240,7 @@ export function toSignUpResponse(signUp: SignUp): SignUpResponse {
       id: signUp.characterId,
       name: signUp.character!.name,
       class: signUp.character!.characterClass,
+      race: signUp.character!.race,
     },
     role: signUp.role,
     status: signUp.status,

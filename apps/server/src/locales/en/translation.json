@@ -101,6 +101,10 @@
     "promoted": "A spot opened in **{{event}}** ({{time}}): {{character}} is in as {{role}}. If you can no longer make it, press Declined on the event.",
     "movedToWaitlist": "**{{event}}** ({{time}}) now has fewer {{role}} slots, so {{character}} moved to the front of the waitlist. You get a spot back if one opens.",
     "rescheduled_one": "The time of an event you signed up for changed:",
-    "rescheduled_other": "The time of {{count}} events you signed up for changed:"
+    "rescheduled_other": "The time of {{count}} events you signed up for changed:",
+    "replaced": "**{{event}}** ({{time}}): {{character}} was Tentative, so their spot went to someone on the waitlist. {{character}} is now at the end of the {{role}} waitlist, and gets a spot if one opens.",
+    "preConfirmed": "You are pre-confirmed for **{{event}}** ({{time}}) with {{character}} as {{role}}. If you can't make it, press Declined on the event.",
+    "removed": "{{name}} removed you from **{{event}}** ({{time}}). You can sign up again from the event post.",
+    "someone": "An Officer"
   }
 }

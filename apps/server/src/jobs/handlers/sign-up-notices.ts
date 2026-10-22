@@ -2,7 +2,7 @@ import { COMBAT_ROLE_NAMES } from '@wgm/shared';
 import { Op } from 'sequelize';
 
 import { directMessageLocale } from '../../bot/locale.js';
-import { Character, Event, Guild, Member, SignUp } from '../../db/models/index.js';
+import { Character, Event, Guild, Member, SignUp, User } from '../../db/models/index.js';
 import { translator } from '../../i18n/index.js';
 import type { DirectMessenger } from '../../integrations/discord/direct-messages.js';
 import type { Logger } from '../../logger.js';
@@ -54,7 +54,11 @@ export function signUpNoticeHandlers({ logger, messenger }: SignUpNoticeDependen
   /** A message about one sign-up: its event, time, character, and role. */
   const sendAbout = (
     signUp: SignUp,
-    key: 'signUpNotices.promoted' | 'signUpNotices.movedToWaitlist',
+    key:
+      | 'signUpNotices.promoted'
+      | 'signUpNotices.movedToWaitlist'
+      | 'signUpNotices.replaced'
+      | 'signUpNotices.preConfirmed',
   ) => {
     const event = signUp.event!;
     return send(signUp.member!, event.guild!, (t) =>
@@ -78,6 +82,38 @@ export function signUpNoticeHandlers({ logger, messenger }: SignUpNoticeDependen
       if (signUp?.placement === 'waitlist') {
         await sendAbout(signUp, 'signUpNotices.movedToWaitlist');
       }
+    },
+
+    'replaced-by-waitlist': async ({ signUpId }: JobPayloads['replaced-by-waitlist']) => {
+      const signUp = await upcomingSignUp(signUpId);
+      if (signUp?.placement === 'waitlist') await sendAbout(signUp, 'signUpNotices.replaced');
+    },
+
+    'pre-confirmed': async ({ signUpId }: JobPayloads['pre-confirmed']) => {
+      const signUp = await upcomingSignUp(signUpId);
+      if (signUp?.placement === 'slot') await sendAbout(signUp, 'signUpNotices.preConfirmed');
+    },
+
+    'participant-removed': async ({
+      memberId,
+      eventId,
+      byUserId,
+    }: JobPayloads['participant-removed']) => {
+      const [member, event, by] = await Promise.all([
+        Member.findByPk(memberId),
+        Event.findByPk(eventId, { include: [{ model: Guild, as: 'guild' }] }),
+        User.findByPk(byUserId, { attributes: ['name'] }),
+      ]);
+      if (!member || !event || event.cancelledAt || event.startsAt <= new Date()) return;
+      // They signed up again since: nothing to say.
+      if (await SignUp.count({ where: { memberId, eventId } })) return;
+      await send(member, event.guild!, (t) =>
+        t('signUpNotices.removed', {
+          event: event.name,
+          time: when(event.startsAt),
+          name: by?.name ?? t('signUpNotices.someone'),
+        }),
+      );
     },
 
     'events-rescheduled': async ({ memberId, eventIds }: JobPayloads['events-rescheduled']) => {
