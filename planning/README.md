@@ -95,7 +95,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 |---|---|---|---|
 | [028](story-028-record-attendance.md) | Recording attendance | Done | 025 |
 | [029](story-029-attendance-reports.md) | Attendance reports | Done | 028 |
-| [030](story-030-attendance-command.md) | The /attendance command | Not started | 008, 029 |
+| [030](story-030-attendance-command.md) | The /attendance command | Done | 008, 029 |
 
 ### Gear checks
 

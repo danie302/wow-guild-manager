@@ -44,6 +44,39 @@
       "noGuild": "This Discord server isn't connected to a guild yet.",
       "notOnRoster": "You aren't on the roster of {{guild}}. Use /register to ask to join.",
       "notYourCharacter": "You don't have a character called **{{name}}** on the roster."
+    },
+    "attendance": {
+      "description": "See your attendance in this server's guild",
+      "noGuild": "This Discord server isn't connected to a guild yet.",
+      "notOnRoster": "You aren't on the roster of {{guild}}, so you have no attendance records. Use /register to ask to join.",
+      "noRecords": "You have no attendance records in {{guild}} yet. They appear after the events you sign up for.",
+      "title": "Your attendance in {{guild}}",
+      "recent": "Last 8 weeks",
+      "allTime": "All time",
+      "byType": "By event type (last 8 weeks)",
+      "counts": "Last 8 weeks",
+      "countsValue": "Late: {{late}} · No-shows: {{noShow}}",
+      "latest": "Latest events",
+      "rate": "{{rate}} ({{attended}} of {{total}})",
+      "footer": "Present, Late, and Left early count as attended.",
+      "bands": {
+        "good": "Good",
+        "watch": "Watch",
+        "at_risk": "At risk"
+      },
+      "types": {
+        "raid": "Raid",
+        "dungeon": "Dungeon",
+        "pvp": "PvP"
+      },
+      "statuses": {
+        "present": "Present",
+        "late": "Late",
+        "left_early": "Left early",
+        "bench": "Bench",
+        "absent_with_notice": "Absent with notice",
+        "no_show": "No-show"
+      }
     }
   },
   "errors": {
