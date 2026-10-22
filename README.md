@@ -119,12 +119,17 @@ pnpm lint           # ESLint
 pnpm format:check   # Prettier (pnpm format fixes formatting)
 ```
 
+### Deploy to a server
+
+`docker-compose.prod.yml` runs the whole product on one server, with HTTPS and daily database backups. [`docs/deployment.md`](docs/deployment.md) walks through it on an Oracle Cloud Always Free VM: creating the VM, the firewall, the DNS record, a production Discord application, `.env` (from `.env.production.example`), updating, and restoring a backup.
+
 ## Documentation
 
 | Document | What it covers |
 |---|---|
 | [`requirements.md`](requirements.md) | The product spec: features, permissions, and rules |
 | [`docs/tech-decisions.md`](docs/tech-decisions.md) | The technology choices and why they were made |
+| [`docs/deployment.md`](docs/deployment.md) | Running the product on a server |
 | [`docs/architecture.png`](docs/architecture.png) | How the web client, Discord, backend, database, cache, and Battle.net connect |
 | [`docs/design/`](docs/design/README.md) | The visual design prototype and how its screens map to stories |
 | [`planning/`](planning/README.md) | The implementation plan as small stories with acceptance criteria |

@@ -1,0 +1,23 @@
+# Production web server (apps/web/Dockerfile). Caddy gets and renews the HTTPS certificate
+# for APP_DOMAIN, and redirects HTTP to HTTPS.
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	# The API, on the same origin, so the browser needs no CORS and the session cookie works.
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+
+	# The web app. Client-side routes (e.g. /guilds/…/events) get index.html.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Vite puts a content hash in asset names, so they can be cached for good.
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+	@html not path /assets/*
+	header @html Cache-Control "no-cache"
+}

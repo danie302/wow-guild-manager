@@ -1,0 +1,131 @@
+# Production stack for one server. Usage (docs/deployment.md):
+#   cp .env.production.example .env   # then fill it in
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+x-logging: &logging # Keep container logs from filling the disk.
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+# api, bot, and worker run the same image with different commands.
+x-server: &server
+  build:
+    context: .
+    dockerfile: apps/server/Dockerfile
+    target: prod
+  image: wgm-server
+  init: true
+  restart: unless-stopped
+  logging: *logging
+  environment:
+    NODE_ENV: production
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    REDIS_URL: redis://redis:6379
+    SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+    WEB_ORIGIN: https://${APP_DOMAIN}
+    DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+    DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+    DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # Serves the web app and proxies /api, over HTTPS. The only service with published ports.
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: prod
+    image: wgm-web
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env}
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      # Certificates, kept so Caddy doesn't ask Let's Encrypt for new ones on every start.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+  api:
+    <<: *server
+    # Migrations run before the server starts; bot and worker never run them.
+    command: sh -c "node_modules/.bin/sequelize-cli db:migrate && exec node --enable-source-maps dist/api.js"
+    volumes:
+      # Uploaded files (guild images).
+      - uploads:/uploads
+
+  bot:
+    <<: *server
+    command: node --enable-source-maps dist/bot.js
+
+  worker:
+    <<: *server
+    command: node --enable-source-maps dist/worker.js
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    logging: *logging
+    # Append-only file persistence, so queued jobs survive a restart.
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Dumps the database every night into ./backups, keeping the last 7 days.
+  backup:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    logging: *logging
+    entrypoint: /backup.sh
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      BACKUP_HOUR: ${BACKUP_HOUR:-4}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-7}
+    volumes:
+      - ./deploy/backup.sh:/backup.sh:ro
+      - ./backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads:
+  caddy_data:
+  caddy_config:

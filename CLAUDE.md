@@ -11,6 +11,7 @@ Early implementation: the foundation stories are done (see `planning/README.md`)
 Use Node.js 24 (`.nvmrc`) and pnpm through corepack. In a fresh shell, run `source ~/.nvm/nvm.sh && nvm use` first.
 
 - `cp .env.example .env && docker compose up`: run the whole stack (web on :5173, API on :3000). `docker compose down -v` resets the data. Details are in `README.md`. After editing `.env`, use `docker compose up -d` (not `restart`, which keeps the old environment). The bot needs `DISCORD_BOT_TOKEN` and the API needs `SESSION_SECRET`; without one, only that container's process exits. Without `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` the API runs with login turned off, and without `DISCORD_BOT_TOKEN` the worker runs without sending direct messages.
+- `docker compose -f docker-compose.prod.yml up -d --build`: the production stack (Caddy with HTTPS, bundled server, daily backups), configured from `.env.production.example`. See `docs/deployment.md`. `pnpm --filter @wgm/server build` bundles the server with esbuild (`apps/server/build.js`).
 - `pnpm install`: install every workspace on the host (containers install their own into Docker volumes). pnpm rejects versions published less than a day ago: pick the previous version, and don't add `minimumReleaseAgeExclude` entries. After adding a dependency with the stack running, run `docker compose up -d` and then `docker compose restart api bot worker web`.
 - `pnpm typecheck`: typecheck every package (`pnpm --filter @wgm/web typecheck` for one).
 - `pnpm lint`: ESLint over the whole repo.

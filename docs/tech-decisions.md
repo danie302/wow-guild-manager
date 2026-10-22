@@ -155,7 +155,7 @@ web ──→ shared ←── server
 
 ### Package names and the shared package
 - The packages are `@wgm/web`, `@wgm/server`, and `@wgm/shared`.
-- `@wgm/shared` has no build step: its `exports` point at its TypeScript source, which Vite and the server's TypeScript tooling read directly. How the production server image handles it is decided when deployment is planned.
+- `@wgm/shared` has no build step: its `exports` point at its TypeScript source, which Vite and the server's TypeScript tooling read directly. The production server image bundles it in with esbuild (see [Deployment](#deployment)).
 
 npm workspaces were considered: they need no extra tool but aren't strict about dependencies. Turborepo and Nx aren't needed at this size and can be added later.
 
@@ -517,11 +517,24 @@ The API, bot, and worker log with pino as structured JSON, with `pino-http` for 
 
 **Status:** Accepted
 
-Uploaded files (guild images) go through a small storage interface (save, read, delete) in `apps/server/src/storage/file-storage.ts`. In development, it writes to the `uploads` Docker volume (`UPLOADS_DIR`, `/uploads`). In production, it can be switched to an S3-compatible object store without changing the rest of the code. The production provider is chosen when deployment is planned. Tests use the in-memory implementation.
+Uploaded files (guild images) go through a small storage interface (save, read, delete) in `apps/server/src/storage/file-storage.ts`. In development, it writes to the `uploads` Docker volume (`UPLOADS_DIR`, `/uploads`). In production, it can be switched to an S3-compatible object store without changing the rest of the code. In production it's still a Docker volume on the server (see [Deployment](#deployment)); an S3-compatible store can replace it when one server isn't enough. Tests use the in-memory implementation.
 
 - **Images are processed with sharp:** cropped square, resized to 256×256, and re-encoded as WebP. Re-encoding drops metadata (EXIF, location) and anything hidden in the file. Only PNG, JPEG, and WebP up to 5 MB are accepted; the type is checked from the file's contents, not only its declared type.
 - **Uploads go with the rest of the form:** the guild settings page saves in one multipart/form-data request (multer reads it into memory, within the size limit), so the image and the other settings apply together or not at all.
 - **Images are served by the API** to people who can open the guild, not from a public folder. Each upload gets a new storage key, which is part of the image URL, so browsers can cache it for good and never show a stale one.
+
+## Deployment
+
+Decided on 2026-10-22 (story 040), for testing with a small group on one free server. The guide is [`docs/deployment.md`](deployment.md).
+
+- **One server, Docker Compose:** `docker-compose.prod.yml` runs the same services as development, plus Caddy and a backup service, with `restart: unless-stopped` and log rotation. Only ports 80 and 443 are published. Target: an Oracle Cloud Always Free Arm VM (about 2 OCPUs and 12 GB of memory running all month), which fits the whole stack; free platforms that sleep idle services or lack background workers don't suit the always-on bot and worker.
+- **Server bundled with esbuild:** `apps/server/build.js` bundles the api, bot, and worker into `dist/` with `@wgm/shared` included and npm dependencies left external, and `pnpm deploy --prod` gathers only production dependencies. No tsx or TypeScript at runtime. `sequelize-cli` is a production dependency because the api runs the migrations when it starts. Running with tsx was simpler but meant a heavier image and slower start.
+- **Caddy in front:** the web image is Caddy with the built app. It serves the app (index.html for client-side routes), proxies `/api` on the same origin (no CORS, and the session cookie stays first-party), and gets Let's Encrypt certificates on its own. The API trusts one proxy hop in production for secure cookies.
+- **Domain:** a subdomain of a domain the Guild Master owns, in `APP_DOMAIN`; `WEB_ORIGIN` is derived from it.
+- **Images built on the server:** `git pull` and `up -d --build`. No registry or CI yet; a GitHub Actions build can replace it later.
+- **Uploads** stay in a Docker volume on the server.
+- **Backups:** a `postgres` container runs `pg_dump` (custom format) every day and keeps 7 days in `./backups`. They're on the same server, so the guide says to copy them off now and then.
+- **A separate Discord application for production,** because two bots with the same token both answer every interaction.
 
 ## Local development requirements
 

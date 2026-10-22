@@ -12,6 +12,7 @@ build/
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Logs
 *.log
@@ -36,3 +37,6 @@ uploads/
 
 # Proposal PDF for sharing, generated outside the repo
 propuesta.pdf
+
+# Database backups of the production stack (docker-compose.prod.yml)
+backups/
