@@ -24,6 +24,10 @@ export interface GuildSettingsResult {
   officerRoleChanged: boolean;
   /** The events channel or the Discord language changed. */
   eventPostsChanged: boolean;
+  /** The Tentative deadline changed. */
+  deadlineChanged: boolean;
+  /** The reminder time changed. */
+  reminderChanged: boolean;
 }
 
 /**
@@ -77,6 +81,12 @@ export async function updateGuildSettings(
     }
   }
   if (changesLocale) require('chooseDiscordLanguage');
+  const changesDeadline =
+    input.tentativeDeadlineHours !== undefined &&
+    input.tentativeDeadlineHours !== guild.tentativeDeadlineHours;
+  const changesReminder =
+    input.reminderHours !== undefined && input.reminderHours !== guild.reminderHours;
+  if (changesDeadline || changesReminder) require('setTentativeTimes');
 
   // The new image is stored before the update, and removed again if the update fails.
   const newImageKey = image ? `guilds/${guild.id}/${randomUUID()}.webp` : undefined;
@@ -90,6 +100,8 @@ export async function updateGuildSettings(
         ...(changesDiscord && { discordServerId, officerRoleId }),
         ...(changesChannel && { eventsChannelId }),
         ...(changesLocale && { discordLocale: input.discordLocale }),
+        ...(changesDeadline && { tentativeDeadlineHours: input.tentativeDeadlineHours }),
+        ...(changesReminder && { reminderHours: input.reminderHours }),
         ...(newImageKey ? { imageKey: newImageKey } : input.removeImage && { imageKey: null }),
       }),
     );
@@ -101,7 +113,12 @@ export async function updateGuildSettings(
   if (previousImageKey && previousImageKey !== guild.imageKey) {
     await storage.delete(previousImageKey);
   }
-  return { officerRoleChanged: changesDiscord, eventPostsChanged: changesChannel || changesLocale };
+  return {
+    officerRoleChanged: changesDiscord,
+    eventPostsChanged: changesChannel || changesLocale,
+    deadlineChanged: changesDeadline,
+    reminderChanged: changesReminder,
+  };
 }
 
 /** The bot must be able to see, write, and post embeds in the events channel. */

@@ -80,7 +80,8 @@
       "current": "Estás inscrito con {{character}} como {{role}} ({{status}}). Si cambias solo el estado o el personaje, conservas tu lugar.",
       "character": "Elige un personaje",
       "role": "Elige un rol",
-      "main": "{{class}} · main"
+      "main": "{{class}} · main",
+      "tentativeClosed": "Ya no se aceptan inscripciones provisionales en este evento. Todavía puedes inscribirte como Confirmado."
     },
     "inSlot": "Estás dentro: {{character}} como {{role}} en {{event}} ({{status}}).",
     "onWaitlist": "No quedan plazas de {{role}} en {{event}}, así que {{character}} está en la lista de espera ({{status}}). Obtienes una plaza si se libera.",
@@ -95,7 +96,8 @@
     "notEligible": "Tu rango no puede inscribirse en {{event}}. Las raids son para Raiders, Officers y el Guild Master.",
     "noCharacters": "Todavía no tienes personajes en el roster. Pide a un Officer que añada los tuyos.",
     "notYourCharacter": "Ese personaje ya no está en tu roster. Vuelve a pulsar Inscribirse en el evento.",
-    "roleNotAllowed": "La clase de ese personaje no puede jugar ese rol."
+    "roleNotAllowed": "La clase de ese personaje no puede jugar ese rol.",
+    "tentativeClosed": "Ya no se aceptan inscripciones provisionales en este evento. Todavía puedes inscribirte como Confirmado."
   },
   "signUpNotices": {
     "promoted": "Se liberó una plaza en **{{event}}** ({{time}}): {{character}} entra como {{role}}. Si ya no puedes ir, pulsa Rechazado en el evento.",
@@ -105,6 +107,7 @@
     "replaced": "**{{event}}** ({{time}}): {{character}} estaba como Provisional, así que su plaza pasó a alguien de la lista de espera. Ahora {{character}} está al final de la lista de espera de {{role}} y obtiene una plaza si se libera alguna.",
     "preConfirmed": "Estás preconfirmado en **{{event}}** ({{time}}) con {{character}} como {{role}}. Si no puedes ir, pulsa Rechazado en el evento.",
     "removed": "{{name}} te quitó de **{{event}}** ({{time}}). Puedes volver a inscribirte desde el mensaje del evento.",
-    "someone": "Un Officer"
+    "someone": "Un Officer",
+    "reminder": "Recordatorio: estás como Provisional en **{{event}}** ({{time}}) con {{character}} como {{role}}. Confirma antes del {{deadline}} en el mensaje del evento, o tu plaza puede pasar a alguien de la lista de espera."
   }
 }

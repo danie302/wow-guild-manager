@@ -16,9 +16,11 @@ import { DomainError } from '../domain/errors.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
 import { can } from '../domain/permissions.js';
 import { eventSignUps, removeParticipant, replaceTentative } from '../domain/sign-ups.js';
+import { deadlineHours } from '../domain/tentative.js';
 import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
 import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
+import { scheduleTentativeJobs } from '../jobs/tentative.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import type { DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
@@ -74,6 +76,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     const event = await createEvent(guild, input, currentUser(res));
     if (jobs) {
       await enqueueEventPosts(jobs, [event.id]);
+      await scheduleTentativeJobs(jobs, [event.id]);
       const preConfirmed = await SignUp.findAll({
         attributes: ['id'],
         where: { eventId: event.id },
@@ -206,6 +209,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       );
       if (jobs) {
         await enqueueEventPosts(jobs, [event.id]);
+        await scheduleTentativeJobs(jobs, [event.id]);
         await notifySignUpChanges(jobs, changes);
       }
       res.json(await eventResponse(event.id, guild));
@@ -219,7 +223,11 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     async (req, res) => {
       const { guild } = currentGuild(res);
       const event = await cancelEvent(guild, eventId(req.params.eventId), currentUser(res));
-      if (jobs) await enqueueEventPosts(jobs, [event.id]);
+      if (jobs) {
+        await enqueueEventPosts(jobs, [event.id]);
+        // Its reminder and deadline jobs go.
+        await scheduleTentativeJobs(jobs, [event.id]);
+      }
       res.json(await eventResponse(event.id, guild));
     },
   );
@@ -272,6 +280,11 @@ function toEventResponse(event: Event, guild: Guild): EventResponse {
       ? { at: event.cancelledAt.toISOString(), by: event.cancelledBy?.name ?? null }
       : null,
     series: event.series ? { id: event.series.id, name: event.series.name } : null,
+    tentativeDeadline: {
+      at: event.tentativeDeadlineAt.toISOString(),
+      hours: deadlineHours(event),
+      own: event.tentativeDeadlineHours !== null,
+    },
     discordPost: {
       url: event.discordMessageId
         ? `https://discord.com/channels/${guild.discordServerId}/${event.discordChannelId}/${event.discordMessageId}`

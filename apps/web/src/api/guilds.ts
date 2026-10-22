@@ -73,6 +73,8 @@ export interface GuildSettingsChanges {
   discord?: GuildDiscordInput;
   eventsChannelId?: string;
   discordLocale?: Locale;
+  tentativeDeadlineHours?: number;
+  reminderHours?: number;
 }
 
 /** Saves every change in one request, so they all apply or none does. */
@@ -90,6 +92,12 @@ export function useSaveGuildSettings(guildId: string) {
       }
       if (changes.eventsChannelId) form.set('eventsChannelId', changes.eventsChannelId);
       if (changes.discordLocale) form.set('discordLocale', changes.discordLocale);
+      if (changes.tentativeDeadlineHours !== undefined) {
+        form.set('tentativeDeadlineHours', String(changes.tentativeDeadlineHours));
+      }
+      if (changes.reminderHours !== undefined) {
+        form.set('reminderHours', String(changes.reminderHours));
+      }
       return apiRequest<GuildResponse>(`/guilds/${guildId}`, { method: 'PATCH', body: form });
     },
     onSuccess: async (guild) => {

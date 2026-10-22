@@ -21,6 +21,7 @@ const mc: EventResponse = {
   cancelled: null,
   series: null,
   discordPost: { url: null, error: null },
+  tentativeDeadline: { at: '2026-01-01T00:00:00.000Z', hours: 24, own: false },
 };
 const wsg: EventResponse = {
   ...mc,
@@ -127,6 +128,7 @@ describe('EventsPage', () => {
           nextEventAt: mc.startsAt,
           nextEventId: mc.id,
           stopped: null,
+          tentativeDeadlineHours: null,
         },
       ],
     });

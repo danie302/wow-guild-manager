@@ -219,6 +219,8 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - Each guild also sets when the **reminder** is sent: how many hours before the deadline. The default is 12 hours, and it can be from 1 to 72 hours.
 - An event can override the guild's deadline with its own, chosen when it's created or edited (e.g. 48 hours for a 40-player raid, 6 hours for a dungeon). Without an override, it uses the guild's deadline.
 - Changing the guild's deadline applies to upcoming events without their own deadline, but only where the new deadline is still in the future. An event whose new deadline would already have passed keeps its previous deadline, so nobody is replaced just because a setting changed.
+- Once an event's Tentative deadline has passed, members can only sign up as Confirmed (and a Tentative participant can still change to Confirmed).
+- At the deadline, if a role has more Tentative participants than waitlisted characters, the Tentative participants who signed up most recently are replaced first. Replaced participants move to the end of the waitlist.
 
 ### Raid events
 - Size: 10, 20, or 40 players.

@@ -28,6 +28,7 @@ function event(extra: Partial<Event> = {}) {
     name: 'Blackwing Lair',
     description: 'Bring Onyxia cloaks.',
     startsAt,
+    tentativeDeadlineAt: new Date(startsAt.getTime() - 24 * 60 * 60 * 1000),
     size: 40,
     tankSlots: 4,
     healerSlots: 10,

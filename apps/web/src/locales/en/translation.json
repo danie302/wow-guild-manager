@@ -221,7 +221,16 @@
     "noChannel": "No channel",
     "noChannelMatch": "No channel matches. The bot needs to see, write, and post embeds in it.",
     "discordLanguage": "Language for Discord messages",
-    "discordLanguageHelp": "Event posts and missing-role alerts use this language."
+    "discordLanguageHelp": "Event posts and missing-role alerts use this language.",
+    "signUps": "Sign-ups",
+    "signUpsHelp": "The Guild Master and Officers can change these.",
+    "tentativeDeadline": "Tentative deadline",
+    "tentativeDeadlineUnit": "Hours before the event (1–168).",
+    "tentativeDeadlineRange": "Use 1–168 hours.",
+    "reminder": "Reminder",
+    "reminderUnit": "Hours before the deadline (1–72).",
+    "reminderRange": "Use 1–72 hours.",
+    "tentativeExample": "Tentative sign-ups close {{deadline}} hours before each event (unless it has its own deadline), and the reminder goes out {{reminder}} hours before it starts. Upcoming events whose new deadline would already have passed keep the old one."
   },
   "roster": {
     "title": "Roster",
@@ -416,7 +425,11 @@
     "preConfirmedRole": "Role",
     "preConfirmedAdd": "Add",
     "preConfirmedNoMember": "No member matches. Only Raiders, Officers, and the Guild Master can join raids.",
-    "preConfirmedRoleFull": "All {{role}} slots are taken."
+    "preConfirmedRoleFull": "All {{role}} slots are taken.",
+    "tentativeDeadline": "Tentative deadline",
+    "tentativeDeadlineGuild": "Guild default ({{hours}} h)",
+    "tentativeDeadlineOwn": "Custom",
+    "tentativeDeadlineHours": "Hours before the start (1–168)"
   },
   "eventPage": {
     "back": "Events",
@@ -470,7 +483,8 @@
     "keepParticipant": "Cancel",
     "replaceTitle": "Replace {{name}}",
     "replaceBody": "Pick someone from the waitlist to take the spot. {{name}} moves to the end of the waitlist, and both get a direct message.",
-    "participantFailed": "Couldn't change the participants."
+    "participantFailed": "Couldn't change the participants.",
+    "tentativeCloses": "Tentative closes {{date}} · {{hours}} h before the start"
   },
   "series": {
     "title": "Recurring events",

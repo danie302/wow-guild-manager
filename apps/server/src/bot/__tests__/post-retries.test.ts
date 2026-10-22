@@ -40,6 +40,8 @@ beforeEach(async () => {
     healerSlots: 10,
     dpsSlots: 26,
     createdByUserId: null,
+    // Not about the deadline; any time does.
+    tentativeDeadlineAt: new Date(),
   };
   const later = (days: number) => new Date(Date.now() + days * day);
   failed = await Event.create({

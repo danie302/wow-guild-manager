@@ -10,7 +10,6 @@ import {
 
 import type { Event, SignUp } from '../db/models/index.js';
 import { translator } from '../i18n/index.js';
-import { tentativeDeadline } from './events.js';
 
 /** The accent of the event posts, and the gray of cancelled ones. */
 const POST_COLOR = 0xdcae55;
@@ -142,7 +141,7 @@ export function eventPostEmbed(
             {
               name: t('eventPost.signUps'),
               value: t('eventPost.tentativeCloses', {
-                time: timestamp(tentativeDeadline(event), 'F'),
+                time: timestamp(event.tentativeDeadlineAt, 'F'),
               }),
             },
           ]),

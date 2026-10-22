@@ -18,6 +18,13 @@ export interface JobPayloads {
    * or to the guild's Discord settings; runs for one event never overlap.
    */
   'event-post': { eventId: string };
+  /**
+   * Reminds the event's Tentative participants to confirm (each once). Scheduled for the
+   * reminder time as `tentative-reminder-<eventId>`, and enqueued after a late Tentative sign-up.
+   */
+  'tentative-reminder': { eventId: string };
+  /** Replaces Tentative participants at the deadline, as `tentative-deadline-<eventId>`. */
+  'tentative-deadline': { eventId: string };
   /** Tells a member by direct message that their waitlisted character got a slot. */
   'waitlist-promoted': { signUpId: string };
   /** Tells a member their character lost its slot because the role's slots went down. */

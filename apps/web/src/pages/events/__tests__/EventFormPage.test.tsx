@@ -22,6 +22,7 @@ const saved: EventResponse = {
   cancelled: null,
   series: null,
   discordPost: { url: null, error: null },
+  tentativeDeadline: { at: '2026-01-01T00:00:00.000Z', hours: 24, own: false },
 };
 
 const me = { ...testUser, timeZone: 'America/Argentina/Buenos_Aires' };
@@ -55,6 +56,7 @@ describe('EventFormPage', () => {
       startsAt: `${nextYear}-11-10T19:00:00.000Z`,
       size: 40,
       slots: { tank: 4, healer: 10, dps: 26 },
+      tentativeDeadlineHours: null,
     });
   });
 
@@ -132,6 +134,7 @@ describe('EventFormPage', () => {
       startsAt: saved.startsAt,
       size: 40,
       slots: { tank: 4, healer: 10, dps: 26 },
+      tentativeDeadlineHours: null,
     });
   });
 
@@ -197,6 +200,30 @@ describe('EventFormPage', () => {
     expect(
       screen.queryByRole('region', { name: 'Pre-confirmed participants' }),
     ).not.toBeInTheDocument();
+  });
+
+  it("gives an event its own Tentative deadline, or the guild's", async () => {
+    const fetchMock = mockApi({
+      '/api/me': () => Response.json(me),
+      [`${api}/${eventId}`]: () => Response.json(saved),
+      [`PUT ${api}/${eventId}`]: () => Response.json(saved),
+    });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/${eventId}/edit`);
+
+    await screen.findByLabelText('Name');
+    expect(screen.getByRole('button', { name: 'Guild default (24 h)' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: 'Custom' }));
+    const hours = screen.getByLabelText('Hours before the start (1–168)');
+    await user.clear(hours);
+    await user.type(hours, '48');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await screen.findByRole('heading', { name: 'Molten Core' });
+    expect(bodyOf(fetchMock, 'PUT')).toMatchObject({ tentativeDeadlineHours: 48 });
   });
 
   it('warns who moves to the waitlist when a role gets fewer slots', async () => {

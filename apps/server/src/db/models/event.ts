@@ -35,6 +35,10 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare cancelledByUserId: CreationOptional<ForeignKey<User['id']> | null>;
   /** The weekly series it belongs to, if any. */
   declare seriesId: CreationOptional<ForeignKey<EventSeries['id']> | null>;
+  /** Its own Tentative deadline in hours before the start; null uses the guild's. */
+  declare tentativeDeadlineHours: CreationOptional<number | null>;
+  /** When Tentative participants must have confirmed (see domain/tentative.ts). */
+  declare tentativeDeadlineAt: Date;
   /** Its Discord post; null until the worker posts it (jobs/handlers/event-posts.ts). */
   declare discordChannelId: CreationOptional<string | null>;
   declare discordMessageId: CreationOptional<string | null>;
@@ -66,6 +70,8 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
         cancelledAt: { type: DataTypes.DATE, allowNull: true },
         cancelledByUserId: { type: DataTypes.UUID, allowNull: true },
         seriesId: { type: DataTypes.UUID, allowNull: true },
+        tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: true },
+        tentativeDeadlineAt: { type: DataTypes.DATE, allowNull: false },
         discordChannelId: { type: DataTypes.STRING(20), allowNull: true },
         discordMessageId: { type: DataTypes.STRING(20), allowNull: true },
         discordPostError: { type: DataTypes.STRING(30), allowNull: true },

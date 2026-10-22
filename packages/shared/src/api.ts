@@ -206,6 +206,10 @@ export interface GuildResponse {
   eventsChannel: { id: string; name: string | null } | null;
   /** The language of the guild's public Discord messages. */
   discordLocale: Locale;
+  /** Hours before an event that Tentative participants must confirm. */
+  tentativeDeadlineHours: number;
+  /** Hours before that deadline the reminder is sent. */
+  reminderHours: number;
 }
 
 /** An IANA time zone name, normalized to the runtime's spelling. */
@@ -315,6 +319,11 @@ export interface EventResponse {
   /** The weekly series it belongs to, if any. */
   series: { id: string; name: string } | null;
   /**
+   * When Tentative sign-ups close, how many hours before the start that is, and whether it's
+   * the event's own deadline (`own`) or the guild's.
+   */
+  tentativeDeadline: { at: string; hours: number; own: boolean };
+  /**
    * Its Discord post: `url` is null until the bot posts it, and `error` says why the last
    * attempt failed, if it did.
    */
@@ -387,6 +396,8 @@ export interface SeriesResponse {
   nextEventAt: string | null;
   /** That event, once it's created (two weeks ahead); null before. */
   nextEventId: string | null;
+  /** Its events' own Tentative deadline in hours; null uses the guild's. */
+  tentativeDeadlineHours: number | null;
   createdBy: string | null;
   /** Set once the series is stopped. */
   stopped: { at: string; by: string | null } | null;

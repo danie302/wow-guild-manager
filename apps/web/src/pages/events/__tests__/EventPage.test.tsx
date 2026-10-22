@@ -22,6 +22,7 @@ const saved: EventResponse = {
   cancelled: null,
   series: null,
   discordPost: { url: null, error: null },
+  tentativeDeadline: { at: '2026-01-01T00:00:00.000Z', hours: 24, own: false },
 };
 
 const me = { ...testUser, timeZone: 'America/Argentina/Buenos_Aires' };
@@ -54,6 +55,7 @@ describe('EventPage', () => {
       within(screen.getByRole('region', { name: 'Tanks' })).getAllByText('Open slot'),
     ).toHaveLength(4);
     expect(screen.getByText('Fire resistance gear.')).toBeInTheDocument();
+    expect(screen.getByText(/Tentative closes .* · 24 h before the start/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Cancel event' }));
     const dialog = await screen.findByRole('dialog', { name: 'Cancel Molten Core?' });

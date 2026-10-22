@@ -262,7 +262,9 @@ export type SignUpRefusal =
   | { result: 'not_eligible'; event: Event }
   | { result: 'no_characters' }
   | { result: 'not_your_character' }
-  | { result: 'role_not_allowed' };
+  | { result: 'role_not_allowed' }
+  /** Tentative after the event's deadline. */
+  | { result: 'tentative_closed' };
 
 /** What the sign-up form needs: the member's active characters, main first. */
 export interface SignUpContext {
@@ -335,6 +337,9 @@ export async function signUp(
     if (!character) return { result: 'not_your_character' };
     if (!rolesFor(character.characterClass).includes(choice.role)) {
       return { result: 'role_not_allowed' };
+    }
+    if (choice.status === 'tentative' && event.tentativeDeadlineAt <= now) {
+      return { result: 'tentative_closed' };
     }
 
     const current = await SignUp.findOne({ where: { eventId: event.id, memberId: member.id } });

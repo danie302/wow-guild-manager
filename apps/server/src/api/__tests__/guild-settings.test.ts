@@ -193,6 +193,8 @@ describe('the events channel and Discord language', () => {
       healerSlots: 10,
       dpsSlots: 26,
       createdByUserId: null,
+      // Not about the deadline; any time does.
+      tentativeDeadlineAt: new Date(),
     };
     const later = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     const upcoming = await Event.create({ ...columns, startsAt: later(3) });
@@ -286,6 +288,52 @@ describe('the events channel and Discord language', () => {
     const { officerAgent, save } = await setup();
 
     expect((await save(officerAgent).field(field, value)).status).toBe(403);
+  });
+});
+
+describe('the Tentative deadline and reminder', () => {
+  it('lets Officers set them, moves upcoming events, and reschedules their jobs', async () => {
+    const { officerAgent, save, jobs, id } = await setup();
+    const startsAt = new Date(Date.now() + 100 * 60 * 60 * 1000);
+    const event = await Event.create({
+      guildId: id,
+      type: 'pvp',
+      name: 'Arathi Basin',
+      description: '',
+      size: 2,
+      tankSlots: 1,
+      healerSlots: 0,
+      dpsSlots: 1,
+      createdByUserId: null,
+      startsAt,
+      tentativeDeadlineAt: new Date(startsAt.getTime() - 24 * 60 * 60 * 1000),
+    });
+
+    const response = await save(officerAgent)
+      .field('tentativeDeadlineHours', '48')
+      .field('reminderHours', '6');
+
+    expect(response.status).toBe(200);
+    expect(body(response)).toMatchObject({ tentativeDeadlineHours: 48, reminderHours: 6 });
+    const deadline = new Date(startsAt.getTime() - 48 * 60 * 60 * 1000);
+    expect((await event.reload()).tentativeDeadlineAt).toEqual(deadline);
+    expect(jobs.job(`tentative-deadline-${event.id}`)?.runAt).toEqual(deadline);
+    expect(jobs.job(`tentative-reminder-${event.id}`)?.runAt).toEqual(
+      new Date(deadline.getTime() - 6 * 60 * 60 * 1000),
+    );
+  });
+
+  it.each([
+    ['tentativeDeadlineHours', '0'],
+    ['tentativeDeadlineHours', '169'],
+    ['reminderHours', '73'],
+  ])('rejects %s %s', async (field, value) => {
+    const { gmAgent, save } = await setup();
+
+    const response = await save(gmAgent).field(field, value);
+
+    expect(response.status).toBe(400);
+    expect(body(response).error.issues).toEqual([expect.objectContaining({ field })]);
   });
 });
 

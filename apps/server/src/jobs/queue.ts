@@ -60,6 +60,14 @@ export interface JobEnqueuer {
     data: JobPayloads[Name],
     options: { jobId: string; runAt: Date },
   ): Promise<void>;
+  /** See JobQueue.schedule. */
+  schedule<Name extends JobName>(
+    name: Name,
+    data: JobPayloads[Name],
+    options: { jobId: string; runAt: Date },
+  ): Promise<void>;
+  /** See JobQueue.unschedule. */
+  unschedule(jobId: string): Promise<void>;
 }
 
 /**

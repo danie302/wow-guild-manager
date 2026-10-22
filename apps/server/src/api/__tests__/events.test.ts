@@ -63,6 +63,11 @@ describe('events', () => {
       createdBy: 'User 0001',
       cancelled: null,
       series: null,
+      tentativeDeadline: {
+        at: new Date(Date.parse(startsAt) - 24 * 60 * 60 * 1000).toISOString(),
+        hours: 24,
+        own: false,
+      },
       discordPost: { url: null, error: null },
     });
     expect((await agent.get(`${base}/${event(response).id}`)).body).toEqual(response.body);
@@ -104,6 +109,7 @@ describe('events', () => {
         healerSlots: 2,
         dpsSlots: 8,
         createdByUserId: null,
+        tentativeDeadlineAt: new Date(inDays(days - 1)),
       });
     }
 

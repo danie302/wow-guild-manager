@@ -18,6 +18,7 @@ import {
 } from 'discord.js';
 
 import { eventPostButtonLabels } from '../domain/event-post.js';
+import { tentativeClosed } from '../domain/tentative.js';
 import {
   decline,
   signUp,
@@ -172,6 +173,11 @@ async function submit(
   });
   await scheduleEventPostUpdate(jobs, outcome.event.id);
   await notifySignUpChanges(jobs, outcome.changes);
+  // Past the reminder time, a new Tentative participant gets the reminder right away (the job
+  // does nothing before then).
+  if (choice.status === 'tentative') {
+    await jobs.enqueue('tentative-reminder', { eventId: outcome.event.id });
+  }
 }
 
 /**
@@ -215,21 +221,28 @@ function form(
     );
   const submitId = (status: 'confirmed' | 'tentative') =>
     `${NAME}:${status}:${event.id}:${character.id}:${role ?? NO_ROLE}`;
+  // After the deadline, only Confirmed.
+  const tentativeOpen = !tentativeClosed(event);
   const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(submitId('confirmed'))
       .setLabel(t('signUp.status.confirmed'))
       .setStyle(ButtonStyle.Success)
       .setDisabled(role === null),
-    new ButtonBuilder()
-      .setCustomId(submitId('tentative'))
-      .setLabel(t('signUp.status.tentative'))
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(role === null),
+    ...(tentativeOpen
+      ? [
+          new ButtonBuilder()
+            .setCustomId(submitId('tentative'))
+            .setLabel(t('signUp.status.tentative'))
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(role === null),
+        ]
+      : []),
   );
 
   const start = `<t:${Math.floor(event.startsAt.getTime() / 1000)}:F>`;
   const lines = [t('signUp.form.title', { event: event.name, time: start })];
+  if (!tentativeOpen) lines.push(t('signUp.form.tentativeClosed'));
   if (current?.placement && current.role) {
     const signedUpWith = characters.find((candidate) => candidate.id === current.characterId);
     lines.push(
@@ -272,5 +285,7 @@ function refusal(outcome: SignUpRefusal, t: Translate): string {
       return t('signUp.notYourCharacter');
     case 'role_not_allowed':
       return t('signUp.roleNotAllowed');
+    case 'tentative_closed':
+      return t('signUp.tentativeClosed');
   }
 }

@@ -221,7 +221,16 @@
     "noChannel": "Sin canal",
     "noChannelMatch": "Ningún canal coincide. El bot necesita ver, escribir y publicar embeds en él.",
     "discordLanguage": "Idioma de los mensajes de Discord",
-    "discordLanguageHelp": "Los mensajes de eventos y los avisos de roles sin cubrir usan este idioma."
+    "discordLanguageHelp": "Los mensajes de eventos y los avisos de roles sin cubrir usan este idioma.",
+    "signUps": "Inscripciones",
+    "signUpsHelp": "El Guild Master y los Officers pueden cambiar esto.",
+    "tentativeDeadline": "Plazo para Provisional",
+    "tentativeDeadlineUnit": "Horas antes del evento (1–168).",
+    "tentativeDeadlineRange": "Usa de 1 a 168 horas.",
+    "reminder": "Recordatorio",
+    "reminderUnit": "Horas antes del plazo (1–72).",
+    "reminderRange": "Usa de 1 a 72 horas.",
+    "tentativeExample": "Las inscripciones provisionales cierran {{deadline}} horas antes de cada evento (salvo que tenga su propio plazo), y el recordatorio se envía {{reminder}} horas antes del inicio. Los próximos eventos cuyo nuevo plazo ya habría pasado conservan el anterior."
   },
   "roster": {
     "title": "Plantilla",
@@ -416,7 +425,11 @@
     "preConfirmedRole": "Rol",
     "preConfirmedAdd": "Añadir",
     "preConfirmedNoMember": "Ningún miembro coincide. Solo Raiders, Officers y el Guild Master pueden ir a raids.",
-    "preConfirmedRoleFull": "No quedan plazas de {{role}}."
+    "preConfirmedRoleFull": "No quedan plazas de {{role}}.",
+    "tentativeDeadline": "Plazo para Provisional",
+    "tentativeDeadlineGuild": "Valor de la hermandad ({{hours}} h)",
+    "tentativeDeadlineOwn": "Personalizado",
+    "tentativeDeadlineHours": "Horas antes del inicio (1–168)"
   },
   "eventPage": {
     "back": "Eventos",
@@ -470,7 +483,8 @@
     "keepParticipant": "Cancelar",
     "replaceTitle": "Sustituir a {{name}}",
     "replaceBody": "Elige a alguien de la lista de espera para ocupar la plaza. {{name}} pasa al final de la lista de espera, y ambos reciben un mensaje directo.",
-    "participantFailed": "No se pudieron cambiar los participantes."
+    "participantFailed": "No se pudieron cambiar los participantes.",
+    "tentativeCloses": "Provisional cierra el {{date}} · {{hours}} h antes del inicio"
   },
   "series": {
     "title": "Eventos recurrentes",

@@ -24,6 +24,31 @@ export class FakeJobQueue implements JobEnqueuer {
     return Promise.resolve();
   }
 
+  schedule<Name extends JobName>(
+    name: Name,
+    data: JobPayloads[Name],
+    { jobId, runAt }: { jobId: string; runAt: Date },
+  ): Promise<void> {
+    this.unscheduleNow(jobId);
+    this.jobs.push({ name, data, jobId, runAt });
+    return Promise.resolve();
+  }
+
+  unschedule(jobId: string): Promise<void> {
+    this.unscheduleNow(jobId);
+    return Promise.resolve();
+  }
+
+  /** The job with this ID, if it's queued. */
+  job(jobId: string) {
+    return this.jobs.find((job) => job.jobId === jobId);
+  }
+
+  private unscheduleNow(jobId: string) {
+    const index = this.jobs.findIndex((job) => job.jobId === jobId);
+    if (index >= 0) this.jobs.splice(index, 1);
+  }
+
   /** The payloads of the jobs with this name. */
   payloads<Name extends JobName>(name: Name): JobPayloads[Name][] {
     return this.jobs.filter((job) => job.name === name).map((job) => job.data as JobPayloads[Name]);

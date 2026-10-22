@@ -23,6 +23,10 @@ Show the Guild Master and Officers what needs attention on the app's home page.
 - [ ] Each item links to the page where it can be handled.
 - [ ] The Guild Master and Officers land on the dashboard after login. It follows screen 03 in `docs/design/`.
 
+## Notes
+
+- Show each event's actual Tentative deadline (`tentativeDeadline` in `EventResponse`, story 026), not a fixed 24 hours.
+
 ## Technical debt
 
 None.

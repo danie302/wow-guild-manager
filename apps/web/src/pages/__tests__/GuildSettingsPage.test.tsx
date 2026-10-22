@@ -206,6 +206,24 @@ describe('GuildSettingsPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('saves the Tentative deadline and reminder', async () => {
+    const fetchMock = mockSettingsApi();
+    const user = userEvent.setup();
+    renderRoute(settingsPath);
+
+    const deadline = await screen.findByLabelText('Tentative deadline');
+    await user.clear(deadline);
+    await user.type(deadline, '200');
+    expect(screen.getByText('Use 1–168 hours.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await user.clear(deadline);
+    await user.type(deadline, '48');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(savesSent(fetchMock)).toHaveLength(1));
+    expect([...savesSent(fetchMock)[0]!.entries()]).toEqual([['tentativeDeadlineHours', '48']]);
+  });
+
   it('asks before leaving with unsaved changes', async () => {
     mockSettingsApi();
     const user = userEvent.setup();
@@ -237,7 +255,8 @@ describe('GuildSettingsPage', () => {
     expect(await screen.findByLabelText('Guild name')).toBeDisabled();
     expect(screen.getAllByText('Only the Guild Master can change these.')).toHaveLength(2);
     expect(screen.queryByLabelText('Upload image')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    // Officers can only change the sign-up settings.
+    expect(screen.getByLabelText('Tentative deadline')).toBeEnabled();
     expect(screen.getByRole('combobox', { name: 'Discord role that grants Officer' })).toHaveValue(
       'Officers',
     );

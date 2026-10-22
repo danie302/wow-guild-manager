@@ -9,12 +9,13 @@ import {
 } from '@wgm/shared';
 import { Op, Transaction } from 'sequelize';
 
-import { Event, EventSeries, SignUp, type Guild, type User } from '../db/models/index.js';
+import { Event, EventSeries, Guild, SignUp, type User } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
 import type { Logger } from '../logger.js';
 import { DomainError, DomainValidationError } from './errors.js';
 import { applyEventChanges, checkStartsInFuture, eventColumns, parseInput } from './events.js';
 import { mergeSignUpChanges, type SignUpChanges } from './sign-ups.js';
+import { deadlineFor } from './tentative.js';
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -49,10 +50,12 @@ export async function createSeries(
 
 /**
  * Creates the series' missing events up to two weeks ahead. Safe to run at any time and in
- * parallel: a unique index keeps one event per week.
+ * parallel: a unique index keeps one event per week. Resolves the events it meant to create
+ * (some may have been created in parallel), for scheduling their jobs.
  */
-export async function extendSeries(series: EventSeries, now = new Date()): Promise<void> {
-  if (series.stoppedAt) return;
+export async function extendSeries(series: EventSeries, now = new Date()): Promise<string[]> {
+  if (series.stoppedAt) return [];
+  const guild = (await Guild.findByPk(series.guildId))!;
   const horizon = now.getTime() + SERIES_WEEKS_AHEAD * WEEK;
   const last = await Event.max<Date | null, Event>('startsAt', { where: { seriesId: series.id } });
   let next = last ? last.getTime() + WEEK : series.startsAt.getTime();
@@ -70,21 +73,34 @@ export async function extendSeries(series: EventSeries, now = new Date()): Promi
       tankSlots: series.tankSlots,
       healerSlots: series.healerSlots,
       dpsSlots: series.dpsSlots,
+      tentativeDeadlineHours: series.tentativeDeadlineHours,
+      tentativeDeadlineAt: deadlineFor(
+        { startsAt: new Date(next), tentativeDeadlineHours: series.tentativeDeadlineHours },
+        guild,
+      ),
       createdByUserId: series.createdByUserId,
     });
   }
-  if (events.length > 0) await Event.bulkCreate(events, { ignoreDuplicates: true });
+  if (events.length === 0) return [];
+  await Event.bulkCreate(events, { ignoreDuplicates: true });
+  const created = await Event.findAll({
+    attributes: ['id'],
+    where: { seriesId: series.id, startsAt: events.map((event) => event.startsAt) },
+  });
+  return created.map((event) => event.id);
 }
 
 /** The worker's hourly job: keeps every running series two weeks ahead. */
-export async function extendAllSeries(logger: Logger, now = new Date()): Promise<void> {
+export async function extendAllSeries(logger: Logger, now = new Date()): Promise<string[]> {
+  const created: string[] = [];
   for (const series of await EventSeries.findAll({ where: { stoppedAt: null } })) {
     try {
-      await extendSeries(series, now);
+      created.push(...(await extendSeries(series, now)));
     } catch (err) {
       logger.error({ err, seriesId: series.id }, 'Could not create the events of a series');
     }
   }
+  return created;
 }
 
 /**
@@ -127,6 +143,7 @@ export async function updateSeries(
           event.cancelledAt
             ? { startsAt: new Date(startsAt) }
             : { ...columns, startsAt: new Date(startsAt) },
+          guild,
         ),
       );
     }

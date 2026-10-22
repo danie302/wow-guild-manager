@@ -34,6 +34,8 @@ export class EventSeries extends Model<
   declare tankSlots: number;
   declare healerSlots: number;
   declare dpsSlots: number;
+  /** The events' own Tentative deadline in hours; null uses the guild's. */
+  declare tentativeDeadlineHours: CreationOptional<number | null>;
   declare createdByUserId: ForeignKey<User['id']> | null;
   declare stoppedAt: CreationOptional<Date | null>;
   declare stoppedByUserId: CreationOptional<ForeignKey<User['id']> | null>;
@@ -57,6 +59,7 @@ export class EventSeries extends Model<
         tankSlots: { type: DataTypes.SMALLINT, allowNull: false },
         healerSlots: { type: DataTypes.SMALLINT, allowNull: false },
         dpsSlots: { type: DataTypes.SMALLINT, allowNull: false },
+        tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: true },
         createdByUserId: { type: DataTypes.UUID, allowNull: true },
         stoppedAt: { type: DataTypes.DATE, allowNull: true },
         stoppedByUserId: { type: DataTypes.UUID, allowNull: true },

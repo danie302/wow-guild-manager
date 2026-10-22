@@ -13,7 +13,9 @@ import type { Guild } from '../db/models/index.js';
 import { guildImageUrl, updateGuildSettings } from '../domain/guild-settings.js';
 import { createGuild } from '../domain/guilds.js';
 import { replaceGuildOfficers } from '../domain/officers.js';
-import { enqueueUpcomingEventPosts } from '../jobs/event-posts.js';
+import { applyGuildDeadline } from '../domain/tentative.js';
+import { enqueueEventPosts, enqueueUpcomingEventPosts } from '../jobs/event-posts.js';
+import { scheduleTentativeJobs, upcomingEventIds } from '../jobs/tentative.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import { discordServerIconUrl, type DiscordDirectory } from '../integrations/discord/directory.js';
 import type { Logger } from '../logger.js';
@@ -105,16 +107,22 @@ export function guildsRouter(
         return;
       }
       try {
-        const { officerRoleChanged, eventPostsChanged } = await updateGuildSettings(
-          currentUser(res),
-          guild,
-          access,
-          input.data,
-          req.file?.buffer,
-          { discord, storage },
-        );
+        const { officerRoleChanged, eventPostsChanged, deadlineChanged, reminderChanged } =
+          await updateGuildSettings(currentUser(res), guild, access, input.data, req.file?.buffer, {
+            discord,
+            storage,
+          });
         if (officerRoleChanged) await loadOfficers(guild, discord!.directory, req.log);
         if (eventPostsChanged && jobs) await enqueueUpcomingEventPosts(jobs, guild.id);
+        // Events keep their deadline when the new one would already have passed.
+        const moved = deadlineChanged ? await applyGuildDeadline(guild) : [];
+        if ((deadlineChanged || reminderChanged) && jobs) {
+          await enqueueEventPosts(jobs, moved);
+          await scheduleTentativeJobs(
+            jobs,
+            reminderChanged ? await upcomingEventIds(guild.id) : moved,
+          );
+        }
       } catch (err) {
         if (err instanceof InvalidImageError) {
           sendError(res, 400, { code: 'INVALID_IMAGE' });
@@ -186,6 +194,8 @@ async function toGuildResponse(
       ? { id: guild.eventsChannelId, name: await eventsChannelName(guild, discord, log) }
       : null,
     discordLocale: guild.discordLocale,
+    tentativeDeadlineHours: guild.tentativeDeadlineHours,
+    reminderHours: guild.reminderHours,
   };
 }
 

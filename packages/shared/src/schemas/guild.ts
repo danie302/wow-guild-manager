@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { FACTIONS } from '../game.js';
 import { SUPPORTED_LOCALES } from '../locales.js';
 import { hasOffensiveWords } from '../offensive-words.js';
+import { REMINDER_HOURS, TENTATIVE_DEADLINE_HOURS } from './event.js';
 
 export const GUILD_NAME_MAX_LENGTH = 50;
 
@@ -56,6 +57,14 @@ export const updateGuildSchema = z
     eventsChannelId: discordIdSchema,
     /** The language of the guild's public Discord messages. */
     discordLocale: z.enum(SUPPORTED_LOCALES),
+    /** Hours before an event that Tentative participants must confirm (multipart text). */
+    tentativeDeadlineHours: z.coerce
+      .number()
+      .int()
+      .min(TENTATIVE_DEADLINE_HOURS.min)
+      .max(TENTATIVE_DEADLINE_HOURS.max),
+    /** Hours before the deadline that the reminder goes out. */
+    reminderHours: z.coerce.number().int().min(REMINDER_HOURS.min).max(REMINDER_HOURS.max),
     /** "true" removes the guild image. */
     removeImage: z.literal('true'),
   })

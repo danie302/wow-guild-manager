@@ -349,6 +349,15 @@ The gear checks (and, later, registering characters from Discord) read character
 - The Guild Master and Officers manage participants in the web app (story 025): removing deletes the sign-up and rebalances the slots; replacing swaps a Tentative participant (who goes to the end of the waitlist, with a new `signed_up_at`) with any waitlisted character of the role. Both lock the event and return `SignUpChanges` like the rest. There's no Undo: a change asks for confirmation, and its direct messages go out right away.
 - Pre-confirmed participants are part of `POST /events` (`preConfirmed`), created in the same transaction as the raid. The schema checks the type and each role's slots, `preConfirm` checks each character, and the route allows it only for the Guild Master.
 
+### Tentative deadline and reminders
+
+**Status:** Accepted (story 026)
+
+- Each event stores its deadline (`tentative_deadline_at`) instead of working it out from the guild's setting each time, because changing the setting keeps an event's deadline when the new one would already have passed. It's recomputed when the event's time or own deadline (`tentative_deadline_hours`, null for the guild's) changes, and for upcoming events without their own deadline when the guild's changes (`src/domain/tentative.ts`).
+- Each event has a `tentative-reminder-<eventId>` and a `tentative-deadline-<eventId>` job, scheduled by `scheduleTentativeJobs` (`src/jobs/tentative.ts`) whenever the event, its series, or the guild's deadline or reminder time changes, and removed when it's cancelled. Scheduling replaces the job with the same ID, so there are never duplicates; if that job is running at that moment, the new one goes under an ID with its time.
+- Both jobs re-check the event before acting: nothing for a cancelled event, a reminder before its time, or a deadline that moved later. Reminders are marked per sign-up (`reminded_at`), so each participant gets one; a Tentative sign-up after the reminder time enqueues the reminder job right away.
+- At the deadline, each role's most recent Tentative participants are swapped with its earliest waitlisted characters, in one transaction that locks the event, and both sides get the usual direct messages.
+
 ## IDs: UUID v7
 
 **Status:** Accepted

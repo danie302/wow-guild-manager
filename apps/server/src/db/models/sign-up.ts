@@ -28,6 +28,8 @@ export class SignUp extends Model<InferAttributes<SignUp>, InferCreationAttribut
   declare placement: SignUpPlacement | null;
   /** When they signed up for this role: the waitlist's order. */
   declare signedUpAt: Date;
+  /** When they got the Tentative reminder; null until then. */
+  declare remindedAt: CreationOptional<Date | null>;
 
   declare event?: NonAttribute<Event>;
   declare character?: NonAttribute<Character>;
@@ -44,6 +46,7 @@ export class SignUp extends Model<InferAttributes<SignUp>, InferCreationAttribut
         status: { type: DataTypes.STRING(9), allowNull: false },
         placement: { type: DataTypes.STRING(8), allowNull: true },
         signedUpAt: { type: DataTypes.DATE, allowNull: false },
+        remindedAt: { type: DataTypes.DATE, allowNull: true },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

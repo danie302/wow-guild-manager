@@ -17,6 +17,7 @@ import { cancelEvent, createEvent } from '../../../domain/events.js';
 import { createTestLogger } from '../../../test-logger.js';
 import { notifySignUpChanges } from '../../sign-up-notices.js';
 import { signUpNoticeHandlers } from '../sign-up-notices.js';
+import { tentativeHandlers } from '../tentative.js';
 
 const serverId = '300000000000000001';
 const playerId = '200000000000000002';
@@ -135,6 +136,29 @@ describe('sign-up notices', () => {
         content: `The time of an event you signed up for changed:\n• **Warsong Gulch**: <t:${unix}:F>`,
       },
     ]);
+  });
+});
+
+describe('tentative-reminder', () => {
+  it('reminds a Tentative participant once, with the deadline', async () => {
+    const signUp = await signUpWith('slot');
+    await signUp.update({ status: 'tentative' });
+    // The reminder time has come: the deadline is in 6 hours, under the guild's 12.
+    const deadline = new Date(Date.now() + 6 * 60 * 60 * 1000);
+    await event.update({ tentativeDeadlineAt: deadline });
+    const handlers = tentativeHandlers({
+      logger: createTestLogger().logger,
+      messenger,
+      jobs: new FakeJobQueue(),
+    });
+
+    await handlers['tentative-reminder']({ eventId: event.id });
+    await handlers['tentative-reminder']({ eventId: event.id });
+
+    expect(messenger.sent).toHaveLength(1);
+    expect(messenger.sent[0]?.content).toContain(
+      `Confirm before <t:${Math.floor(deadline.getTime() / 1000)}:F>`,
+    );
   });
 });
 

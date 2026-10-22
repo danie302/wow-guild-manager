@@ -29,6 +29,8 @@ export const testGuild: GuildResponse = {
   officerRole: { id: '400000000000000001', name: 'Officers' },
   eventsChannel: { id: '500000000000000001', name: 'raid-signups' },
   discordLocale: 'en',
+  tentativeDeadlineHours: 24,
+  reminderHours: 12,
 };
 
 type Handler = (init?: RequestInit) => Response | Promise<Response>;

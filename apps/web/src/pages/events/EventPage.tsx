@@ -69,6 +69,16 @@ export function EventPage() {
         ].join(' · ')}
         title={data.name}
         when={whenText(format, startsAt)}
+        details={
+          data.cancelled
+            ? undefined
+            : [
+                t('eventPage.tentativeCloses', {
+                  date: whenText(format, new Date(data.tentativeDeadline.at)),
+                  hours: data.tentativeDeadline.hours,
+                }),
+              ]
+        }
         description={data.description}
         actions={
           changeable && (

@@ -5,12 +5,14 @@ import type { ChannelMessages } from '../../integrations/discord/channel-message
 import type { DirectMessenger } from '../../integrations/discord/direct-messages.js';
 import type { Logger } from '../../logger.js';
 import { enqueueMissingEventPosts } from '../event-posts.js';
+import { scheduleTentativeJobs } from '../tentative.js';
 import type { JobEnqueuer } from '../queue.js';
 import type { JobHandlers } from '../worker.js';
 import { eventPostHandlers } from './event-posts.js';
 import { pingHandler } from './ping.js';
 import { registrationHandlers } from './registrations.js';
 import { signUpNoticeHandlers } from './sign-up-notices.js';
+import { tentativeHandlers } from './tentative.js';
 
 /** What the handlers can use. Lookups in the game run here, never in page requests. */
 export interface JobDependencies {
@@ -32,9 +34,11 @@ export function createJobHandlers(dependencies: JobDependencies): JobHandlers {
     ...registrationHandlers(dependencies),
     ...eventPostHandlers(dependencies),
     ...signUpNoticeHandlers(dependencies),
+    ...tentativeHandlers(dependencies),
     // New events of a series get their posts in the same run.
     'extend-series': async () => {
-      await extendAllSeries(dependencies.logger);
+      const created = await extendAllSeries(dependencies.logger);
+      await scheduleTentativeJobs(dependencies.jobs, created);
       await enqueueMissingEventPosts(dependencies.jobs);
     },
   };

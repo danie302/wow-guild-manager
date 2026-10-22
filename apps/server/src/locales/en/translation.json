@@ -80,7 +80,8 @@
       "current": "You are signed up with {{character}} as {{role}} ({{status}}). Changing only the status or the character keeps your spot.",
       "character": "Choose a character",
       "role": "Choose a role",
-      "main": "{{class}} · main"
+      "main": "{{class}} · main",
+      "tentativeClosed": "Tentative sign-ups for this event have closed. You can still sign up as Confirmed."
     },
     "inSlot": "You're in: {{character}} as {{role}} for {{event}} ({{status}}).",
     "onWaitlist": "{{role}} is full for {{event}}, so {{character}} is on the waitlist ({{status}}). You get a spot if one opens.",
@@ -95,7 +96,8 @@
     "notEligible": "Your rank can't sign up for {{event}}. Raids are for Raiders, Officers, and the Guild Master.",
     "noCharacters": "You have no characters on the roster yet. Ask an Officer to add yours.",
     "notYourCharacter": "That character isn't on your roster any more. Press Sign up on the event again.",
-    "roleNotAllowed": "That character's class can't play that role."
+    "roleNotAllowed": "That character's class can't play that role.",
+    "tentativeClosed": "Tentative sign-ups for this event have closed. You can still sign up as Confirmed."
   },
   "signUpNotices": {
     "promoted": "A spot opened in **{{event}}** ({{time}}): {{character}} is in as {{role}}. If you can no longer make it, press Declined on the event.",
@@ -105,6 +107,7 @@
     "replaced": "**{{event}}** ({{time}}): {{character}} was Tentative, so their spot went to someone on the waitlist. {{character}} is now at the end of the {{role}} waitlist, and gets a spot if one opens.",
     "preConfirmed": "You are pre-confirmed for **{{event}}** ({{time}}) with {{character}} as {{role}}. If you can't make it, press Declined on the event.",
     "removed": "{{name}} removed you from **{{event}}** ({{time}}). You can sign up again from the event post.",
-    "someone": "An Officer"
+    "someone": "An Officer",
+    "reminder": "Reminder: you're Tentative for **{{event}}** ({{time}}) with {{character}} as {{role}}. Confirm before {{deadline}} on the event post, or your spot may go to someone on the waitlist."
   }
 }

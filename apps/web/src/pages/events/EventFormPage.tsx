@@ -66,6 +66,8 @@ interface Draft {
   time: string;
   size: number;
   slots: Slots;
+  /** Its own Tentative deadline in hours, as typed; null uses the guild's. */
+  ownDeadline: string | null;
 }
 
 /** Slots a new event starts with, by type and size. */
@@ -120,7 +122,8 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
   const updateSeries = useUpdateSeries(guildId, editingSeries ? editing.value.id : '');
   const [repeat, setRepeat] = useState(false);
   const [preConfirmed, setPreConfirmed] = useState<PreConfirmed[]>([]);
-  const isGuildMaster = useGuild(guildId).data?.access === 'guild_master';
+  const guild = useGuild(guildId).data;
+  const isGuildMaster = guild?.access === 'guild_master';
   const save = editing
     ? editingSeries
       ? updateSeries
@@ -137,6 +140,14 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
           ...toZonedFields(new Date(event.startsAt), format.timeZone),
           size: event.size,
           slots: { ...event.slots },
+          ownDeadline:
+            editing?.kind === 'event'
+              ? editing.value.tentativeDeadline.own
+                ? String(editing.value.tentativeDeadline.hours)
+                : null
+              : editing?.kind === 'series' && editing.value.tentativeDeadlineHours !== null
+                ? String(editing.value.tentativeDeadlineHours)
+                : null,
         }
       : {
           type: 'raid',
@@ -146,6 +157,7 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
           time: '',
           size: defaultSize.raid,
           slots: defaultSlots('raid', defaultSize.raid),
+          ownDeadline: null,
         },
   );
   const change = (changes: Partial<Draft>) => setDraft((current) => ({ ...current, ...changes }));
@@ -162,6 +174,7 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     startsAt: startsAt?.toISOString() ?? '',
     size: draft.size,
     slots: draft.slots,
+    tentativeDeadlineHours: draft.ownDeadline === null ? null : Number(draft.ownDeadline),
     ...(canPreConfirm &&
       preConfirmed.length > 0 && {
         preConfirmed: preConfirmed.map(({ characterId, role }) => ({ characterId, role })),
@@ -235,8 +248,8 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
       else createEvent.mutate(input, toEvent);
       return;
     }
-    const { name, description, startsAt: start, size, slots } = input;
-    const details = { name, description, startsAt: start, size, slots };
+    const { name, description, startsAt: start, size, slots, tentativeDeadlineHours } = input;
+    const details = { name, description, startsAt: start, size, slots, tentativeDeadlineHours };
     if (editingSeries) updateSeries.mutate(details, toSeries);
     else updateEvent.mutate(details, toEvent);
   };
@@ -301,6 +314,31 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
       </FormGrid>
       {!event && <Checkbox label={t('eventForm.repeat')} checked={repeat} onChange={setRepeat} />}
       {(repeat || editingSeries) && <Page.Text>{t('eventForm.repeatHint')}</Page.Text>}
+      <ChoiceGroup
+        label={t('eventForm.tentativeDeadline')}
+        size="small"
+        value={draft.ownDeadline === null ? 'guild' : 'own'}
+        onChange={(mode: 'guild' | 'own') =>
+          change({
+            ownDeadline: mode === 'guild' ? null : String(guild?.tentativeDeadlineHours ?? 24),
+          })
+        }
+      >
+        <ChoiceGroup.Option value="guild">
+          {t('eventForm.tentativeDeadlineGuild', { hours: guild?.tentativeDeadlineHours ?? 24 })}
+        </ChoiceGroup.Option>
+        <ChoiceGroup.Option value="own">{t('eventForm.tentativeDeadlineOwn')}</ChoiceGroup.Option>
+      </ChoiceGroup>
+      {draft.ownDeadline !== null && (
+        <TextField
+          label={t('eventForm.tentativeDeadlineHours')}
+          type="number"
+          width={120}
+          value={draft.ownDeadline}
+          onChange={(ownDeadline) => change({ ownDeadline })}
+          error={errorFor('tentativeDeadlineHours')}
+        />
+      )}
     </>
   );
 

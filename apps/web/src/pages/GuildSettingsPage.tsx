@@ -3,6 +3,8 @@ import {
   GUILD_IMAGE_TYPES,
   GUILD_NAME_MAX_LENGTH,
   guildNameSchema,
+  REMINDER_HOURS,
+  TENTATIVE_DEADLINE_HOURS,
   SUPPORTED_LOCALES,
   toValidationIssues,
   type GuildResponse,
@@ -27,6 +29,7 @@ import {
   ChoiceGroup,
   ComboBox,
   ConfirmDialog,
+  FormGrid,
   ImagePicker,
   Loading,
   Notice,
@@ -47,6 +50,9 @@ interface Form {
   /** Null until one is chosen; a new server starts without one. */
   channelId: string | null;
   discordLocale: Locale;
+  /** As typed, so a half-typed number doesn't jump. */
+  deadlineHours: string;
+  reminderHours: string;
 }
 
 function formFrom(guild: GuildResponse): Form {
@@ -57,7 +63,15 @@ function formFrom(guild: GuildResponse): Form {
     roleId: guild.officerRole.id,
     channelId: guild.eventsChannel?.id ?? null,
     discordLocale: guild.discordLocale,
+    deadlineHours: String(guild.tentativeDeadlineHours),
+    reminderHours: String(guild.reminderHours),
   };
+}
+
+/** A whole number of hours within the range, or null. */
+function hoursIn(value: string, { min, max }: { min: number; max: number }): number | null {
+  const hours = Number(value);
+  return /^\d+$/.test(value.trim()) && hours >= min && hours <= max ? hours : null;
 }
 
 /** The guild's settings. Changes apply only when saved, for the whole page at once. */
@@ -121,6 +135,10 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   const roleChanged = form.roleId !== guild.officerRole.id;
   const channelChanged = form.channelId !== (guild.eventsChannel?.id ?? null);
   const localeChanged = form.discordLocale !== guild.discordLocale;
+  const deadlineHours = hoursIn(form.deadlineHours, TENTATIVE_DEADLINE_HOURS);
+  const reminderHours = hoursIn(form.reminderHours, REMINDER_HOURS);
+  const deadlineChanged = form.deadlineHours !== String(guild.tentativeDeadlineHours);
+  const reminderChanged = form.reminderHours !== String(guild.reminderHours);
 
   const changes: GuildSettingsChanges = {};
   if (nameResult.success && nameResult.data !== guild.name) changes.name = nameResult.data;
@@ -132,6 +150,8 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   // A new server without a channel leaves the guild without one.
   if (channelChanged && form.channelId) changes.eventsChannelId = form.channelId;
   if (localeChanged) changes.discordLocale = form.discordLocale;
+  if (deadlineChanged && deadlineHours !== null) changes.tentativeDeadlineHours = deadlineHours;
+  if (reminderChanged && reminderHours !== null) changes.reminderHours = reminderHours;
 
   const dirty =
     form.name !== guild.name ||
@@ -139,8 +159,11 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
     serverChanged ||
     roleChanged ||
     channelChanged ||
-    localeChanged;
-  const valid = nameResult.success && form.roleId !== null;
+    localeChanged ||
+    deadlineChanged ||
+    reminderChanged;
+  const valid =
+    nameResult.success && form.roleId !== null && deadlineHours !== null && reminderHours !== null;
 
   const blocker = useBlocker(dirty && !save.isPending);
   useEffect(() => {
@@ -336,9 +359,41 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
         <Page.Text>{t('guildSettings.discordLanguageHelp')}</Page.Text>
       </Page.Setting>
 
+      <Page.Setting title={t('guildSettings.signUps')} description={t('guildSettings.signUpsHelp')}>
+        <FormGrid>
+          <TextField
+            label={t('guildSettings.tentativeDeadline')}
+            type="number"
+            width={120}
+            value={form.deadlineHours}
+            onChange={(value) => update({ deadlineHours: value })}
+            hint={t('guildSettings.tentativeDeadlineUnit')}
+            error={deadlineHours === null ? t('guildSettings.tentativeDeadlineRange') : undefined}
+          />
+          <TextField
+            label={t('guildSettings.reminder')}
+            type="number"
+            width={120}
+            value={form.reminderHours}
+            onChange={(value) => update({ reminderHours: value })}
+            hint={t('guildSettings.reminderUnit')}
+            error={reminderHours === null ? t('guildSettings.reminderRange') : undefined}
+          />
+        </FormGrid>
+        {deadlineHours !== null && reminderHours !== null && (
+          <Page.Text>
+            {t('guildSettings.tentativeExample', {
+              deadline: deadlineHours,
+              reminder: deadlineHours + reminderHours,
+            })}
+          </Page.Text>
+        )}
+      </Page.Setting>
+
       {save.isError && <SaveError error={save.error} />}
 
-      {isGuildMaster && (
+      {/* Officers can save the sign-up settings; the rest is the Guild Master's. */}
+      {(isGuildMaster || guild.access === 'officer') && (
         <SaveBar
           status={dirty ? 'dirty' : justSaved ? 'saved' : 'clean'}
           statusText={dirty ? t('guildSettings.unsaved') : t('guildSettings.saved')}

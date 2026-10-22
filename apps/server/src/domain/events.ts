@@ -14,17 +14,7 @@ import { Event, type Guild, type User } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
 import { DomainError, DomainValidationError } from './errors.js';
 import { balanceSlots, participantIds, preConfirm, type SignUpChanges } from './sign-ups.js';
-
-/**
- * How many hours before an event Tentative sign-ups close, until story 026 makes it a guild
- * setting with a per-event override.
- */
-export const DEFAULT_TENTATIVE_DEADLINE_HOURS = 24;
-
-/** When Tentative participants must have confirmed. */
-export function tentativeDeadline(event: Pick<Event, 'startsAt'>): Date {
-  return new Date(event.startsAt.getTime() - DEFAULT_TENTATIVE_DEADLINE_HOURS * 60 * 60 * 1000);
-}
+import { deadlineFor } from './tentative.js';
 
 /**
  * Creates an event. It must start in the future. A raid can come with pre-confirmed
@@ -40,10 +30,12 @@ export async function createEvent(
   const event = parseInput(createEventSchema, input);
   checkStartsInFuture(event.startsAt, now);
   return transaction(async () => {
+    const columns = eventColumns(event);
     const created = await Event.create({
       guildId: guild.id,
       type: event.type,
-      ...eventColumns(event),
+      ...columns,
+      tentativeDeadlineAt: deadlineFor(columns, guild),
       createdByUserId: createdBy.id,
     });
     await preConfirm(guild, created, event.preConfirmed ?? [], now);
@@ -69,7 +61,7 @@ export async function updateEvent(
     const issues = eventSlotIssues(event.type, details);
     if (issues.length > 0) throw new DomainValidationError(issues);
     checkStartsInFuture(details.startsAt, now);
-    const changes = await applyEventChanges(event, eventColumns(details));
+    const changes = await applyEventChanges(event, eventColumns(details), guild);
     return { event, changes };
   });
 }
@@ -81,9 +73,14 @@ export async function updateEvent(
 export async function applyEventChanges(
   event: Event,
   columns: Partial<ReturnType<typeof eventColumns>>,
+  guild: Guild,
 ): Promise<SignUpChanges> {
   const startsAt = event.startsAt.getTime();
   await event.update(columns);
+  // A new time or own deadline moves the deadline; the caller reschedules its jobs.
+  if (columns.startsAt || columns.tentativeDeadlineHours !== undefined) {
+    await event.update({ tentativeDeadlineAt: deadlineFor(event, guild) });
+  }
   const changes = await balanceSlots(event);
   if (event.startsAt.getTime() !== startsAt && !event.cancelledAt) {
     for (const memberId of await participantIds(event.id)) {
@@ -144,5 +141,6 @@ export function eventColumns(details: z.output<typeof updateEventSchema>) {
     tankSlots: details.slots.tank,
     healerSlots: details.slots.healer,
     dpsSlots: details.slots.dps,
+    tentativeDeadlineHours: details.tentativeDeadlineHours,
   };
 }

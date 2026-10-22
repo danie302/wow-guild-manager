@@ -198,6 +198,8 @@ describe('POST /api/guilds', () => {
       officerRole: { id: officers, name: 'Officers' },
       eventsChannel: null,
       discordLocale: 'en',
+      tentativeDeadlineHours: 24,
+      reminderHours: 12,
     });
     const me = await agent.get('/api/me');
     expect(body(me).guilds).toEqual([

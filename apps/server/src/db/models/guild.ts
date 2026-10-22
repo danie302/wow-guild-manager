@@ -31,6 +31,10 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   declare eventsChannelId: CreationOptional<string | null>;
   /** The language of the guild's public Discord messages (event posts and alerts). */
   declare discordLocale: CreationOptional<Locale>;
+  /** Hours before an event that Tentative participants must confirm (1–168). */
+  declare tentativeDeadlineHours: CreationOptional<number>;
+  /** Hours before that deadline the reminder is sent (1–72). */
+  declare reminderHours: CreationOptional<number>;
 
   declare guildMaster?: NonAttribute<User>;
 
@@ -48,6 +52,8 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
         imageKey: { type: DataTypes.STRING(100), allowNull: true },
         eventsChannelId: { type: DataTypes.STRING(20), allowNull: true },
         discordLocale: { type: DataTypes.STRING(2), allowNull: false, defaultValue: 'en' },
+        tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 24 },
+        reminderHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 12 },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
       },

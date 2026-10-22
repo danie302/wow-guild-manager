@@ -12,6 +12,7 @@ import { DomainError } from '../domain/errors.js';
 import { createSeries, futureEventIds, stopSeries, updateSeries } from '../domain/series.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
 import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
+import { scheduleTentativeJobs } from '../jobs/tentative.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import { eventSignUps } from '../domain/sign-ups.js';
 import { eventId as seriesId, toSignUpResponse } from './events.js';
@@ -42,7 +43,11 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
     const { guild } = currentGuild(res);
     const series = await createSeries(guild, req.body as CreateEventInput, currentUser(res));
-    if (jobs) await enqueueEventPosts(jobs, await futureEventIds(series.id));
+    if (jobs) {
+      const ids = await futureEventIds(series.id);
+      await enqueueEventPosts(jobs, ids);
+      await scheduleTentativeJobs(jobs, ids);
+    }
     res.status(201).json(await seriesResponse(series.id));
   });
 
@@ -73,7 +78,9 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
         req.body as UpdateEventInput,
       );
       if (jobs) {
-        await enqueueEventPosts(jobs, await futureEventIds(series.id));
+        const ids = await futureEventIds(series.id);
+        await enqueueEventPosts(jobs, ids);
+        await scheduleTentativeJobs(jobs, ids);
         await notifySignUpChanges(jobs, changes);
       }
       res.json(await seriesResponse(series.id));
@@ -156,6 +163,7 @@ async function toSeriesResponse(series: EventSeries): Promise<SeriesResponse> {
       next?.startsAt.toISOString() ??
       (!series.stoppedAt && series.startsAt > new Date() ? series.startsAt.toISOString() : null),
     nextEventId: next?.id ?? null,
+    tentativeDeadlineHours: series.tentativeDeadlineHours,
     createdBy: series.createdBy?.name ?? null,
     stopped: series.stoppedAt
       ? { at: series.stoppedAt.toISOString(), by: series.stoppedBy?.name ?? null }

@@ -39,6 +39,17 @@ export const EVENT_ERROR_CODES = {
 
 const slotCount = z.number().int().min(0).max(PVP_MAX_SIZE);
 
+/** A Tentative deadline, in hours before the event (the guild's, or an event's own). */
+export const TENTATIVE_DEADLINE_HOURS = { min: 1, max: 168, default: 24 } as const;
+/** When the reminder goes out, in hours before the deadline. */
+export const REMINDER_HOURS = { min: 1, max: 72, default: 12 } as const;
+
+export const tentativeDeadlineHoursSchema = z
+  .number()
+  .int()
+  .min(TENTATIVE_DEADLINE_HOURS.min)
+  .max(TENTATIVE_DEADLINE_HOURS.max);
+
 /** What can change on an event; the type is fixed when it's created. */
 const eventDetails = {
   name: z.string().trim().min(1).max(EVENT_NAME_MAX_LENGTH),
@@ -47,6 +58,8 @@ const eventDetails = {
   startsAt: z.iso.datetime({ offset: true }),
   size: z.number().int().min(PVP_MIN_SIZE).max(PVP_MAX_SIZE),
   slots: z.object({ tank: slotCount, healer: slotCount, dps: slotCount }).strict(),
+  /** Its own Tentative deadline; null (or left out) uses the guild's. */
+  tentativeDeadlineHours: tentativeDeadlineHoursSchema.nullable().default(null),
 };
 
 type Details = { size: number; slots: { tank: number; healer: number; dps: number } };
