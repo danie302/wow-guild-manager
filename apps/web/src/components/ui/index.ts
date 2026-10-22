@@ -4,6 +4,8 @@ export { AgendaList } from './AgendaList';
 export type { AgendaListItemProps, AgendaListProps } from './AgendaList';
 export type { ActionListItemProps, ActionListProps } from './ActionList';
 export { AppShell } from './AppShell';
+export { AttentionList } from './AttentionList';
+export type { AttentionListItemProps, AttentionListProps } from './AttentionList';
 export type {
   AppShellAccountProps,
   AppShellBrandProps,
@@ -84,6 +86,8 @@ export type { StepperProps } from './Stepper';
 export { StatusList } from './StatusList';
 export type { StatusListItemProps, Tone } from './StatusList';
 export { Tabs } from './Tabs';
+export { TileGrid } from './TileGrid';
+export type { TileGridCardProps } from './TileGrid';
 export type { TabsProps } from './Tabs';
 export { Tag } from './Tag';
 export type { TagProps } from './Tag';

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateGuildInput,
+  DashboardResponse,
   TransferCandidate,
   DiscordChannelsResponse,
   DiscordRolesResponse,
@@ -149,4 +150,12 @@ export function useDisbandGuild(guildId: string) {
   return useLeadershipMutation(guildId, (name: string) =>
     apiRequest<void>(`/guilds/${guildId}/disband`, { method: 'POST', body: { name } }),
   );
+}
+
+/** What needs the Guild Master's and Officers' attention. */
+export function useDashboard(guildId: string) {
+  return useQuery({
+    queryKey: ['guilds', guildId, 'dashboard'],
+    queryFn: () => apiRequest<DashboardResponse>(`/guilds/${guildId}/dashboard`),
+  });
 }

@@ -34,7 +34,10 @@ describe('guild access', () => {
 
     renderRoute('/');
 
-    expect(await screen.findByRole('heading', { name: 'Ashen Vanguard' })).toBeInTheDocument();
+    // The page is redrawn on the way, so wait until it settles on the right guild.
+    await waitFor(() =>
+      expect(screen.getByRole('complementary', { name: 'Ashen Vanguard' })).toBeInTheDocument(),
+    );
   });
 
   it('shows the no-access page to a user without any guild', async () => {
@@ -70,11 +73,11 @@ describe('guild access', () => {
     expect(await screen.findByRole('heading', { name: 'Choose a guild' })).toBeInTheDocument();
     expect(screen.getByText('You: Officer')).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: /Emberwatch/ }));
-    expect(await screen.findByRole('heading', { name: 'Emberwatch' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: 'Emberwatch' })).toBeInTheDocument();
     unmount();
 
     renderRoute('/');
-    expect(await screen.findByRole('heading', { name: 'Emberwatch' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: 'Emberwatch' })).toBeInTheDocument();
   });
 
   it('switches guild from the sidebar', async () => {
@@ -84,11 +87,11 @@ describe('guild access', () => {
     });
     const user = userEvent.setup();
     renderRoute(`/guilds/${ashenId}/dashboard`);
-    await screen.findByRole('heading', { name: 'Ashen Vanguard' });
+    await screen.findByRole('complementary', { name: 'Ashen Vanguard' });
 
     await choose(user, screen.getByRole('combobox', { name: 'Switch guild' }), 'Emberwatch');
 
-    expect(await screen.findByRole('heading', { name: 'Emberwatch' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: 'Emberwatch' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Roster' })).toHaveAttribute(
       'href',
       `/guilds/${emberwatchId}/roster`,
@@ -100,15 +103,18 @@ describe('guild access', () => {
 
     renderRoute(`/guilds/${emberwatchId}/dashboard`);
 
-    expect(await screen.findByRole('heading', { name: 'Ashen Vanguard' })).toBeInTheDocument();
+    // The page is redrawn on the way, so wait until it settles on the right guild.
+    await waitFor(() =>
+      expect(screen.getByRole('complementary', { name: 'Ashen Vanguard' })).toBeInTheDocument(),
+    );
   });
 
   it('drops a guild once the API says the user lost access to it', async () => {
     let me: MeResponse = twoGuilds;
     mockApi({
       '/api/me': () => Response.json(me),
-      [`/api/guilds/${emberwatchId}`]: () => {
-        // The Officer role was removed in Discord.
+      // The Officer role was removed in Discord: the dashboard's request is refused.
+      [`/api/guilds/${emberwatchId}/dashboard`]: () => {
         me = { ...testUser };
         return Response.json({ error: { code: 'FORBIDDEN' } }, { status: 403 });
       },
@@ -116,7 +122,10 @@ describe('guild access', () => {
 
     renderRoute(`/guilds/${emberwatchId}/dashboard`);
 
-    expect(await screen.findByRole('heading', { name: 'Ashen Vanguard' })).toBeInTheDocument();
+    // The page is redrawn on the way, so wait until it settles on the right guild.
+    await waitFor(() =>
+      expect(screen.getByRole('complementary', { name: 'Ashen Vanguard' })).toBeInTheDocument(),
+    );
     await waitFor(() =>
       expect(screen.queryByRole('combobox', { name: 'Switch guild' })).not.toBeInTheDocument(),
     );

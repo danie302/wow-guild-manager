@@ -28,6 +28,10 @@ Let the Guild Master and Officers check participants' gear and enchants before a
 - [ ] Characters that Battle.net can't find are flagged.
 - [ ] The page stays usable while the check runs, and if Battle.net fails.
 
+## Notes
+
+- Add the dashboard's "Raid participants with gear problems" section (story 034 left it out).
+
 ## Technical debt
 
 None.

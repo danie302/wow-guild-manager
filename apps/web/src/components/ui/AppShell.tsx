@@ -59,11 +59,13 @@ function AppShellRoot({ children }: AppShellProps) {
   );
 }
 
-function Sidebar({ children }: { children: ReactNode }) {
+/** `label` names the sidebar for screen readers, e.g. after the open guild. */
+function Sidebar({ label, children }: { label?: string; children: ReactNode }) {
   const { compact } = useAppShell('Sidebar');
   return (
     <Box
       component="aside"
+      aria-label={label}
       sx={{
         flex: 'none',
         width: compact ? '100%' : 240,

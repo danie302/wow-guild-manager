@@ -162,13 +162,18 @@
     "createFailed": "No se pudo crear la hermandad"
   },
   "dashboard": {
-    "lead": "Tu hermandad está configurada. Aquí aparecerán los próximos eventos, los roles sin cubrir y los registros pendientes.",
-    "faction": "Facción",
-    "discordServer": "Servidor de Discord",
-    "officerRole": "Rol de Officer",
-    "unavailable": "No se puede leer de Discord en este momento",
     "loading": "Cargando la hermandad",
-    "loadFailed": "No se pudo cargar la hermandad"
+    "loadFailed": "No se pudo cargar la hermandad",
+    "upcoming": "Próximos eventos",
+    "viewAll": "Ver todos",
+    "signedUp": "{{filled}}/{{size}} inscritos",
+    "missingRoles": "Eventos con roles sin cubrir",
+    "tentative": "Inscripciones provisionales cerca de su plazo",
+    "registrations": "Solicitudes para unirse pendientes",
+    "leftDiscord": "Miembros que salieron del servidor de Discord",
+    "none": "Nada que resolver.",
+    "closesIn": "Cierra en {{hours}} h",
+    "requested": "Lo pidió {{when}}"
   },
   "noAccess": {
     "title": "No tienes acceso a Gestor de hermandad",

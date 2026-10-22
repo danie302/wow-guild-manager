@@ -34,7 +34,7 @@ export function Layout() {
 
   return (
     <AppShell>
-      <AppShell.Sidebar>
+      <AppShell.Sidebar label={guild?.name ?? t('app.name')}>
         <AppShell.Brand
           title={guild?.name ?? t('app.name')}
           subtitle={guild ? t('app.name') : t('app.game')}

@@ -83,7 +83,9 @@ describe('GuildSetupPage', () => {
     expect(fetchMock).not.toHaveBeenCalledWith('/api/guilds', expect.anything());
     await user.click(screen.getByRole('button', { name: 'Finish setup' }));
 
-    expect(await screen.findByRole('heading', { name: 'Ashen Vanguard' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('complementary', { name: 'Ashen Vanguard' }),
+    ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/guilds',
       expect.objectContaining({
@@ -179,7 +181,9 @@ describe('GuildSetupPage', () => {
 
     renderRoute('/setup');
 
-    expect(await screen.findByRole('heading', { name: 'Ashen Vanguard' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('complementary', { name: 'Ashen Vanguard' }),
+    ).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Set up your guild')).not.toBeInTheDocument());
   });
 });

@@ -450,6 +450,52 @@ export interface AttendanceReportResponse {
   members: AttendanceReportRow[];
 }
 
+/**
+ * `GET /api/guilds/:guildId/dashboard`: what needs the Guild Master's and Officers' attention.
+ * Times are UTC ISO strings.
+ */
+export interface DashboardResponse {
+  /** The next few events, with how full each role is. */
+  upcoming: {
+    id: string;
+    type: EventType;
+    name: string;
+    startsAt: string;
+    size: number;
+    cancelled: boolean;
+    slots: Record<CombatRole, number>;
+    filled: Record<CombatRole, number>;
+  }[];
+  /** Events in the next 8 days with open slots, and how many each role is missing. */
+  missingRoles: {
+    id: string;
+    name: string;
+    startsAt: string;
+    size: number;
+    missing: Record<CombatRole, number>;
+  }[];
+  /** Tentative participants whose event's deadline is within 48 hours. */
+  tentative: {
+    signUpId: string;
+    eventId: string;
+    eventName: string;
+    startsAt: string;
+    deadlineAt: string;
+    character: { name: string; class: CharacterClass };
+    role: CombatRole;
+  }[];
+  /** Pending requests to join. */
+  registrations: { id: string; discordName: string; requestedAt: string }[];
+  /** Members flagged as having left the guild's Discord server. */
+  leftDiscord: {
+    memberId: string;
+    discordName: string;
+    rank: Rank;
+    main: { name: string; class: CharacterClass } | null;
+    leftAt: string;
+  }[];
+}
+
 /** Why the bot couldn't post or update an event's Discord post. */
 export const DISCORD_POST_ERRORS = ['missing_permissions', 'channel_not_found'] as const;
 

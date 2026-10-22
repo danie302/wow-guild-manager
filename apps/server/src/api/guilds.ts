@@ -14,6 +14,7 @@ import multer from 'multer';
 
 import type { Guild } from '../db/models/index.js';
 import { guildImageUrl, updateGuildSettings } from '../domain/guild-settings.js';
+import { dashboard } from '../domain/dashboard.js';
 import { createGuild } from '../domain/guilds.js';
 import { disbandGuild, transferCandidates, transferLeadership } from '../domain/leadership.js';
 import { replaceGuildOfficers } from '../domain/officers.js';
@@ -132,6 +133,17 @@ export function guildsRouter(
         throw err;
       }
       res.json(await toGuildResponse(guild, access, discord, req.log));
+    },
+  );
+
+  // What needs attention: the home page of the Guild Master and Officers.
+  router.get(
+    '/guilds/:guildId/dashboard',
+    requireUser,
+    requireGuildPermission('viewGuild'),
+    async (_req, res) => {
+      const { guild } = currentGuild(res);
+      res.json(await dashboard(guild));
     },
   );
 
