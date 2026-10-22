@@ -1,4 +1,5 @@
 import {
+  canJoinEvent,
   COMBAT_ROLES,
   EVENT_ERROR_CODES,
   rolesFor,
@@ -32,6 +33,8 @@ export interface SignUpChanges {
   replaced: string[];
   /** Participants an Officer or the Guild Master removed from an event. */
   removed: { memberId: string; eventId: string; byUserId: string }[];
+  /** Sign-ups an Officer or the Guild Master added or changed for their member. */
+  added: { signUpId: string; byUserId: string }[];
   /** Events whose sign-ups changed outside a sign-up, so their posts need updating. */
   eventIds: string[];
 }
@@ -43,6 +46,7 @@ export function noSignUpChanges(): SignUpChanges {
     rescheduled: [],
     replaced: [],
     removed: [],
+    added: [],
     eventIds: [],
   };
 }
@@ -54,6 +58,7 @@ export function mergeSignUpChanges(...all: SignUpChanges[]): SignUpChanges {
     rescheduled: all.flatMap((changes) => changes.rescheduled),
     replaced: all.flatMap((changes) => changes.replaced),
     removed: all.flatMap((changes) => changes.removed),
+    added: all.flatMap((changes) => changes.added),
     eventIds: [...new Set(all.flatMap((changes) => changes.eventIds))],
   };
 }
@@ -240,15 +245,8 @@ async function openEvent(guild: Guild, eventId: string, now: Date): Promise<Even
   return event;
 }
 
-/** Who can join each type of event, from "Who can join events" in requirements.md. */
-const RANKS_BY_EVENT_TYPE: Record<EventType, readonly Rank[]> = {
-  raid: ['guild_master', 'officer', 'raider'],
-  dungeon: ['guild_master', 'officer', 'raider', 'member'],
-  pvp: ['guild_master', 'officer', 'raider', 'member'],
-};
-
 export function canJoin(rank: Rank, type: EventType): boolean {
-  return RANKS_BY_EVENT_TYPE[type].includes(rank);
+  return canJoinEvent(rank, type);
 }
 
 /** Why someone can't sign up (or decline) from Discord. */
@@ -342,40 +340,91 @@ export async function signUp(
       return { result: 'tentative_closed' };
     }
 
-    const current = await SignUp.findOne({ where: { eventId: event.id, memberId: member.id } });
-    if (current?.placement && current.role === choice.role) {
-      await current.update({ characterId: character.id, status: choice.status });
-      return {
-        result: 'signed_up',
-        event,
-        character,
-        placement: current.placement,
-        changes: noSignUpChanges(),
-      };
-    }
-
-    const taken = await SignUp.count({
-      where: {
-        eventId: event.id,
-        role: choice.role,
-        placement: 'slot',
-        memberId: { [Op.ne]: member.id },
-      },
-    });
-    const placement: SignUpPlacement = taken < slotsFor(event, choice.role) ? 'slot' : 'waitlist';
-    const values = {
-      characterId: character.id,
-      role: choice.role,
-      status: choice.status,
-      placement,
-      signedUpAt: now,
-    };
-    if (current) await current.update(values);
-    else await SignUp.create({ eventId: event.id, memberId: member.id, ...values });
-    // Leaving a slot in another role opens it for that role's waitlist.
-    const changes = current?.placement === 'slot' ? await balanceSlots(event) : noSignUpChanges();
+    const { placement, changes } = await place(event, member, character, choice, now);
     return { result: 'signed_up', event, character, placement, changes };
   });
+}
+
+/**
+ * The Guild Master or an Officer signs a member up from the web app, with the same rules as
+ * signing up from Discord: an active member who is still in the Discord server, of a rank
+ * that can join the event, a role the character's class can fill, and Tentative only before
+ * the deadline. A member who was already signed up has their sign-up changed.
+ */
+export async function addParticipant(
+  guild: Guild,
+  eventId: string,
+  choice: SignUpChoice,
+  by: { id: string },
+  now = new Date(),
+): Promise<SignUpChanges> {
+  return transaction(async () => {
+    const event = await openEvent(guild, eventId, now);
+    const character = await Character.findOne({
+      where: { id: choice.characterId, removedAt: null },
+      include: [{ model: Member, as: 'member', where: { guildId: guild.id, removedAt: null } }],
+    });
+    const member = character?.member;
+    if (!character || !member) throw new DomainError({ code: 'NOT_FOUND' });
+    if (member.leftDiscordAt || !canJoin(await memberRank(member, guild), event.type)) {
+      throw new DomainError({ code: 'CANNOT_JOIN_EVENT' });
+    }
+    if (!rolesFor(character.characterClass).includes(choice.role)) {
+      throw new DomainError({ code: 'ROLE_NOT_ALLOWED' });
+    }
+    if (choice.status === 'tentative' && event.tentativeDeadlineAt <= now) {
+      throw new DomainError({ code: 'TENTATIVE_CLOSED' });
+    }
+    const { signUp, changes } = await place(event, member, character, choice, now);
+    return mergeSignUpChanges(changes, {
+      ...noSignUpChanges(),
+      added: [{ signUpId: signUp.id, byUserId: by.id }],
+    });
+  });
+}
+
+/**
+ * Gives the member's sign-up the character, role, and status, with the event locked. Changing
+ * only the status or the character keeps their spot or place on the waitlist; changing the
+ * role (or coming back from Declined) is a new sign-up for that role, with a slot if it has a
+ * free one and at the end of its waitlist otherwise.
+ */
+async function place(
+  event: Event,
+  member: Member,
+  character: Character,
+  choice: SignUpChoice,
+  now: Date,
+): Promise<{ signUp: SignUp; placement: SignUpPlacement; changes: SignUpChanges }> {
+  const current = await SignUp.findOne({ where: { eventId: event.id, memberId: member.id } });
+  if (current?.placement && current.role === choice.role) {
+    await current.update({ characterId: character.id, status: choice.status });
+    return { signUp: current, placement: current.placement, changes: noSignUpChanges() };
+  }
+
+  const taken = await SignUp.count({
+    where: {
+      eventId: event.id,
+      role: choice.role,
+      placement: 'slot',
+      memberId: { [Op.ne]: member.id },
+    },
+  });
+  const placement: SignUpPlacement = taken < slotsFor(event, choice.role) ? 'slot' : 'waitlist';
+  const values = {
+    characterId: character.id,
+    role: choice.role,
+    status: choice.status,
+    placement,
+    signedUpAt: now,
+  };
+  const hadSlot = current?.placement === 'slot';
+  const signUp = current
+    ? await current.update(values)
+    : await SignUp.create({ eventId: event.id, memberId: member.id, ...values });
+  // Leaving a slot in another role opens it for that role's waitlist.
+  const changes = hadSlot ? await balanceSlots(event) : noSignUpChanges();
+  return { signUp, placement, changes };
 }
 
 export type DeclineOutcome =

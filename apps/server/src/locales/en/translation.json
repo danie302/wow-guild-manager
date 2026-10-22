@@ -140,6 +140,8 @@
     "replaced": "**{{event}}** ({{time}}): {{character}} was Tentative, so their spot went to someone on the waitlist. {{character}} is now at the end of the {{role}} waitlist, and gets a spot if one opens.",
     "preConfirmed": "You are pre-confirmed for **{{event}}** ({{time}}) with {{character}} as {{role}}. If you can't make it, press Declined on the event.",
     "removed": "{{name}} removed you from **{{event}}** ({{time}}). You can sign up again from the event post.",
+    "addedInSlot": "{{name}} signed you up for **{{event}}** ({{time}}): {{character}} as {{role}}, {{status}}. You're in a slot. If you can't make it, press Declined on the event.",
+    "addedOnWaitlist": "{{name}} signed you up for **{{event}}** ({{time}}): {{character}} as {{role}}, {{status}}. {{role}} is full, so you're on the waitlist, and get a spot if one opens. If you can't make it, press Declined on the event.",
     "someone": "An Officer",
     "reminder": "Reminder: you're Tentative for **{{event}}** ({{time}}) with {{character}} as {{role}}. Confirm before {{deadline}} on the event post, or your spot may go to someone on the waitlist."
   },

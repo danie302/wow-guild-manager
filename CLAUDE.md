@@ -51,7 +51,7 @@ The diagram is in `docs/architecture.svg` (source) and `docs/architecture.png` (
 The product has two front ends that share one backend and database:
 
 - **Web app**: the Guild Master and Officers log in with Discord to manage the roster, events, attendance, and gear checks. Roster members can also log in with read-only access to upcoming events and the roster. Guild gold and items are managed in the game and are out of scope.
-- **Discord bot**: where members act. It posts events, takes sign-ups through buttons, handles `/register` (requests to join) and `/main`, and sends reminders and missing-role alerts. Members never sign up or change anything through the web app.
+- **Discord bot**: where members act. It posts events, takes sign-ups through buttons, handles `/register` (requests to join) and `/main`, and sends reminders and missing-role alerts. Members never sign up or change anything through the web app (the GM and Officers can add participants there to fix problems).
 
 Sign-up rules (combat roles by class, slots, waitlist, Tentative deadline) must live in the shared backend, not in the bot or the web app, so both apply the same rules.
 

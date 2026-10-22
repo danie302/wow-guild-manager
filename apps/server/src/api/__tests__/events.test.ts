@@ -247,6 +247,7 @@ describe('sign-ups of an event', () => {
     expect(listed.body).toEqual([
       {
         id: signUp.id,
+        memberId: member.id,
         character: { id: character.id, name: 'Thrall', class: 'shaman', race: 'orc' },
         role: 'healer',
         status: 'tentative',
@@ -307,6 +308,40 @@ describe('managing participants', () => {
     expect(created.status).toBe(201);
     const [preConfirmed] = await SignUp.findAll({ where: { eventId: event(created).id } });
     expect(jobs.payloads('pre-confirmed')).toEqual([{ signUpId: preConfirmed!.id }]);
+  });
+
+  it('lets Officers add a participant, and tells them who did it', async () => {
+    const { app, jobs, base, guild } = await setup();
+    const character = await warrior(guild.id, '200000000000000010');
+    await replaceGuildOfficers(guild.id, ['200000000000000002']);
+    const officer = await loginAs(app, '200000000000000002');
+    const id = event(await officer.post(base).send({ ...raid, startsAt: inDays(3) })).id;
+    jobs.jobs.length = 0;
+
+    const response = await officer
+      .post(`${base}/${id}/sign-ups`)
+      .send({ characterId: character.id, role: 'tank', status: 'tentative' });
+
+    expect(response.status).toBe(201);
+    const [added] = response.body as SignUpResponse[];
+    expect(added).toMatchObject({
+      memberId: character.memberId,
+      role: 'tank',
+      status: 'tentative',
+      placement: 'slot',
+    });
+    expect(jobs.payloads('participant-added')).toEqual([
+      { signUpId: added!.id, byUserId: expect.any(String) as string },
+    ]);
+    expect(jobs.payloads('tentative-reminder')).toEqual([{ eventId: id }]);
+    expect(jobs.payloads('event-post')).toEqual([{ eventId: id }]);
+    expect(
+      (
+        await officer
+          .post(`${base}/${id}/sign-ups`)
+          .send({ characterId: character.id, role: 'healer', status: 'confirmed' })
+      ).body,
+    ).toEqual({ error: { code: 'ROLE_NOT_ALLOWED' } });
   });
 
   it('removes a participant and tells them who did it', async () => {

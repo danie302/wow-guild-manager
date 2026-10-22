@@ -22,7 +22,7 @@ The visual design for the web app, made in Claude Design. Last downloaded on 202
 | 06 | Pending registrations (found / not found in Battle.net), built as requests to join | 018 |
 | 07 | Events (list and calendar, recurring series) | 020, 021 |
 | 08 | Create/edit event (running slot total, pre-confirmed raid participants, own Tentative deadline) | 020, 021, 025, 026 |
-| 09 | Event detail: Sign-ups tab (by role, waitlist, remove, replace, move to slot, cancel event) | 020, 025 |
+| 09 | Event detail: Sign-ups tab (by role, waitlist, remove, replace, move to slot, cancel event) | 020, 025, 039 |
 | 09 | Event detail: Gear check tab (refresh, not found in Battle.net, full equipment per character) | 031 |
 | 10 | Event detail: Attendance tab (with change history) | 028 |
 | 09 | Event detail: Discord post tab (preview of the bot's message) | 022 |
@@ -53,7 +53,7 @@ The tokens below are implemented in `apps/web/src/components/ui/tokens.ts` (stor
 ## Differences from the requirements
 
 - **Event detail, Discord post tab (09)** shows Tank, Healer, DPS, Tentative, and Declined buttons on the post. The app has **Sign up** and **Declined** buttons instead: Sign up opens a message only the member sees, with a character select, a combat role select, and Confirmed and Tentative buttons (story 023, decided on 2026-10-21).
-- **Event detail, Sign-ups tab (09)** has **Move to slot** (and dragging) and a toast with **Undo** after removing, replacing, or promoting. The app has neither: open slots always go to the waitlist right away (story 024), and removing asks for confirmation instead of offering Undo. Replacing works only on Tentative participants (story 025, decided on 2026-10-21).
+- **Event detail, Sign-ups tab (09)** has **Move to slot** (and dragging) and a toast with **Undo** after removing, replacing, or promoting. The app has neither: open slots always go to the waitlist right away (story 024), and removing asks for confirmation instead of offering Undo. Replacing works only on Tentative participants (story 025, decided on 2026-10-21). The app adds an **Add participant** button and dialog (member, character, role, status), which the design doesn't have (story 039, decided on 2026-10-22).
 - **The event post's layout (09)** lists each role as numbered lines ("1. Name"). The app lays it out like Raid-Helper instead: a header with the leader, sign-up count, date, time, and time left, then a column per role with class icons, sign-up numbers across the event, and names (story 023, decided on 2026-10-21).
 
 ### Notes for implementation

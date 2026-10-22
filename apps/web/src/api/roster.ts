@@ -18,10 +18,11 @@ import { apiRequest } from './client';
 const rosterKey = (guildId: string) => ['guilds', guildId, 'members'] as const;
 const memberKey = (guildId: string, memberId: string) => [...rosterKey(guildId), memberId] as const;
 
-export function useRoster(guildId: string) {
+export function useRoster(guildId: string, enabled = true) {
   return useQuery({
     queryKey: rosterKey(guildId),
     queryFn: () => apiRequest<RosterMember[]>(`/guilds/${guildId}/members`),
+    enabled,
   });
 }
 

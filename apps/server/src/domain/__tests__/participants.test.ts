@@ -7,7 +7,7 @@ import { Character, Member, SignUp, User, type Event, type Guild } from '../../d
 import { createSequelize } from '../../db/sequelize.js';
 import { DomainError, DomainValidationError } from '../errors.js';
 import { createEvent } from '../events.js';
-import { removeParticipant, replaceTentative, signUp } from '../sign-ups.js';
+import { addParticipant, removeParticipant, replaceTentative, signUp } from '../sign-ups.js';
 
 const serverId = '300000000000000001';
 const day = 24 * 60 * 60 * 1000;
@@ -109,6 +109,105 @@ describe('removeParticipant', () => {
     await expect(
       removeParticipant(guild, event.id, signUpRow.id, gm, new Date(Date.now() + 4 * day)),
     ).rejects.toEqual(new DomainError({ code: 'EVENT_STARTED' }));
+  });
+});
+
+describe('addParticipant', () => {
+  const add = (who: Player, event: Event, role: CombatRole, status: 'confirmed' | 'tentative') =>
+    addParticipant(guild, event.id, { characterId: who.character.id, role, status }, gm);
+
+  it('gives a free slot, then the end of the waitlist, and says who added them', async () => {
+    const event = await raid();
+    const [a, b] = [await player('warrior'), await player('warrior')];
+
+    const first = await add(a, event, 'tank', 'confirmed');
+    const second = await add(b, event, 'tank', 'tentative');
+
+    const rows = await SignUp.findAll({
+      where: { eventId: event.id },
+      order: [['signedUpAt', 'ASC']],
+    });
+    expect(rows.map((row) => [row.memberId, row.status, row.placement])).toEqual([
+      [a.member.id, 'confirmed', 'slot'],
+      [b.member.id, 'tentative', 'waitlist'],
+    ]);
+    expect(first.added).toEqual([{ signUpId: rows[0]!.id, byUserId: gm.id }]);
+    expect(second.added).toEqual([{ signUpId: rows[1]!.id, byUserId: gm.id }]);
+  });
+
+  it('changes an existing sign-up as the member would in Discord', async () => {
+    const event = await raid();
+    const druid = await player('druid');
+    const waiting = await player('warrior');
+    const own = await join(druid, event, 'tank', 'tentative');
+    const queued = await join(waiting, event, 'tank', 'confirmed');
+
+    // Only the status: the spot stays.
+    await add(druid, event, 'tank', 'confirmed');
+    expect(await own.reload()).toMatchObject({ status: 'confirmed', placement: 'slot' });
+
+    // Another role: a new sign-up, and the tank slot goes to the waitlist.
+    const changes = await add(druid, event, 'healer', 'confirmed');
+    expect(await own.reload()).toMatchObject({ role: 'healer', placement: 'slot' });
+    expect(changes.promoted).toEqual([queued.id]);
+    expect(await SignUp.count({ where: { eventId: event.id } })).toBe(2);
+  });
+
+  it('applies the same rules as signing up from Discord', async () => {
+    const event = await raid();
+    const member = await player('warrior', 'member');
+    const left = await player('warrior');
+    await left.member.update({ leftDiscordAt: new Date() });
+    const priest = await player('priest');
+    const other = await createTestGuild(
+      await User.create({ discordId: '200000000000000099', name: 'Vol', avatar: null }),
+      { serverId: '300000000000000002' },
+    );
+    const stranger = await Member.create({
+      guildId: other.id,
+      discordUserId: '200000000000000098',
+      discordName: 'Stranger',
+      discordAvatar: null,
+      rank: 'raider',
+    });
+    const strangerCharacter = await Character.create({
+      memberId: stranger.id,
+      name: 'Stranger',
+      faction: 'horde',
+      race: 'orc',
+      characterClass: 'warrior',
+      level: 60,
+      professions: [],
+      isMain: true,
+    });
+
+    await expect(add(member, event, 'tank', 'confirmed')).rejects.toEqual(
+      new DomainError({ code: 'CANNOT_JOIN_EVENT' }),
+    );
+    await expect(add(left, event, 'tank', 'confirmed')).rejects.toEqual(
+      new DomainError({ code: 'CANNOT_JOIN_EVENT' }),
+    );
+    await expect(add(priest, event, 'tank', 'confirmed')).rejects.toEqual(
+      new DomainError({ code: 'ROLE_NOT_ALLOWED' }),
+    );
+    await expect(
+      addParticipant(
+        guild,
+        event.id,
+        { characterId: strangerCharacter.id, role: 'tank', status: 'confirmed' },
+        gm,
+      ),
+    ).rejects.toEqual(new DomainError({ code: 'NOT_FOUND' }));
+    await expect(
+      addParticipant(
+        guild,
+        event.id,
+        { characterId: priest.character.id, role: 'healer', status: 'tentative' },
+        gm,
+        new Date(event.tentativeDeadlineAt.getTime() + 1000),
+      ),
+    ).rejects.toEqual(new DomainError({ code: 'TENTATIVE_CLOSED' }));
+    expect(await SignUp.count()).toBe(0);
   });
 });
 

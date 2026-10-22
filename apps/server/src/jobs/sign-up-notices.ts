@@ -4,7 +4,7 @@ import type { JobEnqueuer } from './queue.js';
 
 /**
  * Hands what a change did to other people's sign-ups to the worker: a direct message for each
- * promotion, move to the waitlist, replacement, and removal, one per member for rescheduled events (however
+ * promotion, move to the waitlist, replacement, removal, and addition by an Officer, one per member for rescheduled events (however
  * many of their events moved), and post updates for events whose sign-ups changed.
  */
 export async function notifySignUpChanges(
@@ -24,6 +24,7 @@ export async function notifySignUpChanges(
     changes.replaced.map((signUpId) => ({ signUpId })),
   );
   await jobs.enqueueMany('participant-removed', changes.removed);
+  await jobs.enqueueMany('participant-added', changes.added);
   const byMember = new Map<string, string[]>();
   for (const { memberId, eventId } of changes.rescheduled) {
     byMember.set(memberId, [...(byMember.get(memberId) ?? []), eventId]);

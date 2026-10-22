@@ -38,6 +38,8 @@ export interface JobPayloads {
   'replaced-by-waitlist': { signUpId: string };
   /** Tells a member who removed them from an event. */
   'participant-removed': { memberId: string; eventId: string; byUserId: string };
+  /** Tells a member who signed them up for an event (or changed their sign-up), and where. */
+  'participant-added': { signUpId: string; byUserId: string };
   /** Tells a member the Guild Master pre-confirmed their character for a new raid. */
   'pre-confirmed': { signUpId: string };
   /** Tells a member the date or time of events they're signed up for changed, in one message. */

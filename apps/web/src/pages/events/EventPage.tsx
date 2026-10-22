@@ -24,6 +24,7 @@ import {
 } from '../../components/ui';
 import { apiErrorText } from '../../i18n/api-errors';
 import { useFormat } from '../../i18n/format';
+import { AddParticipantDialog } from './AddParticipantDialog';
 import { AttendanceTab } from './AttendanceTab';
 import { DiscordPostTab } from './DiscordPostTab';
 import { everyWeekText, whenText } from './eventText';
@@ -47,6 +48,7 @@ export function EventPage() {
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState<SignUpResponse | null>(null);
   const [replacing, setReplacing] = useState<SignUpResponse | null>(null);
+  const [adding, setAdding] = useState(false);
   const readOnly = useGuildAccess() === 'member';
 
   if (event.isPending) return <Loading label={t('events.loading')} />;
@@ -146,6 +148,7 @@ export function EventPage() {
         actions={
           changeable
             ? {
+                onAdd: () => setAdding(true),
                 onRemove: setRemoving,
                 onReplace: setReplacing,
                 busy: removeParticipant.isPending || replaceParticipant.isPending,
@@ -169,6 +172,16 @@ export function EventPage() {
               ]
         }
       />
+
+      {changeable && (
+        <AddParticipantDialog
+          guildId={guildId}
+          event={data}
+          signUps={signUps.data ?? []}
+          open={adding}
+          onClose={() => setAdding(false)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirming}

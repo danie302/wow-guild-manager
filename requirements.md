@@ -159,7 +159,7 @@ A character can only sign up for an event with a combat role their class can fil
 | Read and write officer notes | ✓ | ✓ |
 | Change a member's main character (members change their own with `/main`) | ✓ | ✓ |
 | Create, edit, and cancel events | ✓ | ✓ |
-| Accept, remove, or replace event participants | ✓ | ✓ |
+| Add, remove, or replace event participants | ✓ | ✓ |
 | Pre-confirm participants when scheduling a raid | ✓ | |
 | Record and edit attendance | ✓ | ✓ |
 | Set the attendance band thresholds | ✓ | |
@@ -263,6 +263,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - In every event type, a Tentative participant who hasn't changed to Confirmed by the event's Tentative deadline is replaced by the next waitlisted character with the same combat role. If nobody is waitlisted for that role, they keep their spot.
 - The Guild Master and Officers can also replace a Tentative participant with a waitlisted character manually at any time. They pick any waitlisted character of the same combat role; the Tentative participant moves to the end of that waitlist, and both get a direct message.
 - The Guild Master and Officers can remove a participant from an event in the web app, after confirming. Their sign-up is deleted (they can sign up again from Discord), their spot goes to the earliest waitlisted character of that role, and they get a direct message saying who removed them. These changes can't be undone.
+- The Guild Master and Officers can add a participant from the web app until the event starts, to fix problems without waiting for the member: a character and a combat role it can fill, as Confirmed or Tentative (Tentative only before the event's Tentative deadline), from active members whose rank can join the event and who haven't left the Discord server. The same rules as signing up from Discord apply: the character gets a slot if the role has an open one and goes to the end of its waitlist otherwise. If the member already had a sign-up, it changes as if they had changed it in Discord; moving them to another role asks for confirmation first, since they lose their spot in their current role. The member gets a direct message saying who added them, with the character, role, status, and whether they're in a slot or on the waitlist.
 - There's no separate way to move a waitlisted character into an open slot: open slots always go to the waitlist right away.
 - When the Guild Master creates a one-time raid (not a recurring series), they can pre-confirm participants: each is a character and a combat role it can fill, from members whose rank can join raids. They start as Confirmed in a slot, within the role's slots, and get a direct message.
 

@@ -169,6 +169,31 @@ describe('signUp', () => {
     expect(await SignUp.count({ where: { eventId: dungeon.id } })).toBe(2);
   });
 
+  it("gives the slot left by a role change to that role's waitlist, even if the new role is full", async () => {
+    const dungeon = await event('dungeon', { tank: 1, healer: 1, dps: 3 });
+    const druid = await member(['druid']);
+    const priest = await member(['priest']);
+    const warrior = await member(['warrior']);
+    const join = (who: Awaited<ReturnType<typeof member>>, role: 'tank' | 'healer') =>
+      signUp(serverId, who.discordUserId, dungeon.id, {
+        characterId: who.characters[0]!.id,
+        role,
+        status: 'confirmed',
+      });
+    await join(priest, 'healer');
+    await join(druid, 'tank');
+    await join(warrior, 'tank');
+
+    const moved = await join(druid, 'healer');
+
+    expect(moved.result === 'signed_up' && moved.changes.promoted).toHaveLength(1);
+    expect(await placements(dungeon)).toEqual([
+      [priest.characters[0]!.name, 'healer', 'confirmed', 'slot'],
+      [warrior.characters[0]!.name, 'tank', 'confirmed', 'slot'],
+      [druid.characters[0]!.name, 'healer', 'confirmed', 'waitlist'],
+    ]);
+  });
+
   it("refuses a role the character's class can't fill", async () => {
     const dungeon = await event('dungeon');
     const mage = await member(['mage']);

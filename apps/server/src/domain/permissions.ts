@@ -56,7 +56,7 @@ export const PERMISSIONS = {
   setAttendanceBands: ['guild_master'],
   /** Record and correct attendance. */
   recordAttendance: ['guild_master', 'officer'],
-  /** Remove event participants and replace Tentative ones with waitlisted characters. */
+  /** Add and remove event participants, and replace Tentative ones with waitlisted characters. */
   manageParticipants: ['guild_master', 'officer'],
   /** Pre-confirm participants when creating a raid. */
   preConfirmParticipants: ['guild_master'],

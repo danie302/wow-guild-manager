@@ -125,6 +125,21 @@ describe('sign-up notices', () => {
     expect(messenger.sent).toEqual([]);
   });
 
+  it('tells a member who signed them up, and where', async () => {
+    const inSlot = await signUpWith('slot');
+
+    await handlers['participant-added']({ signUpId: inSlot.id, byUserId: gm.id });
+    await inSlot.update({ placement: 'waitlist', status: 'tentative' });
+    await handlers['participant-added']({ signUpId: inSlot.id, byUserId: gm.id });
+    await inSlot.update({ placement: null, status: 'declined' });
+    await handlers['participant-added']({ signUpId: inSlot.id, byUserId: gm.id });
+
+    expect(messenger.sent.map((message) => message.content)).toEqual([
+      `Garrosh signed you up for **Warsong Gulch** (<t:${unix}:F>): Thrall as Healer, Confirmed. You're in a slot. If you can't make it, press Declined on the event.`,
+      `Garrosh signed you up for **Warsong Gulch** (<t:${unix}:F>): Thrall as Healer, Tentative. Healer is full, so you're on the waitlist, and get a spot if one opens. If you can't make it, press Declined on the event.`,
+    ]);
+  });
+
   it('lists all of a member’s rescheduled events in one message', async () => {
     await signUpWith('slot');
 
@@ -176,6 +191,7 @@ describe('notifySignUpChanges', () => {
       ],
       replaced: [],
       removed: [],
+      added: [],
       eventIds: ['e3'],
     });
 

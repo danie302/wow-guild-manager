@@ -140,6 +140,8 @@
     "replaced": "**{{event}}** ({{time}}): {{character}} estaba como Provisional, así que su plaza pasó a alguien de la lista de espera. Ahora {{character}} está al final de la lista de espera de {{role}} y obtiene una plaza si se libera alguna.",
     "preConfirmed": "Estás preconfirmado en **{{event}}** ({{time}}) con {{character}} como {{role}}. Si no puedes ir, pulsa Rechazado en el evento.",
     "removed": "{{name}} te quitó de **{{event}}** ({{time}}). Puedes volver a inscribirte desde el mensaje del evento.",
+    "addedInSlot": "{{name}} te inscribió en **{{event}}** ({{time}}): {{character}} como {{role}}, {{status}}. Tienes plaza. Si no puedes ir, pulsa Rechazado en el evento.",
+    "addedOnWaitlist": "{{name}} te inscribió en **{{event}}** ({{time}}): {{character}} como {{role}}, {{status}}. No quedan plazas de {{role}}, así que estás en la lista de espera y obtienes una plaza si se libera. Si no puedes ir, pulsa Rechazado en el evento.",
     "someone": "Un Officer",
     "reminder": "Recordatorio: estás como Provisional en **{{event}}** ({{time}}) con {{character}} como {{role}}. Confirma antes del {{deadline}} en el mensaje del evento, o tu plaza puede pasar a alguien de la lista de espera."
   },

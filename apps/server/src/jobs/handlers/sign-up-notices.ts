@@ -116,6 +116,31 @@ export function signUpNoticeHandlers({ logger, messenger }: SignUpNoticeDependen
       );
     },
 
+    'participant-added': async ({ signUpId, byUserId }: JobPayloads['participant-added']) => {
+      const [signUp, by] = await Promise.all([
+        upcomingSignUp(signUpId),
+        User.findByPk(byUserId, { attributes: ['name'] }),
+      ]);
+      // They declined or were removed since: nothing to say.
+      if (!signUp?.placement) return;
+      const event = signUp.event!;
+      await send(signUp.member!, event.guild!, (t) =>
+        t(
+          signUp.placement === 'slot'
+            ? 'signUpNotices.addedInSlot'
+            : 'signUpNotices.addedOnWaitlist',
+          {
+            name: by?.name ?? t('signUpNotices.someone'),
+            event: event.name,
+            time: when(event.startsAt),
+            character: signUp.character!.name,
+            role: COMBAT_ROLE_NAMES[signUp.role!],
+            status: t(`signUp.status.${signUp.status}`),
+          },
+        ),
+      );
+    },
+
     'events-rescheduled': async ({ memberId, eventIds }: JobPayloads['events-rescheduled']) => {
       const member = await Member.findByPk(memberId, { include: [{ model: Guild, as: 'guild' }] });
       if (!member || member.removedAt) return;

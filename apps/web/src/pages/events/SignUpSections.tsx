@@ -13,6 +13,7 @@ import {
   Button,
   CharacterName,
   NameList,
+  Page,
   SlotGroup,
   StatStrip,
   Tabs,
@@ -25,6 +26,8 @@ type Slots = Record<CombatRole, number>;
 
 /** What the Guild Master and Officers can do to a participant. */
 export interface ParticipantActions {
+  /** Signs a member up, or changes their sign-up. */
+  onAdd: () => void;
   onRemove: (signUp: SignUpResponse) => void;
   /** Only offered for Tentative participants while the role has a waitlist. */
   onReplace: (signUp: SignUpResponse) => void;
@@ -135,6 +138,13 @@ function SignUpTab({
   return (
     <>
       {notice}
+      {actions && (
+        <Page.Actions>
+          <Button size="medium" startIcon="plus" onClick={actions.onAdd} disabled={actions.busy}>
+            {t('addParticipant.title')}
+          </Button>
+        </Page.Actions>
+      )}
       {roles.map((role) => {
         const inSlots = signUps.filter((s) => s.role === role && s.placement === 'slot');
         const waitlist = signUps.filter((s) => s.role === role && s.placement === 'waitlist');

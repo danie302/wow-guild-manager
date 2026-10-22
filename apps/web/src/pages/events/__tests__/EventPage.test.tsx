@@ -1,5 +1,10 @@
-import type { EventDiscordPostResponse, EventResponse, SignUpResponse } from '@wgm/shared';
-import { screen, within } from '@testing-library/react';
+import type {
+  EventDiscordPostResponse,
+  EventResponse,
+  RosterMember,
+  SignUpResponse,
+} from '@wgm/shared';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -182,6 +187,7 @@ describe('EventPage', () => {
       status: SignUpResponse['status'] = 'confirmed',
     ): SignUpResponse => ({
       id: `019a0c3e-5b1e-7c2a-9f3d-00000000080${n}`,
+      memberId: `019a0c3e-5b1e-7c2a-9f3d-00000000070${n}`,
       character: {
         id: `019a0c3e-5b1e-7c2a-9f3d-00000000090${n}`,
         name,
@@ -246,6 +252,113 @@ describe('EventPage', () => {
       expect(await within(tanks).findByText('Rexxar')).toBeInTheDocument();
       expect(within(tanks).queryByText('Grommash')).not.toBeInTheDocument();
       expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(true);
+    });
+
+    it('adds a participant, saying where they will end up', async () => {
+      const member = (n: number, name: string, rank: RosterMember['rank']): RosterMember => ({
+        id: `019a0c3e-5b1e-7c2a-9f3d-00000000070${n}`,
+        discordUserId: `20000000000000000${n}`,
+        discordName: name,
+        avatarUrl: '',
+        rank,
+        baseRank: 'raider',
+        leftDiscordAt: null,
+        attendanceRate: null,
+        attendanceBand: null,
+        characters: [
+          {
+            id: `019a0c3e-5b1e-7c2a-9f3d-00000000110${n}`,
+            name: `${name}char`,
+            faction: 'horde',
+            race: 'orc',
+            class: 'warrior',
+            level: 60,
+            professions: [],
+            isMain: true,
+          },
+        ],
+      });
+      const open = {
+        ...small,
+        type: 'raid' as const,
+        tentativeDeadline: { at: `${nextYear}-11-09T19:00:00.000Z`, hours: 24, own: false },
+      };
+      const fetchMock = mockApi({
+        [`${api}/${eventId}`]: () => Response.json(open),
+        [`${api}/${eventId}/sign-ups`]: () => Response.json(signUps),
+        [`/api/guilds/${ashenId}/members`]: () =>
+          Response.json([member(5, 'Varok', 'raider'), member(6, 'Peon', 'member')]),
+        [`POST ${api}/${eventId}/sign-ups`]: () => Response.json(signUps, { status: 201 }),
+      });
+      const user = userEvent.setup();
+      renderRoute(`/guilds/${ashenId}/events/${eventId}`);
+
+      await user.click(await screen.findByRole('button', { name: 'Add participant' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Add participant' });
+      const combo = within(dialog).getByRole('combobox', { name: 'Member' });
+      await waitFor(() => expect(combo).toBeEnabled());
+      await user.click(combo);
+      // Members can't join raids, so they aren't offered.
+      expect(screen.queryByRole('option', { name: /Peon/ })).not.toBeInTheDocument();
+      await user.click(await screen.findByRole('option', { name: /Varok/ }));
+      await user.click(within(dialog).getByRole('button', { name: 'Tank' }));
+      expect(
+        within(dialog).getByText('Tank is full, so they go to the end of its waitlist.'),
+      ).toBeInTheDocument();
+      await user.click(within(dialog).getByRole('button', { name: 'Tentative' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Add' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      const call = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST');
+      expect(JSON.parse(call![1]!.body as string)).toEqual({
+        characterId: '019a0c3e-5b1e-7c2a-9f3d-000000001105',
+        role: 'tank',
+        status: 'tentative',
+      });
+    });
+
+    it('asks before moving someone signed up to another role', async () => {
+      const grommash: RosterMember = {
+        id: signUps[1]!.memberId,
+        discordUserId: '200000000000000002',
+        discordName: 'Grom',
+        avatarUrl: '',
+        rank: 'raider',
+        baseRank: 'raider',
+        leftDiscordAt: null,
+        attendanceRate: null,
+        attendanceBand: null,
+        characters: [
+          { ...signUps[1]!.character, faction: 'horde', level: 60, professions: [], isMain: true },
+        ],
+      };
+      const fetchMock = mockApi({
+        [`${api}/${eventId}`]: () => Response.json(small),
+        [`${api}/${eventId}/sign-ups`]: () => Response.json(signUps),
+        [`/api/guilds/${ashenId}/members`]: () => Response.json([grommash]),
+        [`POST ${api}/${eventId}/sign-ups`]: () => Response.json(signUps, { status: 201 }),
+      });
+      const user = userEvent.setup();
+      renderRoute(`/guilds/${ashenId}/events/${eventId}`);
+
+      await user.click(await screen.findByRole('button', { name: 'Add participant' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Add participant' });
+      const combo = within(dialog).getByRole('combobox', { name: 'Member' });
+      await waitFor(() => expect(combo).toBeEnabled());
+      await user.click(combo);
+      await user.click(await screen.findByRole('option', { name: /Grom/ }));
+      await user.click(within(dialog).getByRole('button', { name: 'DPS' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Add' }));
+
+      const confirm = await screen.findByRole('dialog', {
+        name: "Change Grommash's role to DPS?",
+      });
+      expect(within(confirm).getByText(/Grommash has a Tank slot/)).toBeInTheDocument();
+      const posted = () => fetchMock.mock.calls.some(([, init]) => init?.method === 'POST');
+      expect(posted()).toBe(false);
+      await user.click(within(confirm).getByRole('button', { name: 'Change role' }));
+
+      await waitFor(() => expect(posted()).toBe(true));
     });
 
     it('replaces a Tentative participant with a waitlisted character', async () => {

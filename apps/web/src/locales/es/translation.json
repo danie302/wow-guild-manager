@@ -55,7 +55,10 @@
     "SERIES_STOPPED": "Esta serie recurrente se detuvo, así que no se puede cambiar.",
     "SIGN_UP_NOT_TENTATIVE": "Solo se puede sustituir a participantes Provisionales, y este ya confirmó o dejó la plaza.",
     "NOT_ON_WAITLIST": "Ese personaje ya no está en la lista de espera de este rol.",
-    "ATTENDANCE_NOT_OPEN": "La asistencia se abre cuando empieza el evento."
+    "ATTENDANCE_NOT_OPEN": "La asistencia se abre cuando empieza el evento.",
+    "CANNOT_JOIN_EVENT": "Ese miembro no puede unirse a este evento: su rango no lo permite o salió del servidor de Discord.",
+    "ROLE_NOT_ALLOWED": "La clase de ese personaje no puede cubrir este rol.",
+    "TENTATIVE_CLOSED": "Ya pasó el plazo de Provisional, así que solo se puede añadir como Confirmado."
   },
   "validation": {
     "REQUIRED": "Obligatorio.",
@@ -504,6 +507,29 @@
     "signUpInDiscord": "Las inscripciones se hacen en Discord",
     "signUpInDiscordHelp": "Usa los botones del mensaje del evento para inscribirte, cambiar tu estado o rechazar.",
     "openPost": "Abrir el mensaje de Discord"
+  },
+  "addParticipant": {
+    "title": "Añadir participante",
+    "description": "Inscribe a un miembro como lo haría él en Discord. Recibe un mensaje directo diciendo que lo hiciste tú.",
+    "add": "Añadir",
+    "status": "Estado",
+    "noMember": {
+      "raid": "Ningún miembro coincide. Solo los Raiders, los Officers y el Guild Master pueden unirse a raids.",
+      "dungeon": "Ningún miembro coincide.",
+      "pvp": "Ningún miembro coincide."
+    },
+    "noRole": "Este evento no tiene plazas para los roles que puede cubrir un {{class}}.",
+    "getsSlot": "Obtiene una plaza libre de {{role}}.",
+    "goesToWaitlist": "No quedan plazas de {{role}}, así que va al final de su lista de espera.",
+    "keepsSlot": "Ya tiene una plaza de {{role}} y la conserva.",
+    "keepsWaitlist": "Ya está en la lista de espera de {{role}} y conserva su puesto.",
+    "replaces": "Esto cambia su inscripción actual.",
+    "tentativeClosed": "Ya pasó el plazo de Provisional, así que se añade como Confirmado.",
+    "changeRoleTitle": "¿Cambiar el rol de {{name}} a {{role}}?",
+    "changeRoleFromSlot": "{{name}} tiene una plaza de {{current}}. Cambiar de rol cuenta como una inscripción nueva, así que esa plaza pasa al primero de la lista de espera de {{current}}.",
+    "changeRoleFromWaitlist": "{{name}} está en la lista de espera de {{current}}. Cambiar de rol cuenta como una inscripción nueva, así que pierde su puesto ahí.",
+    "changeRole": "Cambiar rol",
+    "goBack": "Volver"
   },
   "series": {
     "title": "Eventos recurrentes",

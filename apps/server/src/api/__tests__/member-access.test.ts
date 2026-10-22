@@ -143,6 +143,7 @@ describe('read-only member access', () => {
       agent.post(`${base}/events`).send({}),
       agent.put(event).send({}),
       agent.post(`${event}/cancel`),
+      agent.post(`${event}/sign-ups`).send({}),
       agent.put(`${event}/attendance`).send({ records: [] }),
       agent.post(`${base}/series`).send({}),
       agent.post(`${base}/members`).send({}),

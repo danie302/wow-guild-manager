@@ -231,6 +231,7 @@ describe('EventFormPage', () => {
   it('warns who moves to the waitlist when a role gets fewer slots', async () => {
     const tank = (name: string, minute: number): SignUpResponse => ({
       id: `019a0c3e-5b1e-7c2a-9f3d-0000000006${minute}`,
+      memberId: `019a0c3e-5b1e-7c2a-9f3d-0000000005${minute}`,
       character: {
         id: `019a0c3e-5b1e-7c2a-9f3d-0000000007${minute}`,
         name,

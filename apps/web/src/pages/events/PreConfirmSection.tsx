@@ -1,4 +1,5 @@
 import {
+  canJoinEvent,
   CLASS_NAMES,
   COMBAT_ROLE_NAMES,
   RACE_NAMES,
@@ -33,9 +34,6 @@ export interface PreConfirmed {
   race: Race;
 }
 
-/** Ranks that can join raids (see "Who can join events" in requirements.md). */
-const RAID_RANKS = ['guild_master', 'officer', 'raider'];
-
 /**
  * The Guild Master pre-confirms participants of a new one-time raid: a member, one of their
  * characters, and a role it can fill, within each role's slots. They start as Confirmed.
@@ -62,7 +60,7 @@ export function PreConfirmSection({
   const taken = new Set(value.map((entry) => entry.memberId));
   const members = (roster.data ?? []).filter(
     (member) =>
-      RAID_RANKS.includes(member.rank) &&
+      canJoinEvent(member.rank, 'raid') &&
       !member.leftDiscordAt &&
       member.characters.length > 0 &&
       !taken.has(member.id),

@@ -1,9 +1,20 @@
 import { z } from 'zod';
 
-import { COMBAT_ROLES, type CombatRole } from '../game.js';
+import { COMBAT_ROLES, type CombatRole, type Rank } from '../game.js';
 
 export const EVENT_TYPES = ['raid', 'dungeon', 'pvp'] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
+
+/** Who can join each type of event, from "Who can join events" in requirements.md. */
+const RANKS_BY_EVENT_TYPE: Record<EventType, readonly Rank[]> = {
+  raid: ['guild_master', 'officer', 'raider'],
+  dungeon: ['guild_master', 'officer', 'raider', 'member'],
+  pvp: ['guild_master', 'officer', 'raider', 'member'],
+};
+
+export function canJoinEvent(rank: Rank, type: EventType): boolean {
+  return RANKS_BY_EVENT_TYPE[type].includes(rank);
+}
 
 export const EVENT_NAME_MAX_LENGTH = 100;
 export const EVENT_DESCRIPTION_MAX_LENGTH = 2000;
@@ -196,6 +207,16 @@ export function signUpsLosingSlots<T extends SlotHolder>(
 
 /** Body of `POST /api/guilds/:guildId/events/:eventId/sign-ups/:signUpId/replace`. */
 export const replaceParticipantSchema = z.object({ replacementId: z.uuid() }).strict();
+
+/** Body of `POST /api/guilds/:guildId/events/:eventId/sign-ups`: an Officer adds a participant. */
+export const addParticipantSchema = z
+  .object({
+    characterId: z.uuid(),
+    role: z.enum(COMBAT_ROLES),
+    status: z.enum(['confirmed', 'tentative']),
+  })
+  .strict();
+export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 
 /** Attendance statuses. Present, Late, and Left early count as attended. */
 export const ATTENDANCE_STATUSES = [

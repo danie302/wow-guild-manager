@@ -55,7 +55,10 @@
     "SERIES_STOPPED": "This recurring series was stopped, so it can't be changed.",
     "SIGN_UP_NOT_TENTATIVE": "Only Tentative participants can be replaced, and this one has confirmed or left the slot.",
     "NOT_ON_WAITLIST": "That character is no longer on the waitlist for this role.",
-    "ATTENDANCE_NOT_OPEN": "Attendance opens when the event starts."
+    "ATTENDANCE_NOT_OPEN": "Attendance opens when the event starts.",
+    "CANNOT_JOIN_EVENT": "That member can't join this event: their rank can't, or they left the Discord server.",
+    "ROLE_NOT_ALLOWED": "That character's class can't fill this role.",
+    "TENTATIVE_CLOSED": "The Tentative deadline has passed, so they can only be added as Confirmed."
   },
   "validation": {
     "REQUIRED": "Required.",
@@ -504,6 +507,29 @@
     "signUpInDiscord": "Sign-ups happen in Discord",
     "signUpInDiscordHelp": "Use the buttons on the event post to sign up, change your status, or decline.",
     "openPost": "Open the Discord post"
+  },
+  "addParticipant": {
+    "title": "Add participant",
+    "description": "Sign a member up as they would in Discord. They get a direct message saying you did it.",
+    "add": "Add",
+    "status": "Status",
+    "noMember": {
+      "raid": "No member matches. Only Raiders, Officers, and the Guild Master can join raids.",
+      "dungeon": "No member matches.",
+      "pvp": "No member matches."
+    },
+    "noRole": "This event has no slots for the roles a {{class}} can fill.",
+    "getsSlot": "They get an open {{role}} slot.",
+    "goesToWaitlist": "{{role}} is full, so they go to the end of its waitlist.",
+    "keepsSlot": "They're already in a {{role}} slot and keep it.",
+    "keepsWaitlist": "They're already on the {{role}} waitlist and keep their place.",
+    "replaces": "This changes their current sign-up.",
+    "tentativeClosed": "The Tentative deadline has passed, so they're added as Confirmed.",
+    "changeRoleTitle": "Change {{name}}'s role to {{role}}?",
+    "changeRoleFromSlot": "{{name}} has a {{current}} slot. Changing the role counts as a new sign-up, so that slot goes to the first on the {{current}} waitlist.",
+    "changeRoleFromWaitlist": "{{name}} is on the {{current}} waitlist. Changing the role counts as a new sign-up, so they lose their place there.",
+    "changeRole": "Change role",
+    "goBack": "Go back"
   },
   "series": {
     "title": "Recurring events",

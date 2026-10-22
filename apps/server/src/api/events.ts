@@ -1,4 +1,5 @@
 import {
+  addParticipantSchema,
   eventListQuerySchema,
   saveAttendanceSchema,
   type AttendanceResponse,
@@ -24,7 +25,12 @@ import {
 import { DomainError } from '../domain/errors.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
 import { can } from '../domain/permissions.js';
-import { eventSignUps, removeParticipant, replaceTentative } from '../domain/sign-ups.js';
+import {
+  addParticipant,
+  eventSignUps,
+  removeParticipant,
+  replaceTentative,
+} from '../domain/sign-ups.js';
 import { deadlineHours } from '../domain/tentative.js';
 import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
@@ -137,6 +143,27 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       });
       if (!event || !visibleTo(access, event)) throw new DomainError({ code: 'NOT_FOUND' });
       res.json((await eventSignUps(event.id)).map(toSignUpResponse));
+    },
+  );
+
+  // Signs a member up (or changes their sign-up), with the same rules as in Discord.
+  router.post(
+    `${base}/:eventId/sign-ups`,
+    requireUser,
+    requireGuildPermission('manageParticipants'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const body = parseBody(addParticipantSchema, req.body, res);
+      if (!body) return;
+      const id = eventId(req.params.eventId);
+      const changes = await addParticipant(guild, id, body, currentUser(res));
+      if (jobs) {
+        await enqueueEventPosts(jobs, [id]);
+        await notifySignUpChanges(jobs, changes);
+        // Past the reminder time, a new Tentative participant gets the reminder right away.
+        if (body.status === 'tentative') await jobs.enqueue('tentative-reminder', { eventId: id });
+      }
+      res.status(201).json((await eventSignUps(id)).map(toSignUpResponse));
     },
   );
 
@@ -338,6 +365,7 @@ async function toAttendanceResponse(event: Event): Promise<AttendanceResponse> {
 export function toSignUpResponse(signUp: SignUp): SignUpResponse {
   return {
     id: signUp.id,
+    memberId: signUp.memberId,
     character: {
       id: signUp.characterId,
       name: signUp.character!.name,

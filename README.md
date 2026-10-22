@@ -12,7 +12,7 @@ The app is available in English and Spanish.
 - **Roster** of members and their characters (main and alts), with ranks, officer notes, and rank history.
 - **Requests to join** from Discord with `/register`, approved by an Officer. Members **choose their main** with `/main` and **remove their characters** with `/character remove`; Officers add, edit, and remove characters in the web app.
 - **Events** (raids, dungeons, and PvP) with slots per combat role, weekly recurring events, and a post in Discord that updates in real time.
-- **Sign-ups from Discord** with a waitlist per role, and a configurable deadline for Tentative sign-ups with reminders.
+- **Sign-ups from Discord** with a waitlist per role, and a configurable deadline for Tentative sign-ups with reminders. Officers can also add, remove, or replace participants from the web app.
 - **Missing-role alerts** in Discord before each event.
 - **Attendance tracking** with six statuses, attendance rates per period and event type, and configurable Good / Watch / At risk bands. Members see their own with `/attendance` in Discord.
 - **Gear checks** before raids using the Battle.net API: empty slots, missing enchants, and direct messages to players who need to fix something.

@@ -97,7 +97,13 @@ export type ApiError =
         // The replacement isn't on the waitlist of that role (anymore).
         | 'NOT_ON_WAITLIST'
         // Attendance opens when the event starts.
-        | 'ATTENDANCE_NOT_OPEN';
+        | 'ATTENDANCE_NOT_OPEN'
+        // The character's member can't join the event (rank, left Discord, or not on the roster).
+        | 'CANNOT_JOIN_EVENT'
+        // The character's class can't fill that combat role.
+        | 'ROLE_NOT_ALLOWED'
+        // Tentative sign-ups closed at the event's Tentative deadline.
+        | 'TENTATIVE_CLOSED';
     }
   | { code: 'VALIDATION_ERROR'; issues: ValidationIssue[] };
 
@@ -356,6 +362,7 @@ export interface EventResponse {
  */
 export interface SignUpResponse {
   id: string;
+  memberId: string;
   character: { id: string; name: string; class: CharacterClass; race: Race };
   role: CombatRole | null;
   status: SignUpStatus;

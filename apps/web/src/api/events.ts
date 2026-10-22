@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AddParticipantInput,
   AttendanceResponse,
   CreateEventInput,
   SaveAttendanceInput,
@@ -71,6 +72,16 @@ function useParticipantMutation<Input>(
       });
     },
   });
+}
+
+/** Signs a member up (or changes their sign-up), with the same rules as in Discord. */
+export function useAddParticipant(guildId: string, eventId: string) {
+  return useParticipantMutation(guildId, eventId, (input: AddParticipantInput) =>
+    apiRequest<SignUpResponse[]>(`/guilds/${guildId}/events/${eventId}/sign-ups`, {
+      method: 'POST',
+      body: input,
+    }),
+  );
 }
 
 /** Removes a participant; their spot goes to the waitlist. */
