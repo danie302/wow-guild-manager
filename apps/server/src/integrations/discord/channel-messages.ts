@@ -14,10 +14,25 @@ const UNKNOWN_MESSAGE = 10008;
 const MISSING_ACCESS = 50001;
 const MISSING_PERMISSIONS = 50013;
 
-/** A message the bot posts in a channel: embeds, and rows of buttons. */
+/** A message the bot posts in a channel: text, embeds, and rows of buttons. */
 export interface ChannelMessage {
-  embeds: DiscordEmbed[];
-  components: APIActionRowComponent<APIComponentInMessageActionRow>[];
+  content?: string;
+  embeds?: DiscordEmbed[];
+  components?: APIActionRowComponent<APIComponentInMessageActionRow>[];
+  /** Posts it as a reply to this message (if it still exists). */
+  replyTo?: string;
+  /** The only users its mentions notify; without it, nobody is notified. */
+  mentionUserIds?: string[];
+}
+
+/** The message as Discord's API takes it. */
+function messageBody({ replyTo, mentionUserIds = [], ...message }: ChannelMessage) {
+  return {
+    ...message,
+    ...(replyTo && { message_reference: { message_id: replyTo, fail_if_not_exists: false } }),
+    // Never @everyone or roles; only the listed users, and not the author of a replied message.
+    allowed_mentions: { parse: [], users: mentionUserIds, replied_user: false },
+  };
 }
 
 export type ChannelMessageFailure =
@@ -53,13 +68,15 @@ export function createRestChannelMessages(botToken: string): ChannelMessages {
   return {
     async post(channelId, message) {
       const posted = (await call(() =>
-        rest.post(Routes.channelMessages(channelId), { body: message }),
+        rest.post(Routes.channelMessages(channelId), { body: messageBody(message) }),
       )) as APIMessage;
       return posted.id;
     },
 
     async edit(channelId, messageId, message) {
-      await call(() => rest.patch(Routes.channelMessage(channelId, messageId), { body: message }));
+      await call(() =>
+        rest.patch(Routes.channelMessage(channelId, messageId), { body: messageBody(message) }),
+      );
     },
 
     async remove(channelId, messageId) {

@@ -25,6 +25,11 @@ export interface JobPayloads {
   'tentative-reminder': { eventId: string };
   /** Replaces Tentative participants at the deadline, as `tentative-deadline-<eventId>`. */
   'tentative-deadline': { eventId: string };
+  /**
+   * Posts an alert in the events channel if the event is still missing players, 48 or 24 hours
+   * before it starts, as `missing-roles-<hours>-<eventId>`.
+   */
+  'missing-role-check': { eventId: string; hoursBefore: 48 | 24 };
   /** Tells a member by direct message that their waitlisted character got a slot. */
   'waitlist-promoted': { signUpId: string };
   /** Tells a member their character lost its slot because the role's slots went down. */

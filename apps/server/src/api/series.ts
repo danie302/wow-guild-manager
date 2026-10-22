@@ -12,7 +12,7 @@ import { DomainError } from '../domain/errors.js';
 import { createSeries, futureEventIds, stopSeries, updateSeries } from '../domain/series.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
 import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
-import { scheduleTentativeJobs } from '../jobs/tentative.js';
+import { scheduleEventJobs } from '../jobs/event-jobs.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import { eventSignUps } from '../domain/sign-ups.js';
 import { eventId as seriesId, toSignUpResponse } from './events.js';
@@ -46,7 +46,7 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
     if (jobs) {
       const ids = await futureEventIds(series.id);
       await enqueueEventPosts(jobs, ids);
-      await scheduleTentativeJobs(jobs, ids);
+      await scheduleEventJobs(jobs, ids);
     }
     res.status(201).json(await seriesResponse(series.id));
   });
@@ -80,7 +80,7 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
       if (jobs) {
         const ids = await futureEventIds(series.id);
         await enqueueEventPosts(jobs, ids);
-        await scheduleTentativeJobs(jobs, ids);
+        await scheduleEventJobs(jobs, ids);
         await notifySignUpChanges(jobs, changes);
       }
       res.json(await seriesResponse(series.id));

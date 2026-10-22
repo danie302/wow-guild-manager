@@ -15,7 +15,7 @@ import { createGuild } from '../domain/guilds.js';
 import { replaceGuildOfficers } from '../domain/officers.js';
 import { applyGuildDeadline } from '../domain/tentative.js';
 import { enqueueEventPosts, enqueueUpcomingEventPosts } from '../jobs/event-posts.js';
-import { scheduleTentativeJobs, upcomingEventIds } from '../jobs/tentative.js';
+import { scheduleEventJobs, upcomingEventIds } from '../jobs/event-jobs.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import { discordServerIconUrl, type DiscordDirectory } from '../integrations/discord/directory.js';
 import type { Logger } from '../logger.js';
@@ -118,10 +118,7 @@ export function guildsRouter(
         const moved = deadlineChanged ? await applyGuildDeadline(guild) : [];
         if ((deadlineChanged || reminderChanged) && jobs) {
           await enqueueEventPosts(jobs, moved);
-          await scheduleTentativeJobs(
-            jobs,
-            reminderChanged ? await upcomingEventIds(guild.id) : moved,
-          );
+          await scheduleEventJobs(jobs, reminderChanged ? await upcomingEventIds(guild.id) : moved);
         }
       } catch (err) {
         if (err instanceof InvalidImageError) {

@@ -20,7 +20,7 @@ import { deadlineHours } from '../domain/tentative.js';
 import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
 import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
-import { scheduleTentativeJobs } from '../jobs/tentative.js';
+import { scheduleEventJobs } from '../jobs/event-jobs.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import type { DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
@@ -76,7 +76,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     const event = await createEvent(guild, input, currentUser(res));
     if (jobs) {
       await enqueueEventPosts(jobs, [event.id]);
-      await scheduleTentativeJobs(jobs, [event.id]);
+      await scheduleEventJobs(jobs, [event.id]);
       const preConfirmed = await SignUp.findAll({
         attributes: ['id'],
         where: { eventId: event.id },
@@ -209,7 +209,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       );
       if (jobs) {
         await enqueueEventPosts(jobs, [event.id]);
-        await scheduleTentativeJobs(jobs, [event.id]);
+        await scheduleEventJobs(jobs, [event.id]);
         await notifySignUpChanges(jobs, changes);
       }
       res.json(await eventResponse(event.id, guild));
@@ -226,7 +226,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       if (jobs) {
         await enqueueEventPosts(jobs, [event.id]);
         // Its reminder and deadline jobs go.
-        await scheduleTentativeJobs(jobs, [event.id]);
+        await scheduleEventJobs(jobs, [event.id]);
       }
       res.json(await eventResponse(event.id, guild));
     },

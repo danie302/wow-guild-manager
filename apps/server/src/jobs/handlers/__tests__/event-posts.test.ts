@@ -64,7 +64,7 @@ const sync = (event: Event) => handlers['event-post']({ eventId: event.id });
 function onlyPost(channelId: string) {
   const messages = [...discord.messages(channelId).values()];
   expect(messages).toHaveLength(1);
-  return messages[0]!.embeds[0]!;
+  return messages[0]!.embeds![0]!;
 }
 
 describe('event-post', () => {
@@ -113,7 +113,7 @@ describe('event-post', () => {
     await sync(event);
 
     const [message] = [...discord.messages(raidsChannel).values()];
-    expect(message!.components[0]!.components).toMatchObject([
+    expect(message!.components![0]!.components).toMatchObject([
       { custom_id: `signup:open:${event.id}`, label: 'Sign up' },
       { custom_id: `signup:decline:${event.id}`, label: 'Declined' },
     ]);

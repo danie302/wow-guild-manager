@@ -358,6 +358,14 @@ The gear checks (and, later, registering characters from Discord) read character
 - Both jobs re-check the event before acting: nothing for a cancelled event, a reminder before its time, or a deadline that moved later. Reminders are marked per sign-up (`reminded_at`), so each participant gets one; a Tentative sign-up after the reminder time enqueues the reminder job right away.
 - At the deadline, each role's most recent Tentative participants are swapped with its earliest waitlisted characters, in one transaction that locks the event, and both sides get the usual direct messages.
 
+### Missing-role alerts
+
+**Status:** Accepted (story 027)
+
+- Each event has `missing-roles-48-<eventId>` and `missing-roles-24-<eventId>` jobs, scheduled with the Tentative ones by `scheduleEventJobs` (`src/jobs/event-jobs.ts`). A check whose time has passed when the event is created or moved isn't scheduled.
+- The check re-reads the event and does nothing if it was cancelled, moved later, or (for the 48-hour check) the 24-hour one is already due, so a late job never alerts twice. Who to mention is worked out when it runs (`src/domain/missing-roles.ts`), from the database only.
+- The alert is one message per event and check, posted by the worker as a reply to the event's post. `allowed_mentions` lists exactly the mentioned users (never `@everyone` or roles), and the mentions are cut short to fit Discord's limits (2000 characters, 100 users).
+
 ## IDs: UUID v7
 
 **Status:** Accepted

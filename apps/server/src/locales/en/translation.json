@@ -109,5 +109,9 @@
     "removed": "{{name}} removed you from **{{event}}** ({{time}}). You can sign up again from the event post.",
     "someone": "An Officer",
     "reminder": "Reminder: you're Tentative for **{{event}}** ({{time}}) with {{character}} as {{role}}. Confirm before {{deadline}} on the event post, or your spot may go to someone on the waitlist."
+  },
+  "missingRoles": {
+    "stillNeeded_one": "{{count}} {{role}} still needed",
+    "stillNeeded_other": "{{count}} {{role}} still needed"
   }
 }

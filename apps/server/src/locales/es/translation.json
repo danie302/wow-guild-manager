@@ -109,5 +109,9 @@
     "removed": "{{name}} te quitó de **{{event}}** ({{time}}). Puedes volver a inscribirte desde el mensaje del evento.",
     "someone": "Un Officer",
     "reminder": "Recordatorio: estás como Provisional en **{{event}}** ({{time}}) con {{character}} como {{role}}. Confirma antes del {{deadline}} en el mensaje del evento, o tu plaza puede pasar a alguien de la lista de espera."
+  },
+  "missingRoles": {
+    "stillNeeded_one": "Falta {{count}} {{role}}",
+    "stillNeeded_other": "Faltan {{count}} {{role}}"
   }
 }

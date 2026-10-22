@@ -5,7 +5,7 @@ import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
 import { Character, Member, SignUp, User, type Event, type Guild } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
-import { scheduleTentativeJobs } from '../../jobs/tentative.js';
+import { scheduleEventJobs } from '../../jobs/event-jobs.js';
 import { cancelEvent, createEvent, updateEvent } from '../events.js';
 import { signUp } from '../sign-ups.js';
 import { applyGuildDeadline, replaceAtDeadline, takeReminders } from '../tentative.js';
@@ -189,15 +189,16 @@ describe('the deadline replacement', () => {
   });
 });
 
-describe('scheduleTentativeJobs', () => {
+describe('scheduleEventJobs', () => {
   it('schedules one reminder and one deadline per event, and moves them on a change', async () => {
     const target = await event(100);
     const jobs = new FakeJobQueue();
 
-    await scheduleTentativeJobs(jobs, [target.id], now);
-    await scheduleTentativeJobs(jobs, [target.id], now);
+    await scheduleEventJobs(jobs, [target.id], now);
+    await scheduleEventJobs(jobs, [target.id], now);
 
-    expect(jobs.jobs.map(({ name, jobId, runAt }) => [name, jobId, runAt])).toEqual([
+    const tentativeJobs = jobs.jobs.filter((job) => job.name.startsWith('tentative-'));
+    expect(tentativeJobs.map(({ name, jobId, runAt }) => [name, jobId, runAt])).toEqual([
       [
         'tentative-reminder',
         `tentative-reminder-${target.id}`,
@@ -210,10 +211,10 @@ describe('scheduleTentativeJobs', () => {
   it('removes the jobs of a cancelled event', async () => {
     const target = await event(100);
     const jobs = new FakeJobQueue();
-    await scheduleTentativeJobs(jobs, [target.id], now);
+    await scheduleEventJobs(jobs, [target.id], now);
 
     await cancelEvent(guild, target.id, gm, now);
-    await scheduleTentativeJobs(jobs, [target.id], now);
+    await scheduleEventJobs(jobs, [target.id], now);
 
     expect(jobs.jobs).toEqual([]);
   });

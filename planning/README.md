@@ -87,7 +87,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [024](story-024-withdraw-and-waitlist.md) | Withdrawals and waitlist promotion | Done | 023 |
 | [025](story-025-manage-participants.md) | Managing participants from the web app | Done | 024 |
 | [026](story-026-tentative-deadline.md) | Tentative deadline and reminders | Done | 009, 024 |
-| [027](story-027-missing-role-alerts.md) | Missing-role alerts | Not started | 009, 024 |
+| [027](story-027-missing-role-alerts.md) | Missing-role alerts | Done | 009, 024 |
 
 ### Attendance
 

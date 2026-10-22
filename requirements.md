@@ -269,6 +269,9 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 ### Reminders and alerts
 - Tentative participants get a direct message at the guild's reminder time before the Tentative deadline, reminding them to confirm. Someone who signs up as Tentative after the reminder time gets the reminder right away.
 - If an event is still missing players for a combat role 48 hours and again 24 hours before it starts, the bot posts an alert (e.g. "2 Healers still needed for BWL on Tuesday") that mentions eligible members who can fill that role and haven't signed up.
+  - One alert per event and check, with a line for each role that's missing players, posted in the events channel as a reply to the event's post, in the guild's Discord language.
+  - It mentions active roster members (not flagged as having left Discord) whose rank can join the event, who have a character that can fill the role, and who have no sign-up for the event (Declined counts as signed up).
+  - A check whose time has already passed when the event is created or moved is skipped (an event created 30 hours ahead only gets the 24-hour one).
 
 ## Attendance
 

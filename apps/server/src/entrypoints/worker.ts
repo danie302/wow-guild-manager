@@ -6,7 +6,7 @@ import { createRestChannelMessages } from '../integrations/discord/channel-messa
 import { createRestDirectMessenger } from '../integrations/discord/direct-messages.js';
 import { createJobHandlers } from '../jobs/handlers/index.js';
 import { createJobWorker, JobQueue, redisConnection } from '../jobs/index.js';
-import { allUpcomingEventIds, scheduleTentativeJobs } from '../jobs/tentative.js';
+import { allUpcomingEventIds, scheduleEventJobs } from '../jobs/event-jobs.js';
 import { createLogger } from '../logger.js';
 
 const config = loadConfigOrExit(workerConfigSchema);
@@ -51,7 +51,7 @@ await jobs.repeat('extend-series', {}, { schedulerId: 'extend-series', pattern: 
 await jobs.enqueue('extend-series', {});
 // Every upcoming event's Tentative jobs, in case some were lost or the events predate them.
 // Fixed job IDs make this safe to repeat.
-await scheduleTentativeJobs(jobs, await allUpcomingEventIds());
+await scheduleEventJobs(jobs, await allUpcomingEventIds());
 logger.info('Worker ready');
 
 process.on('SIGTERM', () => {
