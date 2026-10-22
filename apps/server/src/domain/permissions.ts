@@ -6,8 +6,10 @@ import { BASE_RANKS, type GuildAccess, type Rank } from '@wgm/shared';
  * with tests.
  */
 export const PERMISSIONS = {
-  /** Open the guild's pages. */
+  /** Open the guild's settings and dashboard (members get read-only pages instead). */
   viewGuild: ['guild_master', 'officer'],
+  /** See the guild's image, e.g. in the sidebar. */
+  viewGuildImage: ['guild_master', 'officer', 'member'],
   /** Edit the guild name and image. */
   editGuildProfile: ['guild_master'],
   /** Connect the guild's Discord server. */
@@ -22,8 +24,8 @@ export const PERMISSIONS = {
   chooseEventsChannel: ['guild_master'],
   /** Choose the language of the guild's public Discord messages. */
   chooseDiscordLanguage: ['guild_master'],
-  /** See the roster and each member's page. */
-  viewRoster: ['guild_master', 'officer'],
+  /** See the roster, and each member's page (a member, only their own). */
+  viewRoster: ['guild_master', 'officer', 'member'],
   /** Add members and characters by hand, and approve requests to join (/register). */
   addCharacters: ['guild_master', 'officer'],
   /** Change a member's rank between Raider and Member (Officers: see canChangeRankOf). */
@@ -38,14 +40,18 @@ export const PERMISSIONS = {
   changeMainCharacter: ['guild_master', 'officer'],
   /** Edit and remove any member's characters (members remove their own from Discord). */
   editCharacters: ['guild_master', 'officer'],
-  /** See the guild's events (members get read-only access in story 036). */
-  viewEvents: ['guild_master', 'officer'],
+  /** See the guild's events (members, only upcoming ones). */
+  viewEvents: ['guild_master', 'officer', 'member'],
+  /** See the recurring series. */
+  viewSeries: ['guild_master', 'officer'],
   /** Create, edit, and cancel events. */
   manageEvents: ['guild_master', 'officer'],
   /** Set the guild's Tentative deadline and reminder time. */
   setTentativeTimes: ['guild_master', 'officer'],
-  /** See the attendance report and each member's attendance. */
-  viewAttendance: ['guild_master', 'officer'],
+  /** See each member's attendance (a member, only their own). */
+  viewAttendance: ['guild_master', 'officer', 'member'],
+  /** See the attendance report that compares members. */
+  viewAttendanceReport: ['guild_master', 'officer'],
   /** Set the attendance band thresholds. */
   setAttendanceBands: ['guild_master'],
   /** Record and correct attendance. */

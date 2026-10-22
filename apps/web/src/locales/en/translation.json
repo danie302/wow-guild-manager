@@ -191,7 +191,8 @@
   "guildPicker": {
     "title": "Choose a guild",
     "lead": "You have access to more than one guild. You can switch later from the sidebar.",
-    "yourRank": "You: {{rank}}"
+    "yourRank": "You: {{rank}}",
+    "readOnly": "Read-only: events and roster"
   },
   "guildSettings": {
     "title": "Guild settings",
@@ -499,7 +500,10 @@
     "replaceTitle": "Replace {{name}}",
     "replaceBody": "Pick someone from the waitlist to take the spot. {{name}} moves to the end of the waitlist, and both get a direct message.",
     "participantFailed": "Couldn't change the participants.",
-    "tentativeCloses": "Tentative closes {{date}} · {{hours}} h before the start"
+    "tentativeCloses": "Tentative closes {{date}} · {{hours}} h before the start",
+    "signUpInDiscord": "Sign-ups happen in Discord",
+    "signUpInDiscordHelp": "Use the buttons on the event post to sign up, change your status, or decline.",
+    "openPost": "Open the Discord post"
   },
   "series": {
     "title": "Recurring events",

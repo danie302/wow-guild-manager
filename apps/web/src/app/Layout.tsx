@@ -26,6 +26,7 @@ export function Layout() {
   const registrations = useRegistrations(guild?.id ?? '', {
     enabled: guild?.access === 'guild_master' || guild?.access === 'officer',
   });
+  const readOnly = guild?.access === 'member';
   const createValue = 'new';
   const switcherOptions = [
     ...guilds.map((option) => ({ value: option.id, label: option.name })),
@@ -54,15 +55,22 @@ export function Layout() {
         <AppShell.Nav label={t('nav.label')}>
           {guild && (
             <>
-              <AppShell.NavItem to={guildPath(guild.id, 'dashboard')} icon="dashboard">
-                {t('nav.dashboard')}
-              </AppShell.NavItem>
+              {!readOnly && (
+                <AppShell.NavItem to={guildPath(guild.id, 'dashboard')} icon="dashboard">
+                  {t('nav.dashboard')}
+                </AppShell.NavItem>
+              )}
               <AppShell.NavItem to={guildPath(guild.id, 'events')} icon="events">
                 {t('nav.events')}
               </AppShell.NavItem>
               <AppShell.NavItem to={guildPath(guild.id, 'roster')} icon="roster">
                 {t('nav.roster')}
               </AppShell.NavItem>
+            </>
+          )}
+          {/* Read-only members don't see these pages. */}
+          {guild && !readOnly && (
+            <>
               <AppShell.NavItem
                 to={guildPath(guild.id, 'registrations')}
                 icon="registrations"

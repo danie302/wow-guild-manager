@@ -30,7 +30,7 @@ Let the Guild Master and Officers check participants' gear and enchants before a
 
 ## Notes
 
-- Add the dashboard's "Raid participants with gear problems" section (story 034 left it out).
+- Add the dashboard's "Raid participants with gear problems" section (story 034 left it out), and members' own gear check result on their raids, never anyone else's (story 036).
 
 ## Technical debt
 

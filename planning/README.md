@@ -116,7 +116,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 
 | Story | Title | Status | Depends on |
 |---|---|---|---|
-| [036](story-036-member-read-only-access.md) | Read-only access for members | Not started | 014, 016, 025, 029, 031 |
+| [036](story-036-member-read-only-access.md) | Read-only access for members | Blocked | 014, 016, 025, 029, 031 |
 
 ## Not planned yet
 

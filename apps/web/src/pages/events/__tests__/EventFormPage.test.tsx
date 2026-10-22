@@ -148,6 +148,7 @@ describe('EventFormPage', () => {
       baseRank: 'raider',
       leftDiscordAt: null,
       attendanceRate: null,
+      attendanceBand: null,
       characters: [
         {
           id: `019a0c3e-5b1e-7c2a-9f3d-00000000110${name.length}`,

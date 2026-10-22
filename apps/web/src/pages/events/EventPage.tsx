@@ -11,7 +11,7 @@ import {
   useRemoveParticipant,
   useReplaceParticipant,
 } from '../../api/events';
-import { guildPath, useGuildIdParam } from '../../app/guildSelection';
+import { guildPath, useGuildAccess, useGuildIdParam } from '../../app/guildSelection';
 import {
   ActionList,
   Button,
@@ -47,6 +47,7 @@ export function EventPage() {
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState<SignUpResponse | null>(null);
   const [replacing, setReplacing] = useState<SignUpResponse | null>(null);
+  const readOnly = useGuildAccess() === 'member';
 
   if (event.isPending) return <Loading label={t('events.loading')} />;
   if (event.error instanceof ApiRequestError && event.error.status === 404) {
@@ -57,7 +58,8 @@ export function EventPage() {
   const { data } = event;
   const startsAt = new Date(data.startsAt);
   const started = startsAt <= new Date();
-  const changeable = !data.cancelled && !started;
+  // Read-only members see the event and its sign-ups, without any action.
+  const changeable = !readOnly && !data.cancelled && !started;
 
   return (
     <Page>
@@ -111,7 +113,17 @@ export function EventPage() {
         }
       />
 
-      {data.series && (
+      {readOnly && !data.cancelled && (
+        <Notice tone="ok" title={t('eventPage.signUpInDiscord')}>
+          {t('eventPage.signUpInDiscordHelp')}{' '}
+          {data.discordPost.url && (
+            <Button variant="text" href={data.discordPost.url} newTab endIcon="external">
+              {t('eventPage.openPost')}
+            </Button>
+          )}
+        </Notice>
+      )}
+      {data.series && !readOnly && (
         <Button variant="text" to={guildPath(guildId, `events/series/${data.series.id}`)}>
           {t('eventPage.series', { name: data.series.name })}
         </Button>
@@ -140,18 +152,22 @@ export function EventPage() {
               }
             : undefined
         }
-        tabs={[
-          {
-            value: 'attendance',
-            label: t('attendance.tab'),
-            content: <AttendanceTab guildId={guildId} event={data} />,
-          },
-          {
-            value: 'post',
-            label: t('eventPage.post.tab'),
-            content: <DiscordPostTab guildId={guildId} event={data} />,
-          },
-        ]}
+        tabs={
+          readOnly
+            ? []
+            : [
+                {
+                  value: 'attendance',
+                  label: t('attendance.tab'),
+                  content: <AttendanceTab guildId={guildId} event={data} />,
+                },
+                {
+                  value: 'post',
+                  label: t('eventPage.post.tab'),
+                  content: <DiscordPostTab guildId={guildId} event={data} />,
+                },
+              ]
+        }
       />
 
       <ConfirmDialog

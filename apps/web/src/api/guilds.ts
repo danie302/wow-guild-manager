@@ -13,11 +13,12 @@ import type {
 
 import { apiRequest } from './client';
 
-export function useGuild(guildId: string | undefined) {
+/** The guild's settings; `enabled` false skips it, e.g. for read-only members, who can't read them. */
+export function useGuild(guildId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: ['guilds', guildId],
     queryFn: () => apiRequest<GuildResponse>(`/guilds/${guildId}`),
-    enabled: guildId !== undefined,
+    enabled: enabled && guildId !== undefined,
   });
 }
 

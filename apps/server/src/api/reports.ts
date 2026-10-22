@@ -13,7 +13,7 @@ export function reportsRouter() {
   router.get(
     '/guilds/:guildId/attendance',
     requireUser,
-    requireGuildPermission('viewAttendance'),
+    requireGuildPermission('viewAttendanceReport'),
     async (req, res) => {
       const { guild } = currentGuild(res);
       const query = parseBody(attendanceReportQuerySchema, req.query, res);

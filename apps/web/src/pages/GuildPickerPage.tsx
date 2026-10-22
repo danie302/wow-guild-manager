@@ -27,12 +27,16 @@ export function GuildPickerPage() {
         {guilds.map((guild) => (
           <Splash.Choice
             key={guild.id}
-            to={guildPath(guild.id, 'dashboard')}
+            to={guildPath(guild.id, guild.access === 'member' ? 'events' : 'dashboard')}
             initials={guild.name.slice(0, 2).toUpperCase()}
             title={guild.name}
-            detail={t('guildPicker.yourRank', {
-              rank: guild.access === 'guild_master' ? 'Guild Master' : 'Officer',
-            })}
+            detail={
+              guild.access === 'member'
+                ? t('guildPicker.readOnly')
+                : t('guildPicker.yourRank', {
+                    rank: guild.access === 'guild_master' ? 'Guild Master' : 'Officer',
+                  })
+            }
           />
         ))}
       </Splash.List>

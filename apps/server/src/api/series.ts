@@ -28,7 +28,7 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
   const base = '/guilds/:guildId/series';
 
   // The running series, soonest next event first.
-  router.get(base, requireUser, requireGuildPermission('viewEvents'), async (_req, res) => {
+  router.get(base, requireUser, requireGuildPermission('viewSeries'), async (_req, res) => {
     const { guild } = currentGuild(res);
     const all = await EventSeries.findAll({
       where: { guildId: guild.id, stoppedAt: null },
@@ -54,7 +54,7 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
   router.get(
     `${base}/:seriesId`,
     requireUser,
-    requireGuildPermission('viewEvents'),
+    requireGuildPermission('viewSeries'),
     async (req, res) => {
       const { guild } = currentGuild(res);
       const series = await EventSeries.findOne({
@@ -91,7 +91,7 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
   router.get(
     `${base}/:seriesId/sign-ups`,
     requireUser,
-    requireGuildPermission('viewEvents'),
+    requireGuildPermission('viewSeries'),
     async (req, res) => {
       const { guild } = currentGuild(res);
       const series = await EventSeries.findOne({

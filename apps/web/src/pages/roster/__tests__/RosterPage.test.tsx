@@ -29,6 +29,7 @@ function rosterMember(
     characters,
     leftDiscordAt: null,
     attendanceRate: null,
+    attendanceBand: null,
   } satisfies RosterMember;
 }
 

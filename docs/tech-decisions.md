@@ -292,6 +292,15 @@ A user is an Officer of a guild while they have its Officer role in its Discord 
 - `src/domain/access.ts` works out a user's access (Guild Master from the guild, Officer from the table), `src/domain/permissions.ts` maps each action to the ranks allowed, and `requireGuildPermission(action)` guards each guild route.
 - Checking Discord on every request (with a short cache) was tried first and replaced: its Discord API usage grows with the number of users.
 
+### Read-only member access
+
+**Status:** Accepted (story 036)
+
+- A third access level, `member`, comes from the roster: an active member not flagged as having left the Discord server (`src/domain/access.ts`). Like Officer access, it costs no Discord API calls.
+- `src/domain/permissions.ts` gives members only read actions (`viewEvents`, `viewRoster`, `viewAttendance`, `viewGuildImage`); every change, the guild settings, the dashboard, series, and reports stay with the Guild Master and Officers.
+- What a member may read is filtered in the routes, not in the browser: no past events (listed or opened), no Discord post errors, no "left Discord" flags, no other member's page or attendance, and no officer notes or rank history on their own page. `src/api/__tests__/member-access.test.ts` calls each endpoint with a member session.
+- The web app reads the user's access from `/api/me` (`useGuildAccess`), since members can't load the guild's settings; `RequireOfficer` sends them from the officers' pages to the events.
+
 ## Character lookup: an interface until Battle.net supports Forever
 
 **Status:** Accepted (story 017)

@@ -191,7 +191,8 @@
   "guildPicker": {
     "title": "Elige una hermandad",
     "lead": "Tienes acceso a más de una hermandad. Puedes cambiar más tarde desde la barra lateral.",
-    "yourRank": "Tú: {{rank}}"
+    "yourRank": "Tú: {{rank}}",
+    "readOnly": "Solo lectura: eventos y roster"
   },
   "guildSettings": {
     "title": "Ajustes de la hermandad",
@@ -499,7 +500,10 @@
     "replaceTitle": "Sustituir a {{name}}",
     "replaceBody": "Elige a alguien de la lista de espera para ocupar la plaza. {{name}} pasa al final de la lista de espera, y ambos reciben un mensaje directo.",
     "participantFailed": "No se pudieron cambiar los participantes.",
-    "tentativeCloses": "Provisional cierra el {{date}} · {{hours}} h antes del inicio"
+    "tentativeCloses": "Provisional cierra el {{date}} · {{hours}} h antes del inicio",
+    "signUpInDiscord": "Las inscripciones se hacen en Discord",
+    "signUpInDiscordHelp": "Usa los botones del mensaje del evento para inscribirte, cambiar tu estado o rechazar.",
+    "openPost": "Abrir el mensaje de Discord"
   },
   "series": {
     "title": "Eventos recurrentes",

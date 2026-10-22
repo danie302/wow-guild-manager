@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
 import { useEvents, useSeriesList, type EventsQuery } from '../../api/events';
-import { guildPath, useGuildIdParam } from '../../app/guildSelection';
+import { guildPath, useGuildAccess, useGuildIdParam } from '../../app/guildSelection';
 import {
   AgendaList,
   Button,
@@ -50,7 +50,9 @@ export function EventsPage() {
   const guildId = useGuildIdParam()!;
   const [params, setParams] = useSearchParams();
   const view: View = params.get('view') === 'calendar' ? 'calendar' : 'list';
-  const when: When = params.get('when') === 'past' ? 'past' : 'upcoming';
+  // Read-only members see upcoming events only, without series or actions.
+  const readOnly = useGuildAccess() === 'member';
+  const when: When = !readOnly && params.get('when') === 'past' ? 'past' : 'upcoming';
   const set = (changes: Record<string, string>) =>
     setParams((current) => {
       const next = new URLSearchParams(current);
@@ -58,7 +60,7 @@ export function EventsPage() {
       return next;
     });
 
-  const series = useSeriesAside(guildId);
+  const series = useSeriesAside(guildId, !readOnly);
 
   return (
     <Page>
@@ -74,29 +76,33 @@ export function EventsPage() {
             <ChoiceGroup.Option value="list">{t('events.list')}</ChoiceGroup.Option>
             <ChoiceGroup.Option value="calendar">{t('events.calendar')}</ChoiceGroup.Option>
           </ChoiceGroup>
-          <Button
-            variant="primary"
-            size="medium"
-            startIcon="plus"
-            to={guildPath(guildId, 'events/new')}
-          >
-            {t('events.new')}
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="primary"
+              size="medium"
+              startIcon="plus"
+              to={guildPath(guildId, 'events/new')}
+            >
+              {t('events.new')}
+            </Button>
+          )}
         </Page.Actions>
       </Page.Header>
 
       {view === 'list' ? (
         <PageColumns aside={series}>
-          <ChoiceGroup
-            label={t('events.when')}
-            hideLabel
-            size="small"
-            value={when}
-            onChange={(next: When) => set({ when: next })}
-          >
-            <ChoiceGroup.Option value="upcoming">{t('events.upcoming')}</ChoiceGroup.Option>
-            <ChoiceGroup.Option value="past">{t('events.past')}</ChoiceGroup.Option>
-          </ChoiceGroup>
+          {!readOnly && (
+            <ChoiceGroup
+              label={t('events.when')}
+              hideLabel
+              size="small"
+              value={when}
+              onChange={(next: When) => set({ when: next })}
+            >
+              <ChoiceGroup.Option value="upcoming">{t('events.upcoming')}</ChoiceGroup.Option>
+              <ChoiceGroup.Option value="past">{t('events.past')}</ChoiceGroup.Option>
+            </ChoiceGroup>
+          )}
           <EventList guildId={guildId} when={when} />
         </PageColumns>
       ) : (
@@ -180,10 +186,10 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
 }
 
 /** The running weekly series, for the column beside the list; null when there are none. */
-function useSeriesAside(guildId: string) {
+function useSeriesAside(guildId: string, enabled: boolean) {
   const { t } = useTranslation();
   const format = useFormat();
-  const series = useSeriesList(guildId);
+  const series = useSeriesList(guildId, enabled);
   if (!series.data || series.data.length === 0) return null;
   return {
     title: t('series.title'),

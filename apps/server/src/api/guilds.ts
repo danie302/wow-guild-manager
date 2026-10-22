@@ -199,7 +199,7 @@ export function guildsRouter(
   router.get(
     '/guilds/:guildId/image',
     requireUser,
-    requireGuildPermission('viewGuild'),
+    requireGuildPermission('viewGuildImage'),
     async (_req, res) => {
       const { guild } = currentGuild(res);
       const image = guild.imageKey ? await storage.read(guild.imageKey) : null;

@@ -7,6 +7,7 @@ import {
   type CreateEventInput,
   type EventDiscordPostResponse,
   type EventResponse,
+  type GuildAccess,
   type SignUpResponse,
   type UpdateEventInput,
 } from '@wgm/shared';
@@ -49,17 +50,28 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
   const base = '/guilds/:guildId/events';
 
   router.get(base, requireUser, requireGuildPermission('viewEvents'), async (req, res) => {
-    const { guild } = currentGuild(res);
+    const { guild, access } = currentGuild(res);
     const query = parseBody(eventListQuerySchema, req.query, res);
     if (!query) return;
     const now = new Date();
+    // Members only see events that haven't started.
+    if (access === 'member' && 'scope' in query && query.scope === 'past') {
+      res.json([]);
+      return;
+    }
     let where: WhereOptions<Event>;
     let order: 'ASC' | 'DESC' = 'ASC';
     if ('scope' in query) {
       where = { startsAt: query.scope === 'upcoming' ? { [Op.gt]: now } : { [Op.lte]: now } };
       if (query.scope === 'past') order = 'DESC';
     } else {
-      where = { startsAt: { [Op.gte]: new Date(query.from), [Op.lt]: new Date(query.to) } };
+      const from = new Date(query.from);
+      where = {
+        startsAt: {
+          [Op.gte]: access === 'member' && from < now ? now : from,
+          [Op.lt]: new Date(query.to),
+        },
+      };
     }
     const events = await Event.findAll({
       where: { guildId: guild.id, ...where },
@@ -70,7 +82,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       ],
       ...('scope' in query && query.scope === 'past' && { limit: PAST_EVENTS_LIMIT }),
     });
-    res.json(events.map((event) => toEventResponse(event, guild)));
+    res.json(events.map((event) => toEventResponse(event, guild, access)));
   });
 
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
@@ -102,13 +114,13 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     requireUser,
     requireGuildPermission('viewEvents'),
     async (req, res) => {
-      const { guild } = currentGuild(res);
+      const { guild, access } = currentGuild(res);
       const event = await Event.findOne({
         where: { id: eventId(req.params.eventId), guildId: guild.id },
         include: people,
       });
-      if (!event) throw new DomainError({ code: 'NOT_FOUND' });
-      res.json(toEventResponse(event, guild));
+      if (!event || !visibleTo(access, event)) throw new DomainError({ code: 'NOT_FOUND' });
+      res.json(toEventResponse(event, guild, access));
     },
   );
 
@@ -118,12 +130,12 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     requireUser,
     requireGuildPermission('viewEvents'),
     async (req, res) => {
-      const { guild } = currentGuild(res);
+      const { guild, access } = currentGuild(res);
       const event = await Event.findOne({
-        attributes: ['id'],
+        attributes: ['id', 'startsAt'],
         where: { id: eventId(req.params.eventId), guildId: guild.id },
       });
-      if (!event) throw new DomainError({ code: 'NOT_FOUND' });
+      if (!event || !visibleTo(access, event)) throw new DomainError({ code: 'NOT_FOUND' });
       res.json((await eventSignUps(event.id)).map(toSignUpResponse));
     },
   );
@@ -348,7 +360,16 @@ async function eventResponse(id: string, guild: Guild): Promise<EventResponse> {
   return toEventResponse((await Event.findByPk(id, { include: people }))!, guild);
 }
 
-function toEventResponse(event: Event, guild: Guild): EventResponse {
+/** Members can't open events that have started. */
+function visibleTo(access: GuildAccess, event: Pick<Event, 'startsAt'>): boolean {
+  return access !== 'member' || event.startsAt > new Date();
+}
+
+function toEventResponse(
+  event: Event,
+  guild: Guild,
+  access: GuildAccess = 'officer',
+): EventResponse {
   return {
     id: event.id,
     type: event.type,
@@ -371,7 +392,8 @@ function toEventResponse(event: Event, guild: Guild): EventResponse {
       url: event.discordMessageId
         ? `https://discord.com/channels/${guild.discordServerId}/${event.discordChannelId}/${event.discordMessageId}`
         : null,
-      error: event.discordPostError,
+      // Only the Guild Master and Officers can fix it, so only they hear about it.
+      error: access === 'member' ? null : event.discordPostError,
     },
   };
 }

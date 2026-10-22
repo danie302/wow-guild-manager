@@ -1,5 +1,4 @@
 import {
-  attendanceBand,
   CLASS_NAMES,
   CLASSES,
   PROFESSION_NAMES,
@@ -12,10 +11,10 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useGuild } from '../../api/guilds';
 import { useMe } from '../../api/me';
 import { useRoster } from '../../api/roster';
-import { guildPath, useGuildIdParam } from '../../app/guildSelection';
+import { useGuild } from '../../api/guilds';
+import { guildPath, useGuildAccess, useGuildIdParam } from '../../app/guildSelection';
 import {
   Button,
   CharacterName,
@@ -65,8 +64,11 @@ function matches(member: RosterMember, { query, rank, characterClass, leftOnly }
 export function RosterPage() {
   const { t } = useTranslation();
   const guildId = useGuildIdParam()!;
-  const guild = useGuild(guildId);
   const roster = useRoster(guildId);
+  // Read-only members see the roster, but only open their own page, and can't add anyone.
+  const readOnly = useGuildAccess() === 'member';
+  // The guild's faction, for adding members; members can't read the guild's settings.
+  const guild = useGuild(guildId, !readOnly);
   const [query, setQuery] = useState('');
   const [rank, setRank] = useState('all');
   const [characterClass, setCharacterClass] = useState('');
@@ -76,8 +78,8 @@ export function RosterPage() {
   const [adding, setAdding] = useState(false);
   const [lastAdded, setLastAdded] = useState<AddMemberResponse>();
 
-  if (roster.isPending || guild.isPending) return <Loading label={t('roster.loading')} />;
-  if (roster.isError || guild.isError) return <Notice tone="bad" title={t('roster.loadFailed')} />;
+  if (roster.isPending) return <Loading label={t('roster.loading')} />;
+  if (roster.isError) return <Notice tone="bad" title={t('roster.loadFailed')} />;
 
   const members = roster.data.filter((member) =>
     matches(member, { query, rank, characterClass, leftOnly }),
@@ -109,9 +111,16 @@ export function RosterPage() {
             value={query}
             onChange={setQuery}
           />
-          <Button variant="primary" size="medium" startIcon="plus" onClick={() => setAdding(true)}>
-            {t('roster.addMember')}
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="primary"
+              size="medium"
+              startIcon="plus"
+              onClick={() => setAdding(true)}
+            >
+              {t('roster.addMember')}
+            </Button>
+          )}
         </Page.Actions>
       </Page.Header>
 
@@ -146,7 +155,9 @@ export function RosterPage() {
             onChange={setCharacterClass}
             options={classOptions}
           />
-          <Checkbox label={t('roster.leftOnly')} checked={leftOnly} onChange={setLeftOnly} />
+          {!readOnly && (
+            <Checkbox label={t('roster.leftOnly')} checked={leftOnly} onChange={setLeftOnly} />
+          )}
         </div>
       </Page.Filters>
 
@@ -165,7 +176,14 @@ export function RosterPage() {
         {members.map((member) => {
           const [main, ...alts] = member.characters;
           return (
-            <ListTable.Row key={member.id} to={guildPath(guildId, `roster/${member.id}`)}>
+            <ListTable.Row
+              key={member.id}
+              to={
+                !readOnly || member.discordUserId === me.data?.discordId
+                  ? guildPath(guildId, `roster/${member.id}`)
+                  : undefined
+              }
+            >
               <div>
                 <strong>{member.discordName}</strong>{' '}
                 {member.discordUserId === me.data?.discordId && (
@@ -199,28 +217,25 @@ export function RosterPage() {
               <RateBar
                 value={member.attendanceRate}
                 label={rateText(format, member.attendanceRate)}
-                color={(() => {
-                  const band = guild.data
-                    ? attendanceBand(member.attendanceRate, guild.data.attendanceThresholds)
-                    : null;
-                  return band ? BAND_COLOR[band] : 'mt';
-                })()}
+                color={member.attendanceBand ? BAND_COLOR[member.attendanceBand] : 'mt'}
               />
             </ListTable.Row>
           );
         })}
       </ListTable>
 
-      <AddMemberDialog
-        guildId={guildId}
-        faction={guild.data.faction}
-        open={adding}
-        onClose={() => setAdding(false)}
-        onAdded={(result) => {
-          setAdding(false);
-          setLastAdded(result);
-        }}
-      />
+      {guild.data && (
+        <AddMemberDialog
+          guildId={guildId}
+          faction={guild.data.faction}
+          open={adding}
+          onClose={() => setAdding(false)}
+          onAdded={(result) => {
+            setAdding(false);
+            setLastAdded(result);
+          }}
+        />
+      )}
     </Page>
   );
 }

@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { can, canChangeRankOf, canRemove, PERMISSIONS, type GuildAction } from '../permissions.js';
 
 // One row per action, from the App permissions table in requirements.md.
-const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
+const table: Record<GuildAction, { guildMaster: boolean; officer: boolean; member?: boolean }> = {
   viewGuild: { guildMaster: true, officer: true },
+  viewGuildImage: { guildMaster: true, officer: true, member: true },
   editGuildProfile: { guildMaster: true, officer: false },
   connectDiscordServer: { guildMaster: true, officer: false },
   chooseOfficerRole: { guildMaster: true, officer: false },
@@ -12,7 +13,7 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   disbandGuild: { guildMaster: true, officer: false },
   chooseEventsChannel: { guildMaster: true, officer: false },
   chooseDiscordLanguage: { guildMaster: true, officer: false },
-  viewRoster: { guildMaster: true, officer: true },
+  viewRoster: { guildMaster: true, officer: true, member: true },
   addCharacters: { guildMaster: true, officer: true },
   changeMemberRank: { guildMaster: true, officer: true },
   removeAnyMember: { guildMaster: true, officer: false },
@@ -20,12 +21,14 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean }> = {
   officerNotes: { guildMaster: true, officer: true },
   changeMainCharacter: { guildMaster: true, officer: true },
   editCharacters: { guildMaster: true, officer: true },
-  viewEvents: { guildMaster: true, officer: true },
+  viewEvents: { guildMaster: true, officer: true, member: true },
+  viewSeries: { guildMaster: true, officer: true },
   manageEvents: { guildMaster: true, officer: true },
   manageParticipants: { guildMaster: true, officer: true },
   setTentativeTimes: { guildMaster: true, officer: true },
   recordAttendance: { guildMaster: true, officer: true },
-  viewAttendance: { guildMaster: true, officer: true },
+  viewAttendance: { guildMaster: true, officer: true, member: true },
+  viewAttendanceReport: { guildMaster: true, officer: true },
   setAttendanceBands: { guildMaster: true, officer: false },
   preConfirmParticipants: { guildMaster: true, officer: false },
 };
@@ -40,6 +43,8 @@ describe('permissions', () => {
     (action, allowed) => {
       expect(can('guild_master', action)).toBe(allowed.guildMaster);
       expect(can('officer', action)).toBe(allowed.officer);
+      // Members only read; every change is refused.
+      expect(can('member', action)).toBe(allowed.member ?? false);
       expect(can(null, action)).toBe(false);
     },
   );

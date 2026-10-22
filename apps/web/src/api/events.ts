@@ -163,10 +163,12 @@ export function useCancelEvent(guildId: string, eventId: string) {
 const seriesKey = (guildId: string) => ['guilds', guildId, 'series'] as const;
 
 /** The running weekly series, soonest next event first. */
-export function useSeriesList(guildId: string) {
+/** The running series; `enabled` false skips them, e.g. for read-only members. */
+export function useSeriesList(guildId: string, enabled = true) {
   return useQuery({
     queryKey: [...seriesKey(guildId), 'list'],
     queryFn: () => apiRequest<SeriesResponse[]>(`/guilds/${guildId}/series`),
+    enabled,
   });
 }
 

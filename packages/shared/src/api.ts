@@ -137,10 +137,10 @@ export interface MeResponse {
 }
 
 /**
- * Why a user can open a guild: they're its Guild Master, or they have its Officer role in
- * Discord. Story 036 adds read-only access for roster members.
+ * Why a user can open a guild: they're its Guild Master, they have its Officer role in
+ * Discord, or they're on its roster (`member`: read-only, story 036).
  */
-export const GUILD_ACCESS = ['guild_master', 'officer'] as const;
+export const GUILD_ACCESS = ['guild_master', 'officer', 'member'] as const;
 
 export type GuildAccess = (typeof GUILD_ACCESS)[number];
 
@@ -284,6 +284,8 @@ export interface RosterMember {
   leftDiscordAt: string | null;
   /** Their attendance rate over the last 8 weeks; null without records. */
   attendanceRate: number | null;
+  /** That rate's band, from the guild's thresholds; null without records. */
+  attendanceBand: AttendanceBand | null;
 }
 
 export interface RankHistoryEntry {

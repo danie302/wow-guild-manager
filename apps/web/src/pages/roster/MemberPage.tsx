@@ -26,7 +26,7 @@ import {
   useSetMainCharacter,
   useUpdateCharacter,
 } from '../../api/roster';
-import { guildPath, useGuildIdParam } from '../../app/guildSelection';
+import { guildPath, useGuildAccess, useGuildIdParam } from '../../app/guildSelection';
 import {
   Button,
   Card,
@@ -58,10 +58,16 @@ export function MemberPage() {
   const { t } = useTranslation();
   const guildId = useGuildIdParam()!;
   const memberId = useParams().memberId!;
-  const guild = useGuild(guildId);
+  const access = useGuildAccess();
+  // Read-only members can't load the guild's settings, and don't need its faction (it's for
+  // adding characters).
+  const readOnly = access === 'member';
+  const guild = useGuild(guildId, !readOnly);
   const member = useMember(guildId, memberId);
 
-  if (member.isPending || guild.isPending) return <Loading label={t('member.loading')} />;
+  if (member.isPending || (!readOnly && guild.isPending) || !access) {
+    return <Loading label={t('member.loading')} />;
+  }
   if (member.error instanceof ApiRequestError && member.error.status === 404) {
     return <Notice tone="warn" title={t('member.notFound')} />;
   }
@@ -70,8 +76,8 @@ export function MemberPage() {
   return (
     <MemberDetail
       guildId={guildId}
-      faction={guild.data.faction}
-      access={guild.data.access}
+      faction={guild.data?.faction ?? member.data.characters[0]?.faction ?? 'horde'}
+      access={access}
       member={member.data}
     />
   );
@@ -103,6 +109,8 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
   const [removingCharacter, setRemovingCharacter] = useState<RosterCharacter | null>(null);
   const saveCharacter = form?.id ? updateCharacter : addCharacter;
 
+  // A read-only member sees their own page without any action.
+  const readOnly = access === 'member';
   // Officers can change the rank of, or remove, only Raiders and Members.
   const isGuildMaster = member.rank === 'guild_master';
   const isOfficer = member.rank === 'officer';
@@ -163,40 +171,42 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
               ` · ${t('member.joinedOn', { date: format.parts(new Date(joined), { day: 'numeric', month: 'long', year: 'numeric' }) })}`}
           </Page.Text>
         </div>
-        <Page.Actions>
-          <Page.Field label={t('member.rank')}>
-            {isGuildMaster || isOfficer ? (
-              <>
-                <strong>{RANK_NAMES[member.rank]}</strong>
-                {rankNote && <Page.Muted>{rankNote}</Page.Muted>}
-              </>
-            ) : null}
-            {canActOn && !isOfficer && (
-              <Select
-                label={t('member.rank')}
-                hideLabel
-                value={member.baseRank}
-                options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
-                onChange={(rank) => changeRank.mutate(rank as BaseRank)}
-                disabled={changeRank.isPending}
-              />
-            )}
-            {!canActOn && !isGuildMaster && !isOfficer && rankNote && (
-              <Page.Muted>{rankNote}</Page.Muted>
-            )}
-          </Page.Field>
-          <Page.Field label={'\u00a0'}>
-            <Button
-              size="medium"
-              tone="danger"
-              onClick={() => setConfirmRemove(true)}
-              disabled={removeReason !== undefined}
-            >
-              {t('member.remove')}
-            </Button>
-            {removeReason && <Page.Muted>{removeReason}</Page.Muted>}
-          </Page.Field>
-        </Page.Actions>
+        {!readOnly && (
+          <Page.Actions>
+            <Page.Field label={t('member.rank')}>
+              {isGuildMaster || isOfficer ? (
+                <>
+                  <strong>{RANK_NAMES[member.rank]}</strong>
+                  {rankNote && <Page.Muted>{rankNote}</Page.Muted>}
+                </>
+              ) : null}
+              {canActOn && !isOfficer && (
+                <Select
+                  label={t('member.rank')}
+                  hideLabel
+                  value={member.baseRank}
+                  options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
+                  onChange={(rank) => changeRank.mutate(rank as BaseRank)}
+                  disabled={changeRank.isPending}
+                />
+              )}
+              {!canActOn && !isGuildMaster && !isOfficer && rankNote && (
+                <Page.Muted>{rankNote}</Page.Muted>
+              )}
+            </Page.Field>
+            <Page.Field label={'\u00a0'}>
+              <Button
+                size="medium"
+                tone="danger"
+                onClick={() => setConfirmRemove(true)}
+                disabled={removeReason !== undefined}
+              >
+                {t('member.remove')}
+              </Button>
+              {removeReason && <Page.Muted>{removeReason}</Page.Muted>}
+            </Page.Field>
+          </Page.Actions>
+        )}
       </Page.Header>
 
       {member.leftDiscordAt && (
@@ -241,98 +251,106 @@ function MemberDetail({ guildId, faction, access, member }: MemberDetailProps) {
                     {character.professions.map((p) => PROFESSION_NAMES[p]).join(', ') ||
                       t('member.noProfessions')}
                   </Page.Muted>
-                  <Page.Inline>
-                    {!character.isMain && (
+                  {!readOnly && (
+                    <Page.Inline>
+                      {!character.isMain && (
+                        <Button
+                          variant="text"
+                          onClick={() => setMain.mutate(character.id)}
+                          disabled={setMain.isPending}
+                        >
+                          {t('member.makeMain')}
+                        </Button>
+                      )}
                       <Button
                         variant="text"
-                        onClick={() => setMain.mutate(character.id)}
-                        disabled={setMain.isPending}
+                        onClick={() => openForm(character.id, toCharacterDraft(character))}
                       >
-                        {t('member.makeMain')}
+                        {t('member.editCharacter')}
                       </Button>
-                    )}
-                    <Button
-                      variant="text"
-                      onClick={() => openForm(character.id, toCharacterDraft(character))}
-                    >
-                      {t('member.editCharacter')}
-                    </Button>
-                    <Button
-                      variant="text"
-                      onClick={() => setRemovingCharacter(character)}
-                      disabled={removeCharacter.isPending}
-                    >
-                      {t('member.removeCharacter')}
-                    </Button>
-                  </Page.Inline>
+                      <Button
+                        variant="text"
+                        onClick={() => setRemovingCharacter(character)}
+                        disabled={removeCharacter.isPending}
+                      >
+                        {t('member.removeCharacter')}
+                      </Button>
+                    </Page.Inline>
+                  )}
                 </Card.Column>
               </Card>
             ))}
-            <span>
-              <Button startIcon="plus" onClick={() => openForm(null, emptyCharacter)}>
-                {t('member.addCharacter')}
-              </Button>
-            </span>
+            {!readOnly && (
+              <span>
+                <Button startIcon="plus" onClick={() => openForm(null, emptyCharacter)}>
+                  {t('member.addCharacter')}
+                </Button>
+              </span>
+            )}
           </Page.Block>
 
-          <Page.Block title={t('member.history')}>
-            {isOfficer && canActOn && (
-              <>
-                <Select
-                  label={t('member.baseRank')}
-                  value={member.baseRank}
-                  options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
-                  onChange={(rank) => changeRank.mutate(rank as BaseRank)}
-                  disabled={changeRank.isPending}
-                />
-                <Page.Muted>{t('member.baseRankHint')}</Page.Muted>
-              </>
-            )}
-            <MarkerList
-              label={t('member.history')}
-              items={member.rankHistory.map((entry, index) => ({
-                key: entry.id,
-                label: RANK_NAMES[entry.toRank],
-                detail: `${format.parts(new Date(entry.at), { day: 'numeric', month: 'long', year: 'numeric' })} · ${historyBy(entry)}`,
-                highlight: index === 0,
-              }))}
-            />
-          </Page.Block>
+          {!readOnly && (
+            <Page.Block title={t('member.history')}>
+              {isOfficer && canActOn && (
+                <>
+                  <Select
+                    label={t('member.baseRank')}
+                    value={member.baseRank}
+                    options={BASE_RANKS.map((rank) => ({ value: rank, label: RANK_NAMES[rank] }))}
+                    onChange={(rank) => changeRank.mutate(rank as BaseRank)}
+                    disabled={changeRank.isPending}
+                  />
+                  <Page.Muted>{t('member.baseRankHint')}</Page.Muted>
+                </>
+              )}
+              <MarkerList
+                label={t('member.history')}
+                items={member.rankHistory.map((entry, index) => ({
+                  key: entry.id,
+                  label: RANK_NAMES[entry.toRank],
+                  detail: `${format.parts(new Date(entry.at), { day: 'numeric', month: 'long', year: 'numeric' })} · ${historyBy(entry)}`,
+                  highlight: index === 0,
+                }))}
+              />
+            </Page.Block>
+          )}
 
           <MemberAttendance guildId={guildId} memberId={member.id} />
 
-          <Page.Block title={t('member.notes')} description={t('member.notesPrivate')}>
-            {member.officerNotes.map((entry) => (
-              <Card key={entry.id}>
-                <Card.Column>
-                  <Page.Muted>
-                    <strong>{entry.author ?? t('member.unknownUser')}</strong> ·{' '}
-                    {format.dateTime(new Date(entry.at))}
-                  </Page.Muted>
-                  <span>{entry.text}</span>
-                </Card.Column>
-              </Card>
-            ))}
-            <TextField
-              label={t('member.addNote')}
-              hideLabel
-              multiline
-              wide
-              placeholder={t('member.notePlaceholder')}
-              value={note}
-              onChange={setNote}
-            />
-            <span>
-              <Button
-                variant="primary"
-                size="medium"
-                disabled={!note.trim() || addNote.isPending}
-                onClick={() => addNote.mutate(note, { onSuccess: () => setNote('') })}
-              >
-                {t('member.addNote')}
-              </Button>
-            </span>
-          </Page.Block>
+          {!readOnly && (
+            <Page.Block title={t('member.notes')} description={t('member.notesPrivate')}>
+              {member.officerNotes.map((entry) => (
+                <Card key={entry.id}>
+                  <Card.Column>
+                    <Page.Muted>
+                      <strong>{entry.author ?? t('member.unknownUser')}</strong> ·{' '}
+                      {format.dateTime(new Date(entry.at))}
+                    </Page.Muted>
+                    <span>{entry.text}</span>
+                  </Card.Column>
+                </Card>
+              ))}
+              <TextField
+                label={t('member.addNote')}
+                hideLabel
+                multiline
+                wide
+                placeholder={t('member.notePlaceholder')}
+                value={note}
+                onChange={setNote}
+              />
+              <span>
+                <Button
+                  variant="primary"
+                  size="medium"
+                  disabled={!note.trim() || addNote.isPending}
+                  onClick={() => addNote.mutate(note, { onSuccess: () => setNote('') })}
+                >
+                  {t('member.addNote')}
+                </Button>
+              </span>
+            </Page.Block>
+          )}
         </div>
       </Page.Columns>
 

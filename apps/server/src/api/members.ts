@@ -1,5 +1,6 @@
 import {
   addMemberSchema,
+  attendanceBand,
   attendancePeriodQuerySchema,
   changeRankSchema,
   officerNoteSchema,
@@ -9,6 +10,7 @@ import {
   type AddMemberResponse,
   type CharacterInput,
   type DiscordMemberOption,
+  type GuildAccess,
   type MemberDetailResponse,
   type Rank,
   type RosterCharacter,
@@ -44,7 +46,7 @@ import { requireDiscord, type DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
-import { memberAttendance, rosterRates } from '../domain/reports.js';
+import { memberAttendance, rosterRates, thresholdsOf } from '../domain/reports.js';
 
 const SEARCH_LIMIT = 10;
 
@@ -58,7 +60,7 @@ export function membersRouter(discord: DiscordAccess | null, jobs: JobEnqueuer |
   const base = '/guilds/:guildId/members';
 
   router.get(base, requireUser, requireGuildPermission('viewRoster'), async (_req, res) => {
-    const { guild } = currentGuild(res);
+    const { guild, access } = currentGuild(res);
     const members = await Member.findAll({
       where: { guildId: guild.id, removedAt: null },
       include: [
@@ -68,7 +70,11 @@ export function membersRouter(discord: DiscordAccess | null, jobs: JobEnqueuer |
     });
     const rankOf = await rankResolver(guild);
     const rates = await rosterRates(members.map((member) => member.id));
-    res.json(members.map((member) => toRosterMember(member, rankOf(member), rates.get(member.id))));
+    res.json(
+      members.map((member) =>
+        forAccess(access, toRosterMember(member, rankOf(member), guild, rates.get(member.id))),
+      ),
+    );
   });
 
   // A member's attendance in a period (last 8 weeks by default).
@@ -122,8 +128,8 @@ export function membersRouter(discord: DiscordAccess | null, jobs: JobEnqueuer |
     requireGuildPermission('viewRoster'),
     requireMember,
     async (_req, res) => {
-      const { guild } = currentGuild(res);
-      res.json(await memberDetail(currentMember(res), guild));
+      const { guild, access } = currentGuild(res);
+      res.json(await memberDetail(currentMember(res), guild, access));
     },
   );
 
@@ -150,7 +156,7 @@ export function membersRouter(discord: DiscordAccess | null, jobs: JobEnqueuer |
   router.delete(
     `${base}/:memberId`,
     requireUser,
-    requireGuildPermission('viewRoster'),
+    requireGuildPermission('removeRaidersAndMembers'),
     requireMember,
     async (_req, res) => {
       const { guild, access } = currentGuild(res);
@@ -284,13 +290,16 @@ function characterId(id: unknown): string {
   return id as string;
 }
 
+/** The member in the URL; a read-only member can only open their own. */
 const requireMember: RequestHandler = async (req, res, next) => {
-  const { guild } = currentGuild(res);
+  const { guild, access } = currentGuild(res);
   const id = req.params.memberId;
   const member = uuidSchema.safeParse(id).success
     ? await Member.findOne({ where: { id: id as string, guildId: guild.id, removedAt: null } })
     : null;
-  if (!member) throw new DomainError({ code: 'NOT_FOUND' });
+  if (!member || (access === 'member' && member.discordUserId !== currentUser(res).discordId)) {
+    throw new DomainError({ code: 'NOT_FOUND' });
+  }
   res.locals.member = member;
   next();
 };
@@ -312,7 +321,17 @@ function toRosterCharacter(character: Character): RosterCharacter {
   };
 }
 
-function toRosterMember(member: Member, rank: Rank, attendanceRate?: number | null): RosterMember {
+/** Members don't see who left the Discord server. */
+function forAccess<T extends RosterMember>(access: GuildAccess, member: T): T {
+  return access === 'member' ? { ...member, leftDiscordAt: null } : member;
+}
+
+function toRosterMember(
+  member: Member,
+  rank: Rank,
+  guild: Guild,
+  attendanceRate?: number | null,
+): RosterMember {
   const characters = (member.characters ?? [])
     .filter((character) => !character.removedAt)
     .sort((a, b) => Number(b.isMain) - Number(a.isMain) || a.name.localeCompare(b.name));
@@ -326,11 +345,36 @@ function toRosterMember(member: Member, rank: Rank, attendanceRate?: number | nu
     characters: characters.map(toRosterCharacter),
     leftDiscordAt: member.leftDiscordAt?.toISOString() ?? null,
     attendanceRate: attendanceRate ?? null,
+    attendanceBand: attendanceBand(attendanceRate ?? null, thresholdsOf(guild)),
   };
 }
 
-/** A member with their characters, rank history, and officer notes, newest first. */
-async function memberDetail(member: Member, guild: Guild): Promise<MemberDetailResponse> {
+/**
+ * A member with their characters, rank history, and officer notes, newest first. A read-only
+ * member (who only opens their own page) gets neither the history nor the notes.
+ */
+async function memberDetail(
+  member: Member,
+  guild: Guild,
+  access: GuildAccess = 'officer',
+): Promise<MemberDetailResponse> {
+  if (access === 'member') {
+    const fresh = await member.reload();
+    fresh.characters = await Character.findAll({ where: { memberId: member.id, removedAt: null } });
+    return {
+      ...forAccess(
+        access,
+        toRosterMember(
+          fresh,
+          (await rankResolver(guild))(fresh),
+          guild,
+          (await rosterRates([fresh.id])).get(fresh.id),
+        ),
+      ),
+      rankHistory: [],
+      officerNotes: [],
+    };
+  }
   const characters = await Character.findAll({ where: { memberId: member.id, removedAt: null } });
   const history = await RankChange.findAll({
     where: { memberId: member.id },
@@ -348,6 +392,7 @@ async function memberDetail(member: Member, guild: Guild): Promise<MemberDetailR
     ...toRosterMember(
       fresh,
       (await rankResolver(guild))(fresh),
+      guild,
       (await rosterRates([fresh.id])).get(fresh.id),
     ),
     rankHistory: history.map((change) => ({

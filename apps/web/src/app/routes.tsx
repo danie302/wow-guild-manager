@@ -21,6 +21,7 @@ import { GuildRoute } from './GuildRoute';
 import { HomeRedirect } from './HomeRedirect';
 import { Layout } from './Layout';
 import { RequireAuth } from './RequireAuth';
+import { RequireOfficer } from './RequireOfficer';
 
 // Placeholder pages until their stories build them. A guild's pages are under /guilds/:guildId.
 export const routes: RouteObject[] = [
@@ -41,18 +42,24 @@ export const routes: RouteObject[] = [
             element: <GuildRoute />,
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
-              { path: 'dashboard', element: <DashboardPage /> },
+              // Read-only members open these too.
               { path: 'events', element: <EventsPage /> },
-              { path: 'events/new', element: <EventFormPage /> },
               { path: 'events/:eventId', element: <EventPage /> },
-              { path: 'events/:eventId/edit', element: <EventFormPage /> },
-              { path: 'events/series/:seriesId', element: <SeriesPage /> },
-              { path: 'events/series/:seriesId/edit', element: <EventFormPage /> },
               { path: 'roster', element: <RosterPage /> },
               { path: 'roster/:memberId', element: <MemberPage /> },
-              { path: 'registrations', element: <RegistrationsPage /> },
-              { path: 'attendance', element: <AttendanceReportPage /> },
-              { path: 'settings', element: <GuildSettingsPage /> },
+              {
+                element: <RequireOfficer />,
+                children: [
+                  { path: 'dashboard', element: <DashboardPage /> },
+                  { path: 'events/new', element: <EventFormPage /> },
+                  { path: 'events/:eventId/edit', element: <EventFormPage /> },
+                  { path: 'events/series/:seriesId', element: <SeriesPage /> },
+                  { path: 'events/series/:seriesId/edit', element: <EventFormPage /> },
+                  { path: 'registrations', element: <RegistrationsPage /> },
+                  { path: 'attendance', element: <AttendanceReportPage /> },
+                  { path: 'settings', element: <GuildSettingsPage /> },
+                ],
+              },
             ],
           },
           { path: 'settings/user', element: <UserSettingsPage /> },

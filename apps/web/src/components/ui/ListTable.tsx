@@ -93,13 +93,13 @@ function ListTableRoot({ label, columns, widths, children, empty, sort }: ListTa
   );
 }
 
-function Row({ to, children }: { to: string; children: ReactNode }) {
+/** A row; with `to`, it opens that page, and without, it's only shown. */
+function Row({ to, children }: { to?: string; children: ReactNode }) {
   const template = useContext(ColumnsContext);
   return (
     <Box
       role="listitem"
-      component={Link}
-      to={to}
+      {...(to ? { component: Link, to } : {})}
       sx={{
         display: 'grid',
         gridTemplateColumns: template,
@@ -109,7 +109,7 @@ function Row({ to, children }: { to: string; children: ReactNode }) {
         color: token('tx'),
         textDecoration: 'none',
         borderBottom: `1px solid ${token('ln')}`,
-        '&:hover': { bgcolor: token('sf') },
+        ...(to && { '&:hover': { bgcolor: token('sf') } }),
         '&:focus-visible': { outline: `2px solid ${token('ac')}`, outlineOffset: -2 },
         [`@media (max-width: ${compactBreakpoint}px)`]: { gridTemplateColumns: '1fr', gap: '4px' },
       }}

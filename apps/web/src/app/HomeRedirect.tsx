@@ -11,7 +11,13 @@ export function HomeRedirect() {
   const guilds = useMe().data?.guilds ?? [];
   const guild = guilds.length === 1 ? guilds[0] : lastGuild(guilds);
   if (guild) {
-    return <Navigate to={guildPath(guild.id, 'dashboard')} replace />;
+    // Read-only members land on the events; the Guild Master and Officers, on the dashboard.
+    return (
+      <Navigate
+        to={guildPath(guild.id, guild.access === 'member' ? 'events' : 'dashboard')}
+        replace
+      />
+    );
   }
   return <Navigate to={guilds.length > 0 ? '/guilds' : '/no-access'} replace />;
 }
