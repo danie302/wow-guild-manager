@@ -13,6 +13,7 @@ import type { z } from 'zod';
 import { Event, type Guild, type User } from '../db/models/index.js';
 import { transaction } from '../db/transaction.js';
 import { DomainError, DomainValidationError } from './errors.js';
+import { balanceSlots, participantIds, type SignUpChanges } from './sign-ups.js';
 
 /**
  * How many hours before an event Tentative sign-ups close, until story 026 makes it a guild
@@ -44,14 +45,15 @@ export async function createEvent(
 
 /**
  * Changes an upcoming event: everything but its type. Started and cancelled events can't
- * change. Its new time must still be in the future.
+ * change. Its new time must still be in the future. New slot counts move participants to the
+ * waitlist or promote from it, and a new date or time is for telling the participants.
  */
 export async function updateEvent(
   guild: Guild,
   eventId: string,
   input: UpdateEventInput,
   now = new Date(),
-): Promise<Event> {
+): Promise<{ event: Event; changes: SignUpChanges }> {
   const details = parseInput(updateEventSchema, input);
   return transaction(async () => {
     const event = await changeableEvent(guild, eventId, now);
@@ -59,8 +61,28 @@ export async function updateEvent(
     const issues = eventSlotIssues(event.type, details);
     if (issues.length > 0) throw new DomainValidationError(issues);
     checkStartsInFuture(details.startsAt, now);
-    return event.update(eventColumns(details));
+    const changes = await applyEventChanges(event, eventColumns(details));
+    return { event, changes };
   });
+}
+
+/**
+ * Saves new columns for a locked event and works out what that does to its sign-ups: slots
+ * rebalanced, and the participants to tell when the date or time moved.
+ */
+export async function applyEventChanges(
+  event: Event,
+  columns: Partial<ReturnType<typeof eventColumns>>,
+): Promise<SignUpChanges> {
+  const startsAt = event.startsAt.getTime();
+  await event.update(columns);
+  const changes = await balanceSlots(event);
+  if (event.startsAt.getTime() !== startsAt && !event.cancelledAt) {
+    for (const memberId of await participantIds(event.id)) {
+      changes.rescheduled.push({ memberId, eventId: event.id });
+    }
+  }
+  return changes;
 }
 
 /** Cancels an upcoming event. It stays listed, marked with who cancelled it and when. */

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { COMBAT_ROLES, type CombatRole } from '../game.js';
+
 export const EVENT_TYPES = ['raid', 'dungeon', 'pvp'] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
@@ -104,3 +106,33 @@ export type SignUpStatus = (typeof SIGN_UP_STATUSES)[number];
 /** Where a sign-up that isn't Declined stands: in one of the role's slots, or on its waitlist. */
 export const SIGN_UP_PLACEMENTS = ['slot', 'waitlist'] as const;
 export type SignUpPlacement = (typeof SIGN_UP_PLACEMENTS)[number];
+
+/** What `signUpsLosingSlots` needs from a sign-up. */
+export interface SlotHolder {
+  id: string;
+  role: CombatRole | null;
+  placement: SignUpPlacement | null;
+  /** ISO string or Date: the order of sign-up. */
+  signedUpAt: string | Date;
+}
+
+/**
+ * The sign-ups that lose their slot when a role's slots go down to `slots`: the most recent
+ * ones in each role. They move to the front of the waitlist. The event form uses it to warn
+ * before saving, and the server to apply it.
+ */
+export function signUpsLosingSlots<T extends SlotHolder>(
+  signUps: readonly T[],
+  slots: Record<CombatRole, number>,
+): T[] {
+  return COMBAT_ROLES.flatMap((role) => {
+    const holders = signUps
+      .filter((signUp) => signUp.role === role && signUp.placement === 'slot')
+      .sort(
+        (a, b) =>
+          new Date(a.signedUpAt).getTime() - new Date(b.signedUpAt).getTime() ||
+          a.id.localeCompare(b.id),
+      );
+    return holders.slice(slots[role]);
+  });
+}

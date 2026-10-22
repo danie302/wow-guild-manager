@@ -20,6 +20,7 @@ import {
 import { transaction } from '../db/transaction.js';
 import { DomainError, DomainValidationError } from './errors.js';
 import { memberRank } from './ranks.js';
+import { releaseSignUps, type SignUpChanges } from './sign-ups.js';
 
 /** Who a member is on Discord, from the server's member list or the bot. */
 export interface DiscordProfile {
@@ -234,9 +235,14 @@ export async function updateCharacter(
  * and attendance remain, and its name is free. If it was the main, the member's oldest
  * remaining character becomes the main.
  */
-export async function removeCharacter(member: Member, characterId: string): Promise<Character> {
+export async function removeCharacter(
+  member: Member,
+  characterId: string,
+): Promise<{ character: Character; changes: SignUpChanges }> {
   return transaction(async () => {
     const character = await activeCharacter(member, characterId);
+    // Its sign-ups for upcoming events go, and their spots go to the waitlist.
+    const changes = await releaseSignUps({ characterId: character.id });
     // Its own timestamp, so restoring the member later doesn't bring it back.
     await character.update({ removedAt: new Date(), isMain: false });
     const hasMain = await Character.count({
@@ -253,7 +259,7 @@ export async function removeCharacter(member: Member, characterId: string): Prom
       });
       await oldest?.update({ isMain: true });
     }
-    return character;
+    return { character, changes };
   });
 }
 
@@ -362,7 +368,8 @@ export async function chooseMainByName(
 
 /** What /character remove did once confirmed. */
 export type RemoveOwnCharacterOutcome =
-  { result: 'removed'; name: string; newMain: string | null } | OwnCharacterRefusal;
+  | { result: 'removed'; name: string; newMain: string | null; changes: SignUpChanges }
+  | OwnCharacterRefusal;
 
 /**
  * A member removes one of their own characters from Discord, after confirming. Checked again
@@ -376,11 +383,11 @@ export async function removeOwnCharacter(
   const own = await ownCharacter(serverId, discordUserId, { id: characterId });
   if (own.result !== 'found') return own;
   const { member, character } = own;
-  await removeCharacter(member, character.id);
+  const { changes } = await removeCharacter(member, character.id);
   const main = character.isMain
     ? await Character.findOne({ where: { memberId: member.id, removedAt: null, isMain: true } })
     : null;
-  return { result: 'removed', name: character.name, newMain: main?.name ?? null };
+  return { result: 'removed', name: character.name, newMain: main?.name ?? null, changes };
 }
 
 /**
@@ -388,11 +395,11 @@ export async function removeOwnCharacter(
  * past sign-ups and attendance remain, and their character names are free for other guilds.
  * The Guild Master can't be removed.
  */
-export async function removeMember(member: Member, guild: Guild): Promise<void> {
+export async function removeMember(member: Member, guild: Guild): Promise<SignUpChanges> {
   if ((await memberRank(member, guild)) === 'guild_master') {
     throw new DomainError({ code: 'GUILD_MASTER_CANNOT_BE_REMOVED' });
   }
-  await transaction(async () => {
+  return transaction(async () => {
     // The same timestamp marks which characters to bring back if the member returns. It must
     // differ from characters removed on their own, even within the same millisecond.
     const lastRemoved = await Character.max<Date | null, Character>('removedAt', {
@@ -401,6 +408,8 @@ export async function removeMember(member: Member, guild: Guild): Promise<void> 
     const removedAt = new Date(Math.max(Date.now(), (lastRemoved?.getTime() ?? 0) + 1));
     await member.update({ removedAt });
     await Character.update({ removedAt }, { where: { memberId: member.id, removedAt: null } });
+    // Their sign-ups for upcoming events go, and their spots go to the waitlist.
+    return releaseSignUps({ memberId: member.id });
   });
 }
 

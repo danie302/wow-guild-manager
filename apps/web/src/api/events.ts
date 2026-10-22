@@ -4,6 +4,8 @@ import type {
   EventDiscordPostResponse,
   EventResponse,
   SeriesResponse,
+  SeriesSignUpsResponse,
+  SignUpResponse,
   UpdateEventInput,
 } from '@wgm/shared';
 
@@ -42,6 +44,15 @@ export function useEventDiscordPost(guildId: string, eventId: string) {
   });
 }
 
+/** The event's sign-ups, in sign-up order. */
+export function useEventSignUps(guildId: string, eventId: string) {
+  return useQuery({
+    queryKey: [...eventKey(guildId, eventId), 'sign-ups'],
+    queryFn: () => apiRequest<SignUpResponse[]>(`/guilds/${guildId}/events/${eventId}/sign-ups`),
+    enabled: eventId !== '',
+  });
+}
+
 /** Every change answers with the event, which replaces the cached one; the lists reload. */
 function useEventMutation<Input>(
   guildId: string,
@@ -55,6 +66,9 @@ function useEventMutation<Input>(
       await queryClient.invalidateQueries({ queryKey: [...eventsKey(guildId), 'list'] });
       await queryClient.invalidateQueries({
         queryKey: [...eventKey(guildId, event.id), 'discord-post'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...eventKey(guildId, event.id), 'sign-ups'],
       });
     },
   });
@@ -99,6 +113,16 @@ export function useSeries(guildId: string, seriesId: string) {
   });
 }
 
+/** The sign-ups of each of the series' future events. */
+export function useSeriesSignUps(guildId: string, seriesId: string) {
+  return useQuery({
+    queryKey: [...seriesKey(guildId), seriesId, 'sign-ups'],
+    queryFn: () =>
+      apiRequest<SeriesSignUpsResponse>(`/guilds/${guildId}/series/${seriesId}/sign-ups`),
+    enabled: seriesId !== '',
+  });
+}
+
 /** A series change also changes its events, so both reload. */
 function useSeriesMutation<Input>(
   guildId: string,
@@ -111,6 +135,7 @@ function useSeriesMutation<Input>(
       queryClient.setQueryData([...seriesKey(guildId), series.id], series);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: [...seriesKey(guildId), 'list'] }),
+        queryClient.invalidateQueries({ queryKey: [...seriesKey(guildId), series.id, 'sign-ups'] }),
         queryClient.invalidateQueries({ queryKey: eventsKey(guildId) }),
       ]);
     },

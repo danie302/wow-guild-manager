@@ -1,4 +1,4 @@
-import type { EventResponse } from '@wgm/shared';
+import type { EventResponse, SignUpResponse } from '@wgm/shared';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -133,6 +133,41 @@ describe('EventFormPage', () => {
       size: 40,
       slots: { tank: 4, healer: 10, dps: 26 },
     });
+  });
+
+  it('warns who moves to the waitlist when a role gets fewer slots', async () => {
+    const tank = (name: string, minute: number): SignUpResponse => ({
+      id: `019a0c3e-5b1e-7c2a-9f3d-0000000006${minute}`,
+      character: { id: `019a0c3e-5b1e-7c2a-9f3d-0000000007${minute}`, name, class: 'warrior' },
+      role: 'tank',
+      status: 'confirmed',
+      placement: 'slot',
+      signedUpAt: `${nextYear}-11-01T10:${minute}:00.000Z`,
+    });
+    mockApi({
+      '/api/me': () => Response.json(me),
+      [`${api}/${eventId}`]: () => Response.json(saved),
+      [`${api}/${eventId}/sign-ups`]: () =>
+        Response.json([
+          tank('Saurfang', 10),
+          tank('Grommash', 20),
+          tank('Thrall', 30),
+          tank('Rexxar', 40),
+        ]),
+    });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/${eventId}/edit`);
+    await screen.findByLabelText('Name');
+
+    await user.click(screen.getByRole('button', { name: 'Fewer: Tank' }));
+    await user.click(screen.getByRole('button', { name: 'Fewer: Tank' }));
+
+    expect(
+      await screen.findByText(
+        'Saving moves 2 participants to the front of the waitlist, and they get a direct message:',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Thrall (Tank), Rexxar (Tank)')).toBeInTheDocument();
   });
 
   it('creates a weekly series and opens it', async () => {

@@ -12,7 +12,8 @@ import { Event, EventSeries, SignUp, type Guild, type User } from '../db/models/
 import { transaction } from '../db/transaction.js';
 import type { Logger } from '../logger.js';
 import { DomainError, DomainValidationError } from './errors.js';
-import { checkStartsInFuture, eventColumns, parseInput } from './events.js';
+import { applyEventChanges, checkStartsInFuture, eventColumns, parseInput } from './events.js';
+import { mergeSignUpChanges, type SignUpChanges } from './sign-ups.js';
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -90,7 +91,7 @@ export async function updateSeries(
   seriesId: string,
   input: UpdateEventInput,
   now = new Date(),
-): Promise<EventSeries> {
+): Promise<{ series: EventSeries; changes: SignUpChanges }> {
   const details = parseInput(updateEventSchema, input);
   return transaction(async () => {
     const series = await runningSeries(guild, seriesId);
@@ -112,16 +113,20 @@ export async function updateSeries(
     if (moves.length > 0 && moves[0]!.startsAt > moves[0]!.event.startsAt.getTime()) {
       moves.reverse();
     }
+    const all = [];
     for (const { event, startsAt } of moves) {
-      await event.update(
-        event.cancelledAt
-          ? { startsAt: new Date(startsAt) }
-          : { ...columns, startsAt: new Date(startsAt) },
+      all.push(
+        await applyEventChanges(
+          event,
+          event.cancelledAt
+            ? { startsAt: new Date(startsAt) }
+            : { ...columns, startsAt: new Date(startsAt) },
+        ),
       );
     }
     await series.update(columns);
     await extendSeries(series, now);
-    return series;
+    return { series, changes: mergeSignUpChanges(...all) };
   });
 }
 

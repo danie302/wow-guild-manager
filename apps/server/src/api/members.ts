@@ -37,6 +37,8 @@ import {
   setMainCharacter,
   updateCharacter,
 } from '../domain/roster.js';
+import type { JobEnqueuer } from '../jobs/index.js';
+import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
 import { requireDiscord, type DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
@@ -44,8 +46,12 @@ import { currentUser, requireUser } from './me.js';
 
 const SEARCH_LIMIT = 10;
 
-/** The guild's roster: members, their characters, rank history, and officer notes. */
-export function membersRouter(discord: DiscordAccess | null) {
+/**
+ * The guild's roster: members, their characters, rank history, and officer notes. Removing a
+ * member or character frees their spots in upcoming events; `jobs` tells the people promoted
+ * (without it, in some tests, nobody is told).
+ */
+export function membersRouter(discord: DiscordAccess | null, jobs: JobEnqueuer | null) {
   const router = express.Router();
   const base = '/guilds/:guildId/members';
 
@@ -136,7 +142,8 @@ export function membersRouter(discord: DiscordAccess | null) {
       if (!canRemove(access, (await rankResolver(guild))(member))) {
         throw new DomainError({ code: 'FORBIDDEN' });
       }
-      await removeMember(member, guild);
+      const changes = await removeMember(member, guild);
+      if (jobs) await notifySignUpChanges(jobs, changes);
       res.status(204).end();
     },
   );
@@ -180,7 +187,11 @@ export function membersRouter(discord: DiscordAccess | null) {
     requireMember,
     async (req, res) => {
       const { guild } = currentGuild(res);
-      await removeCharacter(currentMember(res), characterId(req.params.characterId));
+      const { changes } = await removeCharacter(
+        currentMember(res),
+        characterId(req.params.characterId),
+      );
+      if (jobs) await notifySignUpChanges(jobs, changes);
       res.json(await memberDetail(currentMember(res), guild));
     },
   );

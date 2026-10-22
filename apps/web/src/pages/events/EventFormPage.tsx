@@ -11,6 +11,7 @@ import {
   PVP_MAX_SIZE,
   PVP_MIN_SIZE,
   RAID_SIZES,
+  signUpsLosingSlots,
   toValidationIssues,
   type CombatRole,
   type CreateEventInput,
@@ -28,7 +29,9 @@ import {
   useCreateEvent,
   useCreateSeries,
   useEvent,
+  useEventSignUps,
   useSeries,
+  useSeriesSignUps,
   useUpdateEvent,
   useUpdateSeries,
 } from '../../api/events';
@@ -190,6 +193,29 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
   const total = draft.slots.tank + draft.slots.healer + draft.slots.dps;
   const slotProblem = eventSlotIssues(draft.type, draft)[0];
 
+  // Fewer slots move the most recent participants of a role to the waitlist: say who first.
+  const eventSignUps = useEventSignUps(guildId, editing?.kind === 'event' ? editing.value.id : '');
+  const seriesSignUps = useSeriesSignUps(guildId, editingSeries ? editing.value.id : '');
+  const losing = (
+    editingSeries
+      ? (seriesSignUps.data?.events ?? []).map((upcoming) => ({
+          startsAt: upcoming.startsAt,
+          signUps: upcoming.signUps,
+        }))
+      : [{ startsAt: null, signUps: eventSignUps.data ?? [] }]
+  )
+    .map(({ startsAt: at, signUps }) => ({
+      at,
+      names: signUpsLosingSlots(signUps, draft.slots).map((signUp) =>
+        t('eventForm.losingSlotName', {
+          name: signUp.character.name,
+          role: COMBAT_ROLE_NAMES[signUp.role!],
+        }),
+      ),
+    }))
+    .filter(({ names }) => names.length > 0);
+  const losingCount = losing.reduce((count, { names }) => count + names.length, 0);
+
   const submit = () => {
     if (localIssues.length > 0) return;
     const toEvent = { onSuccess: (saved: { id: string }) => open(`events/${saved.id}`) };
@@ -345,6 +371,20 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
 
       <FormColumns panel={slots}>{fields}</FormColumns>
 
+      {losingCount > 0 && (
+        <Notice tone="warn" title={t('eventForm.losingSlots', { count: losingCount })}>
+          {losing.map(({ at, names }) => (
+            <div key={at ?? 'event'}>
+              {at
+                ? t('eventForm.losingSlotsOn', {
+                    date: format.dateTime(new Date(at)),
+                    names: names.join(', '),
+                  })
+                : names.join(', ')}
+            </div>
+          ))}
+        </Notice>
+      )}
       {save.error && serverIssues.length === 0 && (
         <Notice tone="bad" title={t('eventForm.saveFailed')}>
           {apiErrorText(t, save.error)}

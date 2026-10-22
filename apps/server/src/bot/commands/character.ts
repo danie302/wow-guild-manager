@@ -10,6 +10,7 @@ import {
 
 import { ownCharacter, removeOwnCharacter, type OwnCharacterRefusal } from '../../domain/roster.js';
 import { translator, type Translate } from '../../i18n/index.js';
+import { notifySignUpChanges } from '../../jobs/sign-up-notices.js';
 import { discordLocalizations } from '../locale.js';
 import { suggestOwnCharacters } from './own-characters.js';
 import type { SlashCommand } from './types.js';
@@ -85,7 +86,7 @@ export const character: SlashCommand = {
   autocomplete: suggestOwnCharacters,
 
   /** Confirm or Cancel on the question. Either way, the question is replaced by the result. */
-  async button(interaction, { t }) {
+  async button(interaction, { t, jobs }) {
     const done = (content: string) => interaction.update({ content, components: [] });
     if (!interaction.customId.startsWith(REMOVE_BUTTON) || !interaction.inGuild()) {
       return void (await done(t('commands.character.remove.cancelled')));
@@ -97,6 +98,8 @@ export const character: SlashCommand = {
       interaction.customId.slice(REMOVE_BUTTON.length),
     );
     if (outcome.result !== 'removed') return void (await done(refusal(outcome, '', t)));
+    // Its spots in upcoming events go to the waitlist.
+    if (jobs) await notifySignUpChanges(jobs, outcome.changes);
     await done(
       outcome.newMain
         ? t('commands.character.remove.removedNewMain', {

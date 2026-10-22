@@ -96,5 +96,11 @@
     "noCharacters": "You have no characters on the roster yet. Ask an Officer to add yours.",
     "notYourCharacter": "That character isn't on your roster any more. Press Sign up on the event again.",
     "roleNotAllowed": "That character's class can't play that role."
+  },
+  "signUpNotices": {
+    "promoted": "A spot opened in **{{event}}** ({{time}}): {{character}} is in as {{role}}. If you can no longer make it, press Declined on the event.",
+    "movedToWaitlist": "**{{event}}** ({{time}}) now has fewer {{role}} slots, so {{character}} moved to the front of the waitlist. You get a spot back if one opens.",
+    "rescheduled_one": "The time of an event you signed up for changed:",
+    "rescheduled_other": "The time of {{count}} events you signed up for changed:"
   }
 }

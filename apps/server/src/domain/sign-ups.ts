@@ -1,5 +1,7 @@
 import {
+  COMBAT_ROLES,
   rolesFor,
+  signUpsLosingSlots,
   uuidSchema,
   type CombatRole,
   type EventType,
@@ -12,6 +14,96 @@ import { Character, Event, SignUp, type Guild, type Member } from '../db/models/
 import { transaction } from '../db/transaction.js';
 import { memberRank } from './ranks.js';
 import { memberOnServer } from './roster.js';
+
+/**
+ * What a change did to other people's sign-ups, for the caller to tell them (direct messages
+ * from the worker) and update the posts (see jobs/sign-up-notices.ts).
+ */
+export interface SignUpChanges {
+  /** Sign-ups that got a slot from the waitlist. */
+  promoted: string[];
+  /** Sign-ups that lost their slot because the role's slots went down. */
+  movedToWaitlist: string[];
+  /** Participants of events whose date or time changed. */
+  rescheduled: { memberId: string; eventId: string }[];
+  /** Events whose sign-ups changed outside a sign-up, so their posts need updating. */
+  eventIds: string[];
+}
+
+export function noSignUpChanges(): SignUpChanges {
+  return { promoted: [], movedToWaitlist: [], rescheduled: [], eventIds: [] };
+}
+
+export function mergeSignUpChanges(...all: SignUpChanges[]): SignUpChanges {
+  return {
+    promoted: all.flatMap((changes) => changes.promoted),
+    movedToWaitlist: all.flatMap((changes) => changes.movedToWaitlist),
+    rescheduled: all.flatMap((changes) => changes.rescheduled),
+    eventIds: [...new Set(all.flatMap((changes) => changes.eventIds))],
+  };
+}
+
+/**
+ * Brings the event's slots in line with its sign-ups: if a role has more participants than
+ * slots, the most recent ones move to the front of its waitlist; if it has open slots, the
+ * earliest waitlisted characters of that role get them. Call it with the event locked, after
+ * anything that can open or remove a slot.
+ */
+export async function balanceSlots(event: Event): Promise<SignUpChanges> {
+  const changes = noSignUpChanges();
+  const active = await SignUp.findAll({
+    where: { eventId: event.id, placement: { [Op.ne]: null } },
+    order: [
+      ['signedUpAt', 'ASC'],
+      ['id', 'ASC'],
+    ],
+  });
+  for (const signUp of signUpsLosingSlots(active, slotsOf(event))) {
+    await signUp.update({ placement: 'waitlist' });
+    changes.movedToWaitlist.push(signUp.id);
+  }
+  for (const role of COMBAT_ROLES) {
+    const inRole = active.filter((signUp) => signUp.role === role);
+    const open = slotsFor(event, role) - inRole.filter((s) => s.placement === 'slot').length;
+    for (const signUp of inRole.filter((s) => s.placement === 'waitlist').slice(0, open)) {
+      await signUp.update({ placement: 'slot' });
+      changes.promoted.push(signUp.id);
+    }
+  }
+  return changes;
+}
+
+/**
+ * Removes a member's (or one character's) sign-ups for events that haven't started and aren't
+ * cancelled, when they're removed from the roster, and fills the spots they free. Past
+ * sign-ups stay for attendance. Each event is locked while it changes, one at a time.
+ */
+export async function releaseSignUps(
+  where: { memberId: string } | { characterId: string },
+  now = new Date(),
+): Promise<SignUpChanges> {
+  return transaction(async () => {
+    const upcoming = await SignUp.findAll({
+      where,
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          attributes: ['id'],
+          where: { startsAt: { [Op.gt]: now }, cancelledAt: null },
+        },
+      ],
+    });
+    const eventIds = [...new Set(upcoming.map((signUp) => signUp.eventId))].sort();
+    const all = [noSignUpChanges()];
+    for (const eventId of eventIds) {
+      const event = await Event.findByPk(eventId, { lock: Transaction.LOCK.UPDATE });
+      await SignUp.destroy({ where: { ...where, eventId } });
+      all.push({ ...(await balanceSlots(event!)), eventIds: [eventId] });
+    }
+    return mergeSignUpChanges(...all);
+  });
+}
 
 /** Who can join each type of event, from "Who can join events" in requirements.md. */
 const RANKS_BY_EVENT_TYPE: Record<EventType, readonly Rank[]> = {
@@ -75,7 +167,14 @@ export interface SignUpChoice {
 }
 
 export type SignUpOutcome =
-  | { result: 'signed_up'; event: Event; character: Character; placement: SignUpPlacement }
+  | {
+      result: 'signed_up';
+      event: Event;
+      character: Character;
+      placement: SignUpPlacement;
+      /** Others promoted into the slot they left by changing role. */
+      changes: SignUpChanges;
+    }
   | SignUpRefusal;
 
 /**
@@ -106,7 +205,13 @@ export async function signUp(
     const current = await SignUp.findOne({ where: { eventId: event.id, memberId: member.id } });
     if (current?.placement && current.role === choice.role) {
       await current.update({ characterId: character.id, status: choice.status });
-      return { result: 'signed_up', event, character, placement: current.placement };
+      return {
+        result: 'signed_up',
+        event,
+        character,
+        placement: current.placement,
+        changes: noSignUpChanges(),
+      };
     }
 
     const taken = await SignUp.count({
@@ -127,16 +232,19 @@ export async function signUp(
     };
     if (current) await current.update(values);
     else await SignUp.create({ eventId: event.id, memberId: member.id, ...values });
-    return { result: 'signed_up', event, character, placement };
+    // Leaving a slot in another role opens it for that role's waitlist.
+    const changes = current?.placement === 'slot' ? await balanceSlots(event) : noSignUpChanges();
+    return { result: 'signed_up', event, character, placement, changes };
   });
 }
 
 export type DeclineOutcome =
-  { result: 'declined'; event: Event; wasSignedUp: boolean } | SignUpRefusal;
+  | { result: 'declined'; event: Event; wasSignedUp: boolean; changes: SignUpChanges }
+  | SignUpRefusal;
 
 /**
- * The member won't come. Their sign-up becomes Declined, which releases their spot (story 024
- * promotes from the waitlist). If they weren't signed up, a Declined sign-up with their main
+ * The member won't come. Their sign-up becomes Declined, which releases their spot to the
+ * earliest waitlisted character of that role. If they weren't signed up, a Declined sign-up with their main
  * records that they let the Guild Master know.
  */
 export async function decline(
@@ -153,8 +261,10 @@ export async function decline(
     const current = await SignUp.findOne({ where: { eventId: event.id, memberId: member.id } });
     if (current) {
       const wasSignedUp = current.status !== 'declined';
+      const hadSlot = current.placement === 'slot';
       await current.update({ status: 'declined', placement: null });
-      return { result: 'declined', event, wasSignedUp };
+      const changes = hadSlot ? await balanceSlots(event) : noSignUpChanges();
+      return { result: 'declined', event, wasSignedUp, changes };
     }
     const main = member.characters!.find((candidate) => candidate.isMain) ?? member.characters![0];
     if (!main) return { result: 'no_characters' };
@@ -167,7 +277,7 @@ export async function decline(
       placement: null,
       signedUpAt: now,
     });
-    return { result: 'declined', event, wasSignedUp: false };
+    return { result: 'declined', event, wasSignedUp: false, changes: noSignUpChanges() };
   });
 }
 
@@ -175,7 +285,7 @@ export async function decline(
 export async function eventSignUps(eventId: string): Promise<SignUp[]> {
   return SignUp.findAll({
     where: { eventId },
-    include: [{ model: Character, as: 'character', attributes: ['name', 'characterClass'] }],
+    include: [{ model: Character, as: 'character', attributes: ['id', 'name', 'characterClass'] }],
     order: [
       ['signedUpAt', 'ASC'],
       ['id', 'ASC'],
@@ -183,8 +293,21 @@ export async function eventSignUps(eventId: string): Promise<SignUp[]> {
   });
 }
 
+function slotsOf(event: Event): Record<CombatRole, number> {
+  return { tank: event.tankSlots, healer: event.healerSlots, dps: event.dpsSlots };
+}
+
 function slotsFor(event: Event, role: CombatRole): number {
-  return { tank: event.tankSlots, healer: event.healerSlots, dps: event.dpsSlots }[role];
+  return slotsOf(event)[role];
+}
+
+/** The event's participants (in a slot or on the waitlist), for telling them about a change. */
+export async function participantIds(eventId: string): Promise<string[]> {
+  const signUps = await SignUp.findAll({
+    attributes: ['memberId'],
+    where: { eventId, placement: { [Op.ne]: null } },
+  });
+  return signUps.map((signUp) => signUp.memberId);
 }
 
 /**

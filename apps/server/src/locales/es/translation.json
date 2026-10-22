@@ -96,5 +96,11 @@
     "noCharacters": "Todavía no tienes personajes en el roster. Pide a un Officer que añada los tuyos.",
     "notYourCharacter": "Ese personaje ya no está en tu roster. Vuelve a pulsar Inscribirse en el evento.",
     "roleNotAllowed": "La clase de ese personaje no puede jugar ese rol."
+  },
+  "signUpNotices": {
+    "promoted": "Se liberó una plaza en **{{event}}** ({{time}}): {{character}} entra como {{role}}. Si ya no puedes ir, pulsa Rechazado en el evento.",
+    "movedToWaitlist": "**{{event}}** ({{time}}) ahora tiene menos plazas de {{role}}, así que {{character}} pasó al principio de la lista de espera. Recuperas una plaza si se libera alguna.",
+    "rescheduled_one": "Cambió la hora de un evento en el que estás inscrito:",
+    "rescheduled_other": "Cambió la hora de {{count}} eventos en los que estás inscrito:"
   }
 }

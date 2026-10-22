@@ -1,11 +1,11 @@
-import type { EventDiscordPostResponse, EventResponse } from '@wgm/shared';
+import type { EventDiscordPostResponse, EventResponse, SignUpResponse } from '@wgm/shared';
 import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loginAs, testApp } from '../../../test/api-app.js';
 import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
-import { Event, User } from '../../db/models/index.js';
+import { Character, Event, Member, SignUp, User } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
 
 const gm = '200000000000000001';
@@ -191,5 +191,67 @@ describe('Discord posts of events', () => {
     expect(preview.embed.title).toBe('Molten Core');
     expect(preview.embed.fields.at(-1)?.name).toBe('Inscripciones');
     expect(preview.buttons.map((button) => button.label)).toEqual(['Inscribirse', 'Rechazado']);
+  });
+});
+
+describe('sign-ups of an event', () => {
+  it('lists them, and tells the people an edit moves or reschedules', async () => {
+    const { agent, jobs, base, guild } = await setup();
+    const pvp = {
+      type: 'pvp',
+      name: 'Arathi Basin',
+      size: 3,
+      slots: { tank: 1, healer: 1, dps: 1 },
+    };
+    const id = event(await agent.post(base).send({ ...pvp, startsAt: inDays(3) })).id;
+    const member = await Member.create({
+      guildId: guild.id,
+      discordUserId: '200000000000000002',
+      discordName: 'Thrall',
+      discordAvatar: null,
+      rank: 'raider',
+    });
+    const character = await Character.create({
+      memberId: member.id,
+      name: 'Thrall',
+      faction: 'horde',
+      race: 'orc',
+      characterClass: 'shaman',
+      level: 60,
+      professions: [],
+      isMain: true,
+    });
+    const signUp = await SignUp.create({
+      eventId: id,
+      memberId: member.id,
+      characterId: character.id,
+      role: 'healer',
+      status: 'tentative',
+      placement: 'slot',
+      signedUpAt: new Date(),
+    });
+
+    const listed = await agent.get(`${base}/${id}/sign-ups`);
+    expect(listed.body).toEqual([
+      {
+        id: signUp.id,
+        character: { id: character.id, name: 'Thrall', class: 'shaman' },
+        role: 'healer',
+        status: 'tentative',
+        placement: 'slot',
+        signedUpAt: signUp.signedUpAt.toISOString(),
+      },
+    ] satisfies SignUpResponse[]);
+
+    jobs.jobs.length = 0;
+    await agent.put(`${base}/${id}`).send({
+      name: pvp.name,
+      size: 3,
+      slots: { tank: 1, healer: 0, dps: 2 },
+      startsAt: inDays(4),
+    });
+
+    expect(jobs.payloads('moved-to-waitlist')).toEqual([{ signUpId: signUp.id }]);
+    expect(jobs.payloads('events-rescheduled')).toEqual([{ memberId: member.id, eventIds: [id] }]);
   });
 });

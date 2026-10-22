@@ -29,6 +29,7 @@ export class SignUp extends Model<InferAttributes<SignUp>, InferCreationAttribut
   /** When they signed up for this role: the waitlist's order. */
   declare signedUpAt: Date;
 
+  declare event?: NonAttribute<Event>;
   declare character?: NonAttribute<Character>;
   declare member?: NonAttribute<Member>;
 

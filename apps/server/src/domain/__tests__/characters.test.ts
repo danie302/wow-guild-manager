@@ -202,7 +202,7 @@ describe('removeOwnCharacter', () => {
       (await named('Thrall'))!.id,
     );
 
-    expect(outcome).toEqual({ result: 'removed', name: 'Thrall', newMain: 'Zuljin' });
+    expect(outcome).toMatchObject({ result: 'removed', name: 'Thrall', newMain: 'Zuljin' });
   });
 
   it("refuses someone else's character, or one already removed", async () => {

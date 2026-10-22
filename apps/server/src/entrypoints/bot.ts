@@ -27,7 +27,12 @@ await redis.connect();
 // Post updates after sign-ups, and retries of failed posts, go to the worker through the queue.
 const jobs = new JobQueue({ connection: redisConnection(config.REDIS_URL) });
 
-const client = createBotClient({ logger, commands, components: [signUpHandler(jobs)] });
+const client = createBotClient({
+  logger,
+  commands,
+  components: [signUpHandler(jobs)],
+  jobs,
+});
 watchDiscordChanges(client, discordCacheInvalidator({ redis }), logger);
 syncServerMembers(client, logger);
 syncMemberProfiles(client, logger);

@@ -344,6 +344,8 @@ The gear checks (and, later, registering characters from Discord) read character
 - The rules live in `src/domain/sign-ups.ts`: who can join each event type, the class and role check, and slot or waitlist. `signUp` and `decline` run in one transaction that locks the event row first, so parallel sign-ups can't both take the last slot.
 - `sign_ups` has one row per member and event (a unique index), with the character, role, status, placement (slot or waitlist, null when Declined), and `signed_up_at`, the waitlist's order. Rows stay when a member or character is removed, so attendance keeps its history.
 - After a sign-up or decline, the bot schedules the post's update through `scheduleEventPostUpdate`, which gathers a few seconds of sign-ups into one edit (see "Event posts").
+- Every change that can open or remove a slot (a decline, a role change, editing the slots, removing a member or character) calls `balanceSlots` with the event locked: extra participants move to the front of the waitlist (most recent first, by `signUpsLosingSlots` in `packages/shared`, which the event form also uses to warn before saving) and open slots go to the earliest waitlisted characters. Removals lock each affected event in turn, in ID order.
+- These changes return a `SignUpChanges` (promoted, moved to the waitlist, rescheduled participants, events whose posts changed) instead of messaging: the route or bot command hands it to `notifySignUpChanges`, which enqueues the direct messages (`waitlist-promoted`, `moved-to-waitlist`, and one `events-rescheduled` per member, however many of their events moved) and the post updates. Each message job re-reads the data and says nothing if it no longer holds.
 
 ## IDs: UUID v7
 

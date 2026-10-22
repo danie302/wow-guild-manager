@@ -4,17 +4,19 @@ import {
   type CreateEventInput,
   type EventDiscordPostResponse,
   type EventResponse,
+  type SignUpResponse,
   type UpdateEventInput,
 } from '@wgm/shared';
 import express from 'express';
 import { Op, type WhereOptions } from 'sequelize';
 
-import { Event, EventSeries, User, type Guild } from '../db/models/index.js';
+import { Event, EventSeries, User, type Guild, type SignUp } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
 import { cancelEvent, createEvent, updateEvent } from '../domain/events.js';
 import { eventSignUps } from '../domain/sign-ups.js';
 import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
+import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import type { DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
@@ -82,6 +84,22 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     },
   );
 
+  // The event's sign-ups, in sign-up order: for the event form's warning, and the sign-ups tab.
+  router.get(
+    `${base}/:eventId/sign-ups`,
+    requireUser,
+    requireGuildPermission('viewEvents'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const event = await Event.findOne({
+        attributes: ['id'],
+        where: { id: eventId(req.params.eventId), guildId: guild.id },
+      });
+      if (!event) throw new DomainError({ code: 'NOT_FOUND' });
+      res.json((await eventSignUps(event.id)).map(toSignUpResponse));
+    },
+  );
+
   // The message the bot posts for the event, for the event page's preview.
   router.get(
     `${base}/:eventId/discord-post`,
@@ -118,12 +136,15 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
     requireGuildPermission('manageEvents'),
     async (req, res) => {
       const { guild } = currentGuild(res);
-      const event = await updateEvent(
+      const { event, changes } = await updateEvent(
         guild,
         eventId(req.params.eventId),
         req.body as UpdateEventInput,
       );
-      if (jobs) await enqueueEventPosts(jobs, [event.id]);
+      if (jobs) {
+        await enqueueEventPosts(jobs, [event.id]);
+        await notifySignUpChanges(jobs, changes);
+      }
       res.json(await eventResponse(event.id, guild));
     },
   );
@@ -148,6 +169,21 @@ const people = [
   { model: User, as: 'cancelledBy', attributes: ['name'] },
   { model: EventSeries, as: 'series', attributes: ['id', 'name'] },
 ];
+
+export function toSignUpResponse(signUp: SignUp): SignUpResponse {
+  return {
+    id: signUp.id,
+    character: {
+      id: signUp.characterId,
+      name: signUp.character!.name,
+      class: signUp.character!.characterClass,
+    },
+    role: signUp.role,
+    status: signUp.status,
+    placement: signUp.placement,
+    signedUpAt: signUp.signedUpAt.toISOString(),
+  };
+}
 
 export function eventId(id: unknown): string {
   if (!uuidSchema.safeParse(id).success) throw new DomainError({ code: 'NOT_FOUND' });

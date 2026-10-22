@@ -2,9 +2,22 @@ import { z } from 'zod';
 
 import { SUPPORTED_LOCALES, type Locale } from './locales.js';
 import { isValidTimeZone, normalizeTimeZone, THEMES, type Theme } from './preferences.js';
-import type { BaseRank, CharacterClass, Faction, Profession, Race, Rank } from './game.js';
+import type {
+  BaseRank,
+  CharacterClass,
+  CombatRole,
+  Faction,
+  Profession,
+  Race,
+  Rank,
+} from './game.js';
 import { CHARACTER_ERROR_CODES } from './schemas/character.js';
-import { EVENT_ERROR_CODES, type EventType } from './schemas/event.js';
+import {
+  EVENT_ERROR_CODES,
+  type EventType,
+  type SignUpPlacement,
+  type SignUpStatus,
+} from './schemas/event.js';
 import { GUILD_ERROR_CODES } from './schemas/guild.js';
 import { ROSTER_ERROR_CODES } from './schemas/roster.js';
 
@@ -302,6 +315,24 @@ export interface EventResponse {
    * attempt failed, if it did.
    */
   discordPost: { url: string | null; error: DiscordPostError | null };
+}
+
+/**
+ * A sign-up on `GET /api/guilds/:guildId/events/:eventId/sign-ups`, in sign-up order. `role`
+ * is null only for a Declined sign-up that never had one; `placement` is null when Declined.
+ */
+export interface SignUpResponse {
+  id: string;
+  character: { id: string; name: string; class: CharacterClass };
+  role: CombatRole | null;
+  status: SignUpStatus;
+  placement: SignUpPlacement | null;
+  signedUpAt: string;
+}
+
+/** `GET /api/guilds/:guildId/series/:seriesId/sign-ups`: each future event's sign-ups. */
+export interface SeriesSignUpsResponse {
+  events: { id: string; startsAt: string; signUps: SignUpResponse[] }[];
 }
 
 /** Why the bot couldn't post or update an event's Discord post. */

@@ -1,4 +1,9 @@
-import type { CreateEventInput, SeriesResponse, UpdateEventInput } from '@wgm/shared';
+import type {
+  CreateEventInput,
+  SeriesResponse,
+  SeriesSignUpsResponse,
+  UpdateEventInput,
+} from '@wgm/shared';
 import express from 'express';
 import { Op } from 'sequelize';
 
@@ -6,8 +11,10 @@ import { Event, EventSeries, User } from '../db/models/index.js';
 import { DomainError } from '../domain/errors.js';
 import { createSeries, futureEventIds, stopSeries, updateSeries } from '../domain/series.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
+import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
 import type { JobEnqueuer } from '../jobs/index.js';
-import { eventId as seriesId } from './events.js';
+import { eventSignUps } from '../domain/sign-ups.js';
+import { eventId as seriesId, toSignUpResponse } from './events.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
 
@@ -60,13 +67,45 @@ export function seriesRouter(jobs: JobEnqueuer | null) {
     requireGuildPermission('manageEvents'),
     async (req, res) => {
       const { guild } = currentGuild(res);
-      const series = await updateSeries(
+      const { series, changes } = await updateSeries(
         guild,
         seriesId(req.params.seriesId),
         req.body as UpdateEventInput,
       );
-      if (jobs) await enqueueEventPosts(jobs, await futureEventIds(series.id));
+      if (jobs) {
+        await enqueueEventPosts(jobs, await futureEventIds(series.id));
+        await notifySignUpChanges(jobs, changes);
+      }
       res.json(await seriesResponse(series.id));
+    },
+  );
+
+  // The sign-ups of each future event, for the series form's warning about fewer slots.
+  router.get(
+    `${base}/:seriesId/sign-ups`,
+    requireUser,
+    requireGuildPermission('viewEvents'),
+    async (req, res) => {
+      const { guild } = currentGuild(res);
+      const series = await EventSeries.findOne({
+        attributes: ['id'],
+        where: { id: seriesId(req.params.seriesId), guildId: guild.id },
+      });
+      if (!series) throw new DomainError({ code: 'NOT_FOUND' });
+      const events = await Event.findAll({
+        attributes: ['id', 'startsAt'],
+        where: { seriesId: series.id, startsAt: { [Op.gt]: new Date() }, cancelledAt: null },
+        order: [['startsAt', 'ASC']],
+      });
+      res.json({
+        events: await Promise.all(
+          events.map(async (event) => ({
+            id: event.id,
+            startsAt: event.startsAt.toISOString(),
+            signUps: (await eventSignUps(event.id)).map(toSignUpResponse),
+          })),
+        ),
+      } satisfies SeriesSignUpsResponse);
     },
   );
 

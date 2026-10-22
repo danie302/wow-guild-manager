@@ -10,6 +10,7 @@ import type { JobHandlers } from '../worker.js';
 import { eventPostHandlers } from './event-posts.js';
 import { pingHandler } from './ping.js';
 import { registrationHandlers } from './registrations.js';
+import { signUpNoticeHandlers } from './sign-up-notices.js';
 
 /** What the handlers can use. Lookups in the game run here, never in page requests. */
 export interface JobDependencies {
@@ -30,6 +31,7 @@ export function createJobHandlers(dependencies: JobDependencies): JobHandlers {
     ping: pingHandler(dependencies.logger),
     ...registrationHandlers(dependencies),
     ...eventPostHandlers(dependencies),
+    ...signUpNoticeHandlers(dependencies),
     // New events of a series get their posts in the same run.
     'extend-series': async () => {
       await extendAllSeries(dependencies.logger);

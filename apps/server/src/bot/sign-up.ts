@@ -27,6 +27,7 @@ import {
 } from '../domain/sign-ups.js';
 import type { Translate } from '../i18n/index.js';
 import { scheduleEventPostUpdate } from '../jobs/event-posts.js';
+import { notifySignUpChanges } from '../jobs/sign-up-notices.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import type { CommandContext, ComponentHandler } from './commands/types.js';
 
@@ -140,6 +141,7 @@ async function declineEvent(
     flags: MessageFlags.Ephemeral,
   });
   await scheduleEventPostUpdate(jobs, outcome.event.id);
+  await notifySignUpChanges(jobs, outcome.changes);
 }
 
 async function submit(
@@ -169,6 +171,7 @@ async function submit(
     components: [],
   });
   await scheduleEventPostUpdate(jobs, outcome.event.id);
+  await notifySignUpChanges(jobs, outcome.changes);
 }
 
 /**

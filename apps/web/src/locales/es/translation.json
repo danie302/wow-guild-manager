@@ -397,7 +397,11 @@
     "hintDate": "Elige una fecha y hora para guardar.",
     "hintFuture": "Elige una fecha y hora futuras para guardar.",
     "hintSlots": "Haz que los slots sumen el tamaño para guardar.",
-    "hintFix": "Corrige los campos marcados en rojo para guardar."
+    "hintFix": "Corrige los campos marcados en rojo para guardar.",
+    "losingSlots_one": "Al guardar, 1 participante pasa al principio de la lista de espera y recibe un mensaje directo:",
+    "losingSlots_other": "Al guardar, {{count}} participantes pasan al principio de la lista de espera y reciben un mensaje directo:",
+    "losingSlotName": "{{name}} ({{role}})",
+    "losingSlotsOn": "{{date}}: {{names}}"
   },
   "eventPage": {
     "back": "Eventos",

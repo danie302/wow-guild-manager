@@ -255,6 +255,8 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - Each sign-up has a status: **Confirmed**, **Tentative**, or **Declined**.
 - If every slot for the chosen combat role is taken, the character goes onto the event's **waitlist** for that role.
 - The waitlist is ordered by sign-up time. When a spot opens, it goes to the earliest waitlisted character with the same combat role.
+- A spot opens when a participant declines or changes to another combat role, is removed from the event or the roster, or their character is removed, and when an event's slots for a role are increased. Each promoted character's member gets a direct message.
+- When an event's date or time changes (edited on its own or through its recurring series), its participants (in a slot or on the waitlist) get a direct message. A series edit sends each member one message listing all their changed events. Other edits (name, description) only update the post.
 - A participant can withdraw at any time by setting their status to Declined. This releases their spot.
 - In every event type, a Tentative participant who hasn't changed to Confirmed by the event's Tentative deadline is replaced by the next waitlisted character with the same combat role. If nobody is waitlisted for that role, they keep their spot.
 - The Guild Master and Officers can also replace a Tentative participant with a waitlisted character manually at any time.

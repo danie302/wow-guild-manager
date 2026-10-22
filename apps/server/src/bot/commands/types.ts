@@ -8,11 +8,14 @@ import type {
 } from 'discord.js';
 
 import type { Translate } from '../../i18n/index.js';
+import type { JobEnqueuer } from '../../jobs/index.js';
 
-/** What a command needs to answer in the member's language. */
+/** What a command needs to answer in the member's language, and to hand work to the worker. */
 export interface CommandContext {
   locale: Locale;
   t: Translate;
+  /** Adds background jobs (e.g. direct messages); missing in tests that don't need it. */
+  jobs?: JobEnqueuer;
 }
 
 export interface SlashCommand {

@@ -12,6 +12,7 @@ import { translator } from '../i18n/index.js';
 import type { Logger } from '../logger.js';
 import type { SlashCommand } from './commands/index.js';
 import type { ComponentHandler } from './commands/types.js';
+import type { JobEnqueuer } from '../jobs/index.js';
 import { replyLocale } from './locale.js';
 
 export interface BotDependencies {
@@ -19,9 +20,16 @@ export interface BotDependencies {
   commands: readonly SlashCommand[];
   /** Buttons and selects outside commands, e.g. on event posts. */
   components?: readonly ComponentHandler[];
+  /** Adds background jobs for commands. */
+  jobs?: JobEnqueuer;
 }
 
-export function createBotClient({ logger, commands, components = [] }: BotDependencies): Client {
+export function createBotClient({
+  logger,
+  commands,
+  components = [],
+  jobs,
+}: BotDependencies): Client {
   const client = new Client({
     // GuildMembers is privileged: it must be enabled in the Discord Developer Portal (see README).
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -40,7 +48,7 @@ export function createBotClient({ logger, commands, components = [] }: BotDepend
   });
 
   client.on(Events.InteractionCreate, (interaction) => {
-    void handleInteraction(interaction, commands, logger, components);
+    void handleInteraction(interaction, commands, logger, components, jobs);
   });
 
   return client;
@@ -68,6 +76,7 @@ export async function handleInteraction(
   commands: readonly SlashCommand[],
   logger: Logger,
   components: readonly ComponentHandler[] = [],
+  jobs?: JobEnqueuer,
 ): Promise<void> {
   if (interaction.isAutocomplete()) {
     const command = commands.find((c) => c.definition.name === interaction.commandName);
@@ -106,7 +115,7 @@ export async function handleInteraction(
     });
     t = translator(locale);
 
-    const context = { locale, t };
+    const context = { locale, t, ...(jobs && { jobs }) };
     if (interaction.isButton()) {
       await (component ?? command)?.button?.(interaction, context);
     } else if (interaction.isStringSelectMenu()) {

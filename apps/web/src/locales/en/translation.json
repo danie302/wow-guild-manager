@@ -397,7 +397,11 @@
     "hintDate": "Pick a date and time to save.",
     "hintFuture": "Pick a date and time in the future to save.",
     "hintSlots": "Make the slots add up to the size to save.",
-    "hintFix": "Fix the fields marked in red to save."
+    "hintFix": "Fix the fields marked in red to save.",
+    "losingSlots_one": "Saving moves 1 participant to the front of the waitlist, and they get a direct message:",
+    "losingSlots_other": "Saving moves {{count}} participants to the front of the waitlist, and they get a direct message:",
+    "losingSlotName": "{{name}} ({{role}})",
+    "losingSlotsOn": "{{date}}: {{names}}"
   },
   "eventPage": {
     "back": "Events",

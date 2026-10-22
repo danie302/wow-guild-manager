@@ -96,7 +96,7 @@ describe('updateEvent', () => {
       now,
     ).catch((e: unknown) => e);
 
-    expect(updated).toMatchObject({ name: 'BWL', type: 'raid', size: 20 });
+    expect(updated.event).toMatchObject({ name: 'BWL', type: 'raid', size: 20 });
     expect(error).toBeInstanceOf(DomainValidationError);
     expect(issuesOf(error)).toEqual([{ field: 'size', code: 'INVALID_RAID_SIZE' }]);
   });

@@ -18,6 +18,12 @@ export interface JobPayloads {
    * or to the guild's Discord settings; runs for one event never overlap.
    */
   'event-post': { eventId: string };
+  /** Tells a member by direct message that their waitlisted character got a slot. */
+  'waitlist-promoted': { signUpId: string };
+  /** Tells a member their character lost its slot because the role's slots went down. */
+  'moved-to-waitlist': { signUpId: string };
+  /** Tells a member the date or time of events they're signed up for changed, in one message. */
+  'events-rescheduled': { memberId: string; eventIds: string[] };
   /** Deletes the post of an event that no longer exists (a stopped series' future events). */
   'event-post-delete': { channelId: string; messageId: string };
 }
