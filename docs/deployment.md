@@ -1,6 +1,6 @@
 # Deployment
 
-How to run WoW Guild Manager on one server with `docker-compose.prod.yml`, using an Oracle Cloud Always Free VM. Any Linux server with Docker works the same way from step 4 on.
+How to run WoW Guild Manager on one server with `docker-compose.prod.yml`, using an Oracle Cloud Always Free VM. Any Linux server with Docker works the same way from step 4 on. To run it on a PC at home instead (Windows included), without a public IP or open ports, see [Run it on a home PC with Cloudflare Tunnel](#run-it-on-a-home-pc-with-cloudflare-tunnel).
 
 ## What runs
 
@@ -108,6 +108,44 @@ The first build takes a few minutes. Then:
 - Open `https://<APP_DOMAIN>` and log in with Discord. The first person to log in sets up the guild.
 
 To type less, set an alias: `echo "alias dc='docker compose -f docker-compose.prod.yml'" >> ~/.bashrc`, then `dc ps`, `dc logs -f api`, and so on.
+
+## Run it on a home PC with Cloudflare Tunnel
+
+Any always-on computer with Docker can run the stack, even without a public IP (many home connections are behind the provider's NAT). `docker-compose.tunnel.yml` adds a `cloudflared` container that connects out to Cloudflare: Cloudflare serves `APP_DOMAIN` over HTTPS and forwards the requests through the tunnel to Caddy, which then serves plain HTTP and publishes no ports. The PC has to stay on: if it sleeps or loses its connection, the app and the bot are down until it's back.
+
+### Move the domain's DNS to Cloudflare
+
+Cloudflare Tunnel needs the domain's DNS at Cloudflare (free). The domain stays registered at Namecheap.
+
+1. Create a [Cloudflare](https://dash.cloudflare.com/sign-up) account and **Add a domain**: `ddazaj.com`, Free plan.
+2. Cloudflare copies the existing DNS records. Check them against Namecheap's **Advanced DNS** (e.g. email records) and add any it missed.
+3. In Namecheap, **Domain List → Manage** next to `ddazaj.com`, under **Nameservers** pick **Custom DNS** and enter the two nameservers Cloudflare shows. Cloudflare emails you when the change is active (usually within an hour).
+4. In Cloudflare, **SSL/TLS → Edge Certificates**: turn on **Always Use HTTPS**.
+
+### Create the tunnel
+
+1. In Cloudflare, **Zero Trust → Networks → Tunnels → Create a tunnel**, type **Cloudflared**, named e.g. `wgm`.
+2. Under **Install and run a connector**, pick **Docker** and copy the token from the command it shows (the long value after `--token`). Don't run the command: the stack starts its own `cloudflared`.
+3. Add a **public hostname**: subdomain `guild`, domain `ddazaj.com`, service type **HTTP**, URL `web:80`. Cloudflare creates the DNS record for it.
+
+### Install Docker
+
+- **Windows:** install [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/) with the WSL 2 backend (no Linux distribution needed), and in its settings turn on **Start Docker Desktop when you sign in**. Install [Git for Windows](https://git-scm.com/download/win). The repository's `.gitattributes` keeps LF line endings, which the containers need.
+  - To cap the memory Docker's VM can take, create `C:\Users\<you>\.wslconfig` with `[wsl2]`, `memory=3GB`, and `processors=2` on separate lines, then run `wsl --shutdown` and start Docker Desktop again. The stack uses about 350 MB when idle; the first build needs more.
+  - Keep the PC from sleeping (**Settings → System → Power**), and set Windows Update's active hours so it doesn't restart during raids.
+- **Linux:** as in step 4 above.
+
+### Set up and start
+
+Set up the production Discord application as in step 5, with the redirect `https://guild.ddazaj.com/api/auth/discord/callback`. Then get the code and fill in `.env` as in step 6, including `CLOUDFLARE_TUNNEL_TOKEN`. On Windows, run those commands in **Git Bash** (installed with Git for Windows, and it includes `openssl`), skip `chmod`, and edit `.env` with Notepad if you prefer it to `nano`.
+
+Start it with both Compose files:
+
+```sh
+docker compose -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build
+```
+
+Use both `-f` files in every command from this guide (`ps`, `logs`, updating, backups). `docker compose ... logs -f cloudflared` shows the tunnel connecting; the tunnel's page in Cloudflare shows it as **Healthy**. Then open `https://guild.ddazaj.com`.
 
 ## Update
 

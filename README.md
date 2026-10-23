@@ -121,7 +121,7 @@ pnpm format:check   # Prettier (pnpm format fixes formatting)
 
 ### Deploy to a server
 
-`docker-compose.prod.yml` runs the whole product on one server, with HTTPS and daily database backups. [`docs/deployment.md`](docs/deployment.md) walks through it on an Oracle Cloud Always Free VM: creating the VM, the firewall, the DNS record, a production Discord application, `.env` (from `.env.production.example`), updating, and restoring a backup.
+`docker-compose.prod.yml` runs the whole product on one server, with HTTPS and daily database backups. [`docs/deployment.md`](docs/deployment.md) walks through it on an Oracle Cloud Always Free VM: creating the VM, the firewall, the DNS record, a production Discord application, `.env` (from `.env.production.example`), updating, and restoring a backup. To run it on a PC at home instead (Windows included), `docker-compose.tunnel.yml` puts it behind Cloudflare Tunnel, with no public IP or open ports; the same guide explains it.
 
 ## Documentation
 

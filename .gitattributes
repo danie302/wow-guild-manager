@@ -1,0 +1,3 @@
+# Check files out with LF line endings on every OS, so a Windows checkout still runs the shell
+# scripts and Caddyfile inside Linux containers.
+* text=auto eol=lf

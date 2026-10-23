@@ -1,6 +1,15 @@
-# Production web server (apps/web/Dockerfile). Caddy gets and renews the HTTPS certificate
-# for APP_DOMAIN, and redirects HTTP to HTTPS.
-{$APP_DOMAIN} {
+# Production web server (apps/web/Dockerfile). docker-compose.prod.yml sets SITE_ADDRESS to
+# APP_DOMAIN, so Caddy gets and renews the HTTPS certificate and redirects HTTP to HTTPS.
+# docker-compose.tunnel.yml sets it to http://APP_DOMAIN instead: Cloudflare Tunnel handles
+# HTTPS, and Caddy trusts its X-Forwarded-Proto header (TRUSTED_PROXIES) so the API still
+# sees HTTPS and sends secure cookies.
+{
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1/32}
+	}
+}
+
+{$SITE_ADDRESS} {
 	encode zstd gzip
 
 	# The API, on the same origin, so the browser needs no CORS and the session cookie works.

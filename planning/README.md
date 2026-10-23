@@ -29,7 +29,7 @@ Name new files `story-NNN-short-name.md`, using the next free number, and copy t
 
 ## Index
 
-Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018. Story 039 was added on 2026-10-22, after the events stories, and story 040 the same day.
+Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018. Story 039 was added on 2026-10-22, after the events stories, and story 040 the same day. Story 041 was added on 2026-10-23.
 
 ### Battle.net plan
 
@@ -55,6 +55,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [009](story-009-worker-skeleton.md) | Worker and job queue skeleton | Done with debt | 002, 003 |
 | [035](story-035-i18n-foundation.md) | Internationalization foundation | Done with debt | 006, 007, 008 |
 | [040](story-040-production-deployment.md) | Production deployment | Done with debt | 002 |
+| [041](story-041-cloudflare-tunnel.md) | Running on a home PC with Cloudflare Tunnel | Done with debt | 040 |
 
 ### Access and guild
 

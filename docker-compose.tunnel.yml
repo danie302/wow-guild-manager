@@ -1,0 +1,27 @@
+# Runs the production stack behind Cloudflare Tunnel, e.g. on a home PC without a public IP
+# or open ports. Use it together with docker-compose.prod.yml (docs/deployment.md):
+#   docker compose -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build
+# Cloudflare handles HTTPS and forwards requests for APP_DOMAIN to Caddy over plain HTTP.
+
+services:
+  web:
+    environment:
+      SITE_ADDRESS: http://${APP_DOMAIN:?Set APP_DOMAIN in .env}
+      # cloudflared reaches Caddy over the Docker network, from a private address.
+      TRUSTED_PROXIES: private_ranges
+    # Nothing is published: the tunnel connects out to Cloudflare.
+    ports: !reset []
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.3
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      - web

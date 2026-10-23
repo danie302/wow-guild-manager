@@ -535,6 +535,7 @@ Decided on 2026-10-22 (story 040), for testing with a small group on one free se
 - **Uploads** stay in a Docker volume on the server.
 - **Backups:** a `postgres` container runs `pg_dump` (custom format) every day and keeps 7 days in `./backups`. They're on the same server, so the guide says to copy them off now and then.
 - **A separate Discord application for production,** because two bots with the same token both answer every interaction.
+- **Home PC behind Cloudflare Tunnel** (decided on 2026-10-23, story 041): an alternative to the VM when Oracle has no Arm capacity. `docker-compose.tunnel.yml` adds `cloudflared`, which connects out to Cloudflare, so the PC needs no public IP or open ports; Cloudflare serves HTTPS and Caddy serves plain HTTP, trusting the tunnel's `X-Forwarded-Proto` (`trusted_proxies`) so the API keeps secure cookies. The domain's DNS moves to Cloudflare (free); it stays registered at Namecheap. On Windows, Docker Desktop's own WSL 2 VM runs the Linux containers (no separate distribution), and `.gitattributes` keeps LF line endings. Chosen over a paid VPS to stay free, accepting that the app is down while the PC is off.
 
 ## Local development requirements
 
