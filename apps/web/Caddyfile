@@ -21,6 +21,10 @@
 	handle {
 		root * /srv
 		try_files {path} /index.html
+		# Fills in {{.Host}} in index.html's link preview tags. Only HTML is processed.
+		templates {
+			mime text/html
+		}
 		file_server
 	}
 

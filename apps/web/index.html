@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WoW Guild Manager</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Link previews (WhatsApp, Discord…). They need an absolute image URL, so in production
+         Caddy fills in the host when it serves this file (templates in apps/web/Caddyfile). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WoW Guild Manager" />
+    <meta property="og:image" content="https://{{.Host}}/og-image.jpg" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body>
     <div id="root"></div>
