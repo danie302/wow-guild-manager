@@ -18,7 +18,7 @@ export function LoginPage() {
   }
 
   return (
-    <Splash initials="GM" title={t('app.name')} lead={t('login.lead')}>
+    <Splash title={t('app.name')} lead={t('login.lead')}>
       {isLoginError(error) && (
         <Notice tone={error === 'cancelled' ? 'warn' : 'bad'} title={t(`login.errors.${error}`)} />
       )}

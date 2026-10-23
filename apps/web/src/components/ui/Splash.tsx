@@ -8,22 +8,20 @@ import { Icon } from './Icon';
 import { token } from './tokens';
 
 export interface SplashProps {
-  /** One or two letters shown in the square badge. */
-  initials: string;
   title: string;
   lead?: string;
   children: ReactNode;
 }
 
 /**
- * A full-screen page outside the app shell, like the login page.
+ * A full-screen page outside the app shell, like the login page, with the app's logo.
  *
- * <Splash initials="GM" title="Guild Manager" lead="…">
+ * <Splash title="Guild Manager" lead="…">
  *   <Button variant="primary" size="large" href="…">Log in with Discord</Button>
  *   <Splash.Note>…</Splash.Note>
  * </Splash>
  */
-function SplashRoot({ initials, title, lead, children }: SplashProps) {
+function SplashRoot({ title, lead, children }: SplashProps) {
   return (
     <Box
       component="main"
@@ -37,19 +35,8 @@ function SplashRoot({ initials, title, lead, children }: SplashProps) {
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 520 }}>
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            display: 'grid',
-            placeItems: 'center',
-            bgcolor: token('ac'),
-            color: token('ac-on'),
-            fontWeight: 800,
-          }}
-        >
-          {initials}
-        </Box>
+        {/* Decorative: the title next to it names the page. */}
+        <Box component="img" src="/logo.png" alt="" sx={{ width: 72, height: 72 }} />
         <Box
           sx={{
             display: 'flex',

@@ -16,7 +16,6 @@ export function NoAccessPage() {
 
   return (
     <Splash
-      initials="GM"
       title={t('noAccess.title')}
       lead={me ? t('noAccess.signedInAs', { name: me.name }) : undefined}
     >

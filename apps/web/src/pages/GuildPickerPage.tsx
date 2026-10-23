@@ -18,7 +18,6 @@ export function GuildPickerPage() {
 
   return (
     <Splash
-      initials="GM"
       title={t('guildPicker.title')}
       lead={me ? t('noAccess.signedInAs', { name: me.name }) : undefined}
     >

@@ -34,7 +34,7 @@ export function RequireAuth() {
   }
   if (me.isError) {
     return (
-      <Splash initials="GM" title={t('app.name')}>
+      <Splash title={t('app.name')}>
         <Notice tone="bad" title={t('auth.unavailableTitle')}>
           {t('errors.API_UNAVAILABLE')}
         </Notice>
