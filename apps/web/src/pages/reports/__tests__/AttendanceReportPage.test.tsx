@@ -19,6 +19,7 @@ const row = (
   total: rate === null ? 0 : 10,
   rate,
   late: 1,
+  bench: 0,
   noShow: 0,
   band,
 });

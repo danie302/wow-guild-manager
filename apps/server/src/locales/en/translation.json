@@ -55,10 +55,10 @@
       "allTime": "All time",
       "byType": "By event type (last 8 weeks)",
       "counts": "Last 8 weeks",
-      "countsValue": "Late: {{late}} · No-shows: {{noShow}}",
+      "countsValue": "Late: {{late}} · Bench: {{bench}} · No-shows: {{noShow}}",
       "latest": "Latest events",
       "rate": "{{rate}} ({{attended}} of {{total}})",
-      "footer": "Present, Late, and Left early count as attended.",
+      "footer": "Present, Late, Left early, and Bench count as attended.",
       "bands": {
         "good": "Good",
         "watch": "Watch",

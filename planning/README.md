@@ -29,7 +29,7 @@ Name new files `story-NNN-short-name.md`, using the next free number, and copy t
 
 ## Index
 
-Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018. Story 039 was added on 2026-10-22, after the events stories, and story 040 the same day. Story 041 was added on 2026-10-23.
+Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018. Story 039 was added on 2026-10-22, after the events stories, and story 040 the same day. Story 041 was added on 2026-10-23, and story 042 on 2026-10-24.
 
 ### Battle.net plan
 
@@ -99,6 +99,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [028](story-028-record-attendance.md) | Recording attendance | Done | 025 |
 | [029](story-029-attendance-reports.md) | Attendance reports | Done | 028 |
 | [030](story-030-attendance-command.md) | The /attendance command | Done | 008, 029 |
+| [042](story-042-bench-counts-as-attended.md) | Bench counts as attended | Done | 029, 030 |
 
 ### Gear checks
 

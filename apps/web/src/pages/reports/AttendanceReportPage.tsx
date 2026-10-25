@@ -26,7 +26,14 @@ import { useFormat } from '../../i18n/format';
 import { BAND_COLOR, rateText } from '../attendanceText';
 
 /** The columns the list sorts by, in the order of its headings. */
-const SORTABLE = { 0: 'name', 2: 'rate', 3: 'attended', 4: 'late', 5: 'noShow' } as const;
+const SORTABLE = {
+  0: 'name',
+  2: 'rate',
+  3: 'attended',
+  4: 'late',
+  5: 'bench',
+  6: 'noShow',
+} as const;
 type SortColumn = keyof typeof SORTABLE;
 
 /** Each column's first direction: the lowest rate first, the most late arrivals first. */
@@ -36,6 +43,7 @@ const FIRST_DIRECTION: Record<SortColumn, 'asc' | 'desc'> = {
   3: 'desc',
   4: 'desc',
   5: 'desc',
+  6: 'desc',
 };
 
 /** Members without records come last, whichever way the list is sorted. */
@@ -153,9 +161,10 @@ export function AttendanceReportPage() {
               t('reports.rate'),
               t('reports.attended'),
               t('reports.late'),
+              t('reports.bench'),
               t('reports.noShows'),
             ]}
-            widths={['1.4fr', '0.8fr', '1.4fr', '0.6fr', '0.5fr', '0.6fr']}
+            widths={['1.4fr', '0.8fr', '1.4fr', '0.6fr', '0.5fr', '0.6fr', '0.6fr']}
             empty={t('roster.empty')}
             sort={{
               columns: [0, 2, 3, 4, 5],
@@ -183,6 +192,7 @@ export function AttendanceReportPage() {
                 />
                 <span>{t('reports.attendedOf', { attended: row.attended, total: row.total })}</span>
                 <span>{row.late}</span>
+                <span>{row.bench}</span>
                 <span>{row.noShow}</span>
               </ListTable.Row>
             ))}

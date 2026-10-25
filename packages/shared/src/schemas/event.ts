@@ -218,7 +218,7 @@ export const addParticipantSchema = z
   .strict();
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 
-/** Attendance statuses. Present, Late, and Left early count as attended. */
+/** Attendance statuses. Present, Late, Left early, and Bench count as attended. */
 export const ATTENDANCE_STATUSES = [
   'present',
   'late',
@@ -229,7 +229,13 @@ export const ATTENDANCE_STATUSES = [
 ] as const;
 export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
 
-export const ATTENDED_STATUSES: readonly AttendanceStatus[] = ['present', 'late', 'left_early'];
+/** Bench counts as attended: the member was available but didn't get a spot. */
+export const ATTENDED_STATUSES: readonly AttendanceStatus[] = [
+  'present',
+  'late',
+  'left_early',
+  'bench',
+];
 
 /**
  * Body of `PUT /api/guilds/:guildId/events/:eventId/attendance`: the whole list. Before the
@@ -262,7 +268,7 @@ export interface AttendanceRate {
   rate: number | null;
 }
 
-/** Present, Late, and Left early count as attended; the rest don't. */
+/** Present, Late, Left early, and Bench count as attended; the rest don't. */
 export function attendanceRate(statuses: readonly AttendanceStatus[]): AttendanceRate {
   const attended = statuses.filter((status) => ATTENDED_STATUSES.includes(status)).length;
   return {

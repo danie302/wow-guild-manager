@@ -67,6 +67,7 @@ export async function memberAttendance(
       ]),
     ) as MemberAttendanceResponse['byType'],
     late: rows.filter((row) => row.status === 'late').length,
+    bench: rows.filter((row) => row.status === 'bench').length,
     noShow: rows.filter((row) => row.status === 'no_show').length,
     history: rows.map((row) => ({
       eventId: row.eventId,
@@ -114,6 +115,7 @@ export async function attendanceReport(
       main: main ? { name: main.name, class: main.characterClass } : null,
       ...rate,
       late: mine.filter((row) => row.status === 'late').length,
+      bench: mine.filter((row) => row.status === 'bench').length,
       noShow: mine.filter((row) => row.status === 'no_show').length,
       band: attendanceBand(rate.rate, thresholds),
     };

@@ -98,7 +98,7 @@ describe('/attendance', () => {
       ['Last 8 weeks', '50% (1 of 2) · At risk'],
       ['All time', '67% (2 of 3)'],
       ['By event type (last 8 weeks)', 'Raid: 50% (1 of 2)\nDungeon: —\nPvP: —'],
-      ['Last 8 weeks', 'Late: 0 · No-shows: 1'],
+      ['Last 8 weeks', 'Late: 0 · Bench: 0 · No-shows: 1'],
       ['Latest events', expect.stringContaining('**Molten Core 3** – Present') as string],
     ]);
   });

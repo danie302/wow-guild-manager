@@ -72,6 +72,7 @@ export const attendance: SlashCommand = {
               name: t('commands.attendance.counts'),
               value: t('commands.attendance.countsValue', {
                 late: recent.late,
+                bench: recent.bench,
                 noShow: recent.noShow,
               }),
             },

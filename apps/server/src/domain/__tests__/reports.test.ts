@@ -83,7 +83,7 @@ async function event(
 }
 
 describe('attendance reports', () => {
-  it("works out a member's rate per period and event type, with late arrivals and no-shows", async () => {
+  it("works out a member's rate per period and event type, with late arrivals, bench, and no-shows", async () => {
     const thrall = await member('Thrall');
     await event(3, [[thrall, 'present']]);
     await event(10, [[thrall, 'late']], 'dungeon');
@@ -97,7 +97,9 @@ describe('attendance reports', () => {
     expect(recent.overall).toMatchObject({ attended: 2, total: 2, rate: 1, band: 'good' });
     expect(eight.overall).toMatchObject({ attended: 2, total: 3, band: 'at_risk' });
     expect(eight.byType.dungeon).toEqual({ attended: 1, total: 1, rate: 1 });
-    expect(all).toMatchObject({ late: 1, noShow: 1 });
+    expect(all).toMatchObject({ late: 1, bench: 1, noShow: 1 });
+    // Bench counts as attended.
+    expect(all.overall).toMatchObject({ attended: 3, total: 4 });
     expect(all.history.map((row) => row.status)).toEqual(['present', 'late', 'no_show', 'bench']);
   });
 

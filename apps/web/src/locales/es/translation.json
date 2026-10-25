@@ -620,11 +620,12 @@
     "rate": "Asistencia",
     "attended": "Asistió",
     "late": "Tarde",
+    "bench": "Reserva",
     "noShows": "No se presentó",
     "attendedOf": "{{attended}} de {{total}}",
     "overall": "General",
     "rates": "Porcentajes de asistencia",
-    "counts": "Llegadas tarde y ausencias sin aviso",
+    "counts": "Llegadas tarde, reservas y ausencias sin aviso",
     "history": "Historial de asistencia",
     "noHistory": "No hay asistencia registrada en este periodo."
   },

@@ -91,6 +91,12 @@ export function MemberAttendance({ guildId, memberId }: { guildId: string; membe
                 color: 'warn',
               },
               {
+                key: 'bench',
+                label: t('reports.bench'),
+                value: String(attendance.data.bench),
+                color: 'dv',
+              },
+              {
                 key: 'noShow',
                 label: t('reports.noShows'),
                 value: String(attendance.data.noShow),

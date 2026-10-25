@@ -620,11 +620,12 @@
     "rate": "Attendance rate",
     "attended": "Attended",
     "late": "Late",
+    "bench": "Bench",
     "noShows": "No-shows",
     "attendedOf": "{{attended}} of {{total}}",
     "overall": "Overall",
     "rates": "Attendance rates",
-    "counts": "Late arrivals and no-shows",
+    "counts": "Late arrivals, bench, and no-shows",
     "history": "Attendance history",
     "noHistory": "No attendance recorded in this period."
   },

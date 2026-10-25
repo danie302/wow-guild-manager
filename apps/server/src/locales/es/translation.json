@@ -55,10 +55,10 @@
       "allTime": "Desde siempre",
       "byType": "Por tipo de evento (últimas 8 semanas)",
       "counts": "Últimas 8 semanas",
-      "countsValue": "Tarde: {{late}} · No se presentó: {{noShow}}",
+      "countsValue": "Tarde: {{late}} · Reserva: {{bench}} · No se presentó: {{noShow}}",
       "latest": "Últimos eventos",
       "rate": "{{rate}} ({{attended}} de {{total}})",
-      "footer": "Presente, Tarde y Se fue antes cuentan como asistencia.",
+      "footer": "Presente, Tarde, Se fue antes y Reserva cuentan como asistencia.",
       "bands": {
         "good": "Bien",
         "watch": "Vigilar",

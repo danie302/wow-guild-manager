@@ -291,8 +291,8 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 
 ### Attendance rate
 - The attendance rate can be shown for three periods: the **last 4 weeks**, the **last 8 weeks**, or **all time**. The last 8 weeks is the default everywhere it's shown, including the roster and each member's page.
-- **Present**, **Late**, and **Left early** count as attended.
-- **Bench**, **Absent with notice**, and **No-show** count as not attended.
+- **Present**, **Late**, **Left early**, and **Bench** count as attended. Bench counts because the member was available, so being benched never lowers their rate and helps them get a spot next time.
+- **Absent with notice** and **No-show** count as not attended.
 - Attendance rate = attended events ÷ all events the member has an attendance record for, within the chosen period.
 - A member with no attendance records in the period has no rate (shown as "—") and isn't in any band, nor in the guild average.
 
@@ -303,7 +303,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 
 ### Attendance reports
 - Each member's attendance rate, overall and per event type, for the chosen period.
-- Each member's attendance history, with counts of late arrivals and no-shows.
+- Each member's attendance history, with counts of late arrivals, times benched, and no-shows.
 - A guild-wide view to compare members, sortable by attendance rate and filterable by period and event type, for deciding who gets a spot when there are more interested players than slots. It shows how many members are in each band.
 - Members can see their own attendance rate (for the last 8 weeks and all time) and history in Discord with an `/attendance` command. Only they see the reply.
 

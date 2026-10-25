@@ -12,7 +12,7 @@ describe('attendanceRate', () => {
     ['present', 1],
     ['late', 1],
     ['left_early', 1],
-    ['bench', 0],
+    ['bench', 1],
     ['absent_with_notice', 0],
     ['no_show', 0],
   ] as [AttendanceStatus, number][])('counts %s as %i attended', (status, attended) => {
@@ -20,7 +20,7 @@ describe('attendanceRate', () => {
   });
 
   it('divides attended events by all events with a record', () => {
-    expect(attendanceRate(['present', 'late', 'no_show', 'bench'])).toEqual({
+    expect(attendanceRate(['present', 'bench', 'no_show', 'absent_with_notice'])).toEqual({
       attended: 2,
       total: 4,
       rate: 0.5,

@@ -422,6 +422,7 @@ export interface MemberAttendanceResponse {
   overall: AttendanceRate & { band: AttendanceBand | null };
   byType: Record<EventType, AttendanceRate>;
   late: number;
+  bench: number;
   noShow: number;
   history: {
     eventId: string;
@@ -441,6 +442,7 @@ export interface AttendanceReportRow extends AttendanceRate {
   /** Null when they have no active character. */
   main: { name: string; class: CharacterClass } | null;
   late: number;
+  bench: number;
   noShow: number;
   band: AttendanceBand | null;
 }
