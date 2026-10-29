@@ -130,8 +130,7 @@ function EventList({ guildId, when }: { guildId: string; when: When }) {
     >
       {events.data.map((event) => {
         const startsAt = new Date(event.startsAt);
-        // Nobody can sign up yet (story 023).
-        const filled = { tank: 0, healer: 0, dps: 0 };
+        const filled = event.filled;
         const total = filled.tank + filled.healer + filled.dps;
         return (
           <AgendaList.Item

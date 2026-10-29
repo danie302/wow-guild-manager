@@ -17,6 +17,7 @@ const mc: EventResponse = {
   startsAt: '2026-11-10T19:00:00.000Z',
   size: 40,
   slots: { tank: 4, healer: 10, dps: 26 },
+  filled: { tank: 2, healer: 3, dps: 10 },
   createdBy: 'Anduin',
   cancelled: null,
   series: null,
@@ -31,6 +32,7 @@ const wsg: EventResponse = {
   startsAt: '2026-11-11T02:00:00.000Z',
   size: 10,
   slots: { tank: 0, healer: 2, dps: 8 },
+  filled: { tank: 0, healer: 0, dps: 0 },
   cancelled: { at: '2026-11-01T10:00:00.000Z', by: 'Anduin' },
 };
 
@@ -79,8 +81,8 @@ describe('EventsPage', () => {
       within(roles)
         .getAllByRole('listitem')
         .map((role) => role.textContent),
-    ).toEqual(['Tanks0/4', 'Healers0/10', 'DPS0/26']);
-    expect(first).toHaveTextContent('0/40Missing 40');
+    ).toEqual(['Tanks2/4', 'Healers3/10', 'DPS10/26']);
+    expect(first).toHaveTextContent('15/40Missing 25');
     expect(first).toHaveAttribute('href', `${path}/${mc.id}`);
     expect(second).toHaveTextContent('Cancelled');
   });

@@ -3,6 +3,7 @@ import {
   eventListQuerySchema,
   saveAttendanceSchema,
   type AttendanceResponse,
+  type CombatRole,
   replaceParticipantSchema,
   uuidSchema,
   type CreateEventInput,
@@ -13,7 +14,7 @@ import {
   type UpdateEventInput,
 } from '@wgm/shared';
 import express from 'express';
-import { Op, type WhereOptions } from 'sequelize';
+import { col, fn, Op, type WhereOptions } from 'sequelize';
 
 import { Event, EventSeries, SignUp, User, type Guild } from '../db/models/index.js';
 import {
@@ -89,7 +90,8 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       ],
       ...('scope' in query && query.scope === 'past' && { limit: PAST_EVENTS_LIMIT }),
     });
-    res.json(events.map((event) => toEventResponse(event, guild, access)));
+    const filled = await filledSlots(events.map((event) => event.id));
+    res.json(events.map((event) => toEventResponse(event, guild, filled.get(event.id), access)));
   });
 
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
@@ -127,7 +129,8 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
         include: people,
       });
       if (!event || !visibleTo(access, event)) throw new DomainError({ code: 'NOT_FOUND' });
-      res.json(toEventResponse(event, guild, access));
+      const filled = await filledSlots([event.id]);
+      res.json(toEventResponse(event, guild, filled.get(event.id), access));
     },
   );
 
@@ -388,7 +391,28 @@ export function eventId(id: unknown): string {
 }
 
 async function eventResponse(id: string, guild: Guild): Promise<EventResponse> {
-  return toEventResponse((await Event.findByPk(id, { include: people }))!, guild);
+  const filled = await filledSlots([id]);
+  return toEventResponse((await Event.findByPk(id, { include: people }))!, guild, filled.get(id));
+}
+
+type Filled = EventResponse['filled'];
+
+/** Each event's taken slots by role, in one query; events without sign-ups are left out. */
+async function filledSlots(eventIds: string[]): Promise<Map<string, Filled>> {
+  const filled = new Map<string, Filled>();
+  if (eventIds.length === 0) return filled;
+  const rows = (await SignUp.findAll({
+    attributes: ['eventId', 'role', [fn('COUNT', col('id')), 'count']],
+    where: { eventId: eventIds, placement: 'slot' },
+    group: ['eventId', 'role'],
+    raw: true,
+  })) as unknown as { eventId: string; role: CombatRole; count: string }[];
+  for (const row of rows) {
+    const counts = filled.get(row.eventId) ?? { tank: 0, healer: 0, dps: 0 };
+    counts[row.role] = Number(row.count);
+    filled.set(row.eventId, counts);
+  }
+  return filled;
 }
 
 /** Members can't open events that have started. */
@@ -399,6 +423,7 @@ function visibleTo(access: GuildAccess, event: Pick<Event, 'startsAt'>): boolean
 function toEventResponse(
   event: Event,
   guild: Guild,
+  filled: Filled = { tank: 0, healer: 0, dps: 0 },
   access: GuildAccess = 'officer',
 ): EventResponse {
   return {
@@ -409,6 +434,7 @@ function toEventResponse(
     startsAt: event.startsAt.toISOString(),
     size: event.size,
     slots: { tank: event.tankSlots, healer: event.healerSlots, dps: event.dpsSlots },
+    filled,
     createdBy: event.createdBy?.name ?? null,
     cancelled: event.cancelledAt
       ? { at: event.cancelledAt.toISOString(), by: event.cancelledBy?.name ?? null }

@@ -340,6 +340,8 @@ export interface EventResponse {
   startsAt: string;
   size: number;
   slots: { tank: number; healer: number; dps: number };
+  /** How many of each role's slots are taken (Confirmed or Tentative), not the waitlist. */
+  filled: { tank: number; healer: number; dps: number };
   /** Null when the creator's account no longer exists. */
   createdBy: string | null;
   /** Set once the event is cancelled; `by` is null when that account no longer exists. */

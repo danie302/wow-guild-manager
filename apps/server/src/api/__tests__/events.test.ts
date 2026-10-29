@@ -65,6 +65,7 @@ describe('events', () => {
       id: expect.any(String) as string,
       ...raid,
       startsAt,
+      filled: { tank: 0, healer: 0, dps: 0 },
       createdBy: 'User 0001',
       cancelled: null,
       series: null,
@@ -123,6 +124,59 @@ describe('events', () => {
     const range = await agent.get(base).query({ from: inDays(-8), to: inDays(3) });
     expect(names(range)).toEqual(['Last week', 'Yesterday', 'Soon']);
     expect((await agent.get(`${base}?scope=someday`)).status).toBe(400);
+  });
+
+  it("counts each role's taken slots, without the waitlist or Declined", async () => {
+    const { agent, base, guild } = await setup();
+    const pvp = {
+      type: 'pvp',
+      name: 'Arathi Basin',
+      size: 3,
+      slots: { tank: 1, healer: 1, dps: 1 },
+    };
+    const id = event(await agent.post(base).send({ ...pvp, startsAt: inDays(3) })).id;
+    await agent.post(base).send({ ...pvp, name: 'Empty', startsAt: inDays(4) });
+    const placements = [
+      ['tank', 'confirmed', 'slot'],
+      ['tank', 'confirmed', 'waitlist'],
+      ['healer', 'tentative', 'slot'],
+      [null, 'declined', null],
+    ] as const;
+    for (const [index, [role, status, placement]] of placements.entries()) {
+      const member = await Member.create({
+        guildId: guild.id,
+        discordUserId: `20000000000000001${index}`,
+        discordName: `Player ${index}`,
+        discordAvatar: null,
+        rank: 'raider',
+      });
+      const character = await Character.create({
+        memberId: member.id,
+        name: `Player${index}`,
+        faction: 'horde',
+        race: 'orc',
+        characterClass: 'warrior',
+        level: 60,
+        professions: [],
+        isMain: true,
+      });
+      await SignUp.create({
+        eventId: id,
+        memberId: member.id,
+        characterId: character.id,
+        role,
+        status,
+        placement,
+        signedUpAt: new Date(),
+      });
+    }
+
+    const listed = (await agent.get(`${base}?scope=upcoming`)).body as EventResponse[];
+    expect(listed.map((item) => [item.name, item.filled])).toEqual([
+      ['Arathi Basin', { tank: 1, healer: 1, dps: 0 }],
+      ['Empty', { tank: 0, healer: 0, dps: 0 }],
+    ]);
+    expect(event(await agent.get(`${base}/${id}`)).filled).toEqual({ tank: 1, healer: 1, dps: 0 });
   });
 
   it('edits and cancels an event', async () => {

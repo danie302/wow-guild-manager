@@ -23,6 +23,7 @@ const saved: EventResponse = {
   startsAt: `${nextYear}-11-10T19:00:00.000Z`,
   size: 40,
   slots: { tank: 4, healer: 10, dps: 26 },
+  filled: { tank: 0, healer: 0, dps: 0 },
   createdBy: 'Thrall',
   cancelled: null,
   series: null,
