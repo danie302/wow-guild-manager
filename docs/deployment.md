@@ -156,6 +156,8 @@ docker compose -f docker-compose.prod.yml up -d --build
 docker image prune -f
 ```
 
+With Cloudflare Tunnel, add the second file: `docker compose -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build`. Without it, `web` comes back up serving HTTPS on ports 80 and 443 instead of plain HTTP for the tunnel, and the site stops loading.
+
 The api applies new migrations when it starts. A change to `.env` also needs `up -d` (`restart` keeps the old environment).
 
 ## Backups
