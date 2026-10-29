@@ -40,6 +40,7 @@ import {
   Button,
   Checkbox,
   ChoiceGroup,
+  ComboBox,
   FormColumns,
   FormGrid,
   Loading,
@@ -52,7 +53,7 @@ import {
 import { apiErrorText, validationIssueMessage } from '../../i18n/api-errors';
 import { fromZonedFields, toZonedFields } from '../../i18n/calendar';
 import { useFormat } from '../../i18n/format';
-import { useGuild } from '../../api/guilds';
+import { useGuild, useGuildChannels } from '../../api/guilds';
 import { roleColor } from './eventText';
 import { PreConfirmSection, type PreConfirmed } from './PreConfirmSection';
 
@@ -124,6 +125,12 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
   const [preConfirmed, setPreConfirmed] = useState<PreConfirmed[]>([]);
   const guild = useGuild(guildId).data;
   const isGuildMaster = guild?.access === 'guild_master';
+  // A series' own channel; null uses its type's or the events channel.
+  const [seriesChannel, setSeriesChannel] = useState<string | null>(
+    editing?.kind === 'series' ? (editing.value.channel?.id ?? null) : null,
+  );
+  const forSeries = repeat || editingSeries;
+  const channels = useGuildChannels(guildId, forSeries);
   const save = editing
     ? editingSeries
       ? updateSeries
@@ -244,18 +251,35 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     const toEvent = { onSuccess: (saved: { id: string }) => open(`events/${saved.id}`) };
     const toSeries = { onSuccess: (saved: { id: string }) => open(`events/series/${saved.id}`) };
     if (!editing) {
-      if (repeat) createSeries.mutate(input, toSeries);
+      if (repeat) createSeries.mutate({ ...input, channelId: seriesChannel }, toSeries);
       else createEvent.mutate(input, toEvent);
       return;
     }
     const { name, description, startsAt: start, size, slots, tentativeDeadlineHours } = input;
     const details = { name, description, startsAt: start, size, slots, tentativeDeadlineHours };
-    if (editingSeries) updateSeries.mutate(details, toSeries);
+    if (editingSeries) updateSeries.mutate({ ...details, channelId: seriesChannel }, toSeries);
     else updateEvent.mutate(details, toEvent);
   };
   const open = (path: string) => void navigate(guildPath(guildId, path));
   const back = () =>
     open(!event ? 'events' : editingSeries ? `events/series/${event.id}` : `events/${event.id}`);
+
+  // Without its own channel, a series is posted where its type's events are.
+  const fallback = guild?.typeChannels[draft.type] ?? guild?.eventsChannel ?? null;
+  const defaultChannelLabel = fallback
+    ? t('eventForm.channelDefault', { channel: `#${fallback.name ?? fallback.id}` })
+    : t('eventForm.channelDefaultNone');
+  // While the channels can't be listed, the saved one still shows.
+  const savedChannel =
+    editingSeries && editing.value.channel
+      ? [
+          {
+            id: editing.value.channel.id,
+            name: editing.value.channel.name ?? editing.value.channel.id,
+            category: null,
+          },
+        ]
+      : [];
 
   const fields = (
     <>
@@ -313,7 +337,28 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
         />
       </FormGrid>
       {!event && <Checkbox label={t('eventForm.repeat')} checked={repeat} onChange={setRepeat} />}
-      {(repeat || editingSeries) && <Page.Text>{t('eventForm.repeatHint')}</Page.Text>}
+      {forSeries && <Page.Text>{t('eventForm.repeatHint')}</Page.Text>}
+      {forSeries && (
+        <ComboBox
+          label={t('eventForm.channel')}
+          value={seriesChannel ?? ''}
+          options={[
+            { value: '', label: defaultChannelLabel },
+            ...(channels.data?.channels ?? savedChannel).map((channel) => ({
+              value: channel.id,
+              label: `#${channel.name}`,
+              ...(channel.category && { group: channel.category }),
+            })),
+          ]}
+          onChange={(channelId) => setSeriesChannel(channelId || null)}
+          noOptionsText={t('guildSettings.noChannelMatch')}
+          hint={
+            errorFor('channelId') ??
+            (channels.isError ? t('eventForm.channelsUnavailable') : t('eventForm.channelHelp'))
+          }
+          disabled={channels.isPending || channels.isError}
+        />
+      )}
       <ChoiceGroup
         label={t('eventForm.tentativeDeadline')}
         size="small"

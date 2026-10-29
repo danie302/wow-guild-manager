@@ -127,6 +127,7 @@ describe('EventsPage', () => {
           id: 'series-1',
           nextEventAt: mc.startsAt,
           nextEventId: mc.id,
+          channel: null,
           stopped: null,
           tentativeDeadlineHours: null,
         },

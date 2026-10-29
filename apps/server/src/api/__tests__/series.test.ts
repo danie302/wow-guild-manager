@@ -3,6 +3,13 @@ import type { Sequelize } from 'sequelize';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loginAs, testApp } from '../../../test/api-app.js';
+import {
+  BOT_USER_ID,
+  channel,
+  FakeDiscordDirectory,
+  SEND_MESSAGES,
+  server,
+} from '../../../test/fake-discord-directory.js';
 import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
 import { Event, User } from '../../db/models/index.js';
@@ -27,12 +34,29 @@ beforeEach(async () => {
   await User.destroy({ truncate: true, cascade: true });
 });
 
-async function setup() {
+const ashen = '300000000000000001';
+const raidsChannel = '500000000000000001';
+const rulesChannel = '500000000000000002';
+
+/** Discord with the guild's server, where the bot can post in #raids but not in #rules. */
+function discordAccess() {
+  const directory = new FakeDiscordDirectory()
+    .addServer(server(ashen, 'Ashen'))
+    .addChannels(ashen, [
+      channel(raidsChannel, 'raids'),
+      channel(rulesChannel, 'rules', {
+        overwrites: [{ id: ashen, type: 'role', allow: 0n, deny: SEND_MESSAGES }],
+      }),
+    ]);
+  return { directory, botInviteUrl: 'https://discord.test/invite', botUserId: BOT_USER_ID };
+}
+
+async function setup(discord: ReturnType<typeof discordAccess> | null = null) {
   const jobs = new FakeJobQueue();
-  const app = testApp(null, undefined, jobs);
+  const app = testApp(discord, undefined, jobs);
   const agent = await loginAs(app, gm);
   const leader = (await User.findOne({ where: { discordId: gm } }))!;
-  const guild = await createTestGuild(leader, { serverId: '300000000000000001' });
+  const guild = await createTestGuild(leader, { serverId: ashen });
   return { agent, jobs, base: `/api/guilds/${guild.id}` };
 }
 
@@ -129,5 +153,61 @@ describe('Discord posts of a series', () => {
     expect(jobs.payloads('event-post-delete')).toEqual([
       { channelId: '500000000000000001', messageId: '600' },
     ]);
+  });
+});
+
+describe("a series' channel", () => {
+  it('lists the channels the bot can post in', async () => {
+    const { agent, base } = await setup(discordAccess());
+
+    const response = await agent.get(`${base}/channels`);
+
+    expect(response.body).toEqual({
+      channels: [{ id: raidsChannel, name: 'raids', category: null }],
+    });
+  });
+
+  it('saves it with the series, and clears it', async () => {
+    const { agent, base } = await setup(discordAccess());
+
+    const created = await agent
+      .post(`${base}/series`)
+      .send({ type: 'raid', ...details, startsAt: inDays(1), channelId: raidsChannel });
+    const series = created.body as SeriesResponse;
+    expect(created.status).toBe(201);
+    expect(series.channel).toEqual({ id: raidsChannel, name: 'raids' });
+    expect(((await agent.get(`${base}/series`)).body as SeriesResponse[])[0]!.channel).toEqual({
+      id: raidsChannel,
+      name: 'raids',
+    });
+
+    const edited = await agent
+      .put(`${base}/series/${series.id}`)
+      .send({ ...details, startsAt: inDays(2), channelId: null });
+    expect((edited.body as SeriesResponse).channel).toBeNull();
+  });
+
+  it("rejects a channel the bot can't post in", async () => {
+    const { agent, base } = await setup(discordAccess());
+
+    const response = await agent
+      .post(`${base}/series`)
+      .send({ type: 'raid', ...details, startsAt: inDays(1), channelId: rulesChannel });
+
+    expect(response.status).toBe(400);
+    expect((response.body as { error: { issues: unknown } }).error.issues).toEqual([
+      { field: 'channelId', code: 'EVENTS_CHANNEL_NOT_USABLE' },
+    ]);
+    expect(await Event.count()).toBe(0);
+  });
+
+  it("can't be set while the API can't read Discord", async () => {
+    const { agent, base } = await setup();
+
+    const response = await agent
+      .post(`${base}/series`)
+      .send({ type: 'raid', ...details, startsAt: inDays(1), channelId: raidsChannel });
+
+    expect(response.status).toBe(503);
   });
 });

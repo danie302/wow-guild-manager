@@ -28,6 +28,7 @@ export const testGuild: GuildResponse = {
   discordServer: { id: '300000000000000001', name: 'Ashen Vanguard Discord', iconUrl: null },
   officerRole: { id: '400000000000000001', name: 'Officers' },
   eventsChannel: { id: '500000000000000001', name: 'raid-signups' },
+  typeChannels: { raid: null, dungeon: null, pvp: null },
   discordLocale: 'en',
   tentativeDeadlineHours: 24,
   reminderHours: 12,

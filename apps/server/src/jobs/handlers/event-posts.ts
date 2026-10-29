@@ -1,5 +1,6 @@
-import { Event, Guild, User } from '../../db/models/index.js';
+import { Event, EventSeries, Guild, User } from '../../db/models/index.js';
 import { transaction } from '../../db/transaction.js';
+import { eventChannelId } from '../../domain/event-channel.js';
 import { eventPostEmbed, NO_EMOJIS, type PostEmojis } from '../../domain/event-post.js';
 import { eventSignUps } from '../../domain/sign-ups.js';
 import { eventPostButtons } from '../../bot/sign-up.js';
@@ -40,8 +41,8 @@ export function eventPostHandlers({
 }
 
 /**
- * Brings the event's post in line with the event and its guild: posts it in the events
- * channel, edits it, posts it again if it was deleted in Discord, or moves it when the channel
+ * Brings the event's post in line with the event and its guild: posts it in its channel (its
+ * series', its type's, or the guild's events channel; see domain/event-channel.ts), edits it, posts it again if it was deleted in Discord, or moves it when the channel
  * changed. A cancelled event's post stays where it is, marked as cancelled. When Discord
  * refuses (the bot lost its permissions, the channel is gone), the reason is stored on the
  * event for the event page; any other failure throws, so the job is retried.
@@ -62,11 +63,14 @@ export async function syncEventPost(
       include: [
         { model: Guild, as: 'guild' },
         { model: User, as: 'createdBy', attributes: ['name'] },
+        { model: EventSeries, as: 'series', attributes: ['channelId'] },
       ],
     });
     if (!event) return;
     const guild = event.guild!;
-    const channelId = event.cancelledAt ? event.discordChannelId : guild.eventsChannelId;
+    const channelId = event.cancelledAt
+      ? event.discordChannelId
+      : eventChannelId(guild, event.type, event.series?.channelId);
 
     if (event.discordMessageId && event.discordChannelId !== channelId) {
       await removeQuietly(channelMessages, event.discordChannelId!, event.discordMessageId, logger);

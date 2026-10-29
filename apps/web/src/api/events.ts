@@ -3,6 +3,7 @@ import type {
   AddParticipantInput,
   AttendanceResponse,
   CreateEventInput,
+  CreateSeriesInput,
   SaveAttendanceInput,
   EventDiscordPostResponse,
   EventResponse,
@@ -10,6 +11,7 @@ import type {
   SeriesSignUpsResponse,
   SignUpResponse,
   UpdateEventInput,
+  UpdateSeriesInput,
 } from '@wgm/shared';
 
 import { apiRequest } from './client';
@@ -221,13 +223,13 @@ function useSeriesMutation<Input>(
 }
 
 export function useCreateSeries(guildId: string) {
-  return useSeriesMutation(guildId, (input: CreateEventInput) =>
+  return useSeriesMutation(guildId, (input: CreateSeriesInput) =>
     apiRequest<SeriesResponse>(`/guilds/${guildId}/series`, { method: 'POST', body: input }),
   );
 }
 
 export function useUpdateSeries(guildId: string, seriesId: string) {
-  return useSeriesMutation(guildId, (input: UpdateEventInput) =>
+  return useSeriesMutation(guildId, (input: UpdateSeriesInput) =>
     apiRequest<SeriesResponse>(`/guilds/${guildId}/series/${seriesId}`, {
       method: 'PUT',
       body: input,

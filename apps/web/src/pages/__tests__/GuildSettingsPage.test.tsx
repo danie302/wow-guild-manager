@@ -33,8 +33,16 @@ function mockSettingsApi(start: GuildResponse = testGuild) {
       const role = roles.roles.find((option) => option.id === roleId);
       const channel = channels.channels.find((option) => option.id === form.get('eventsChannelId'));
       const discordLocale = form.get('discordLocale');
+      const typeChannels = { ...guild.typeChannels };
+      for (const type of ['raid', 'dungeon', 'pvp'] as const) {
+        const id = form.get(`${type}ChannelId`);
+        const chosen = channels.channels.find((option) => option.id === id);
+        if (id === '') typeChannels[type] = null;
+        if (chosen) typeChannels[type] = { id: chosen.id, name: chosen.name };
+      }
       guild = {
         ...guild,
+        typeChannels,
         ...(typeof name === 'string' && { name }),
         ...(form.get('image') && { imageUrl: `/api/guilds/${ashenId}/image?v=2` }),
         ...(role && { officerRole: { id: role.id, name: role.name } }),
@@ -195,6 +203,36 @@ describe('GuildSettingsPage', () => {
       ['discordLocale', 'es'],
     ]);
     expect(screen.getByRole('combobox', { name: 'Events channel' })).toHaveValue('#announcements');
+  });
+
+  it("sets one event type's channel and clears another's", async () => {
+    const fetchMock = mockSettingsApi({
+      ...testGuild,
+      typeChannels: {
+        raid: { id: '500000000000000001', name: 'raid-signups' },
+        dungeon: null,
+        pvp: null,
+      },
+    });
+    const user = userEvent.setup();
+    renderRoute(settingsPath);
+
+    const raid = await screen.findByRole('combobox', { name: 'Raid channel' });
+    await waitFor(() => expect(raid).toBeEnabled());
+    await user.click(raid);
+    await user.click(await screen.findByRole('option', { name: 'Use the events channel' }));
+    const pvp = screen.getByRole('combobox', { name: 'PvP channel' });
+    expect(pvp).toHaveValue('Use the events channel');
+    await user.click(pvp);
+    await user.click(await screen.findByRole('option', { name: '#announcements' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await screen.findByText('All changes saved');
+    expect([...savesSent(fetchMock)[0]!.entries()]).toEqual([
+      ['raidChannelId', ''],
+      ['pvpChannelId', '500000000000000002'],
+    ]);
+    expect(screen.getByRole('combobox', { name: 'PvP channel' })).toHaveValue('#announcements');
   });
 
   it('says events are not posted until a channel is chosen', async () => {

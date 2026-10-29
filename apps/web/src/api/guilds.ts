@@ -6,6 +6,7 @@ import type {
   DiscordChannelsResponse,
   DiscordRolesResponse,
   DiscordServersResponse,
+  EventType,
   GuildDiscordInput,
   GuildResponse,
   Locale,
@@ -55,6 +56,16 @@ export function useDiscordChannels(serverId: string | null) {
   });
 }
 
+/** The channels of the guild's server where the bot can post, e.g. for a series' channel. */
+export function useGuildChannels(guildId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['guilds', guildId, 'channels'],
+    queryFn: () => apiRequest<DiscordChannelsResponse>(`/guilds/${guildId}/channels`),
+    enabled,
+    refetchOnWindowFocus: 'always',
+  });
+}
+
 export function useCreateGuild() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -75,6 +86,8 @@ export interface GuildSettingsChanges {
   image?: File | null;
   discord?: GuildDiscordInput;
   eventsChannelId?: string;
+  /** Each changed event type's channel; null clears it. */
+  typeChannelIds?: Partial<Record<EventType, string | null>>;
   discordLocale?: Locale;
   tentativeDeadlineHours?: number;
   reminderHours?: number;
@@ -96,6 +109,10 @@ export function useSaveGuildSettings(guildId: string) {
         form.set('officerRoleId', changes.discord.officerRoleId);
       }
       if (changes.eventsChannelId) form.set('eventsChannelId', changes.eventsChannelId);
+      for (const [type, channelId] of Object.entries(changes.typeChannelIds ?? {})) {
+        // "" clears the type's channel.
+        form.set(`${type}ChannelId`, channelId ?? '');
+      }
       if (changes.discordLocale) form.set('discordLocale', changes.discordLocale);
       if (changes.tentativeDeadlineHours !== undefined) {
         form.set('tentativeDeadlineHours', String(changes.tentativeDeadlineHours));

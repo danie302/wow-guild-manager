@@ -1,6 +1,7 @@
 import {
   createGuildSchema,
   disbandGuildSchema,
+  EVENT_TYPES,
   transferLeadershipSchema,
   type TransferCandidate,
   GUILD_IMAGE_MAX_BYTES,
@@ -15,6 +16,7 @@ import multer from 'multer';
 import type { Guild } from '../db/models/index.js';
 import { guildImageUrl, updateGuildSettings } from '../domain/guild-settings.js';
 import { dashboard } from '../domain/dashboard.js';
+import { typeChannelIds } from '../domain/event-channel.js';
 import { createGuild } from '../domain/guilds.js';
 import { disbandGuild, transferCandidates, transferLeadership } from '../domain/leadership.js';
 import { replaceGuildOfficers } from '../domain/officers.js';
@@ -112,13 +114,19 @@ export function guildsRouter(
         return;
       }
       try {
-        const { officerRoleChanged, eventPostsChanged, deadlineChanged, reminderChanged } =
+        const { officerRoleChanged, eventPosts, deadlineChanged, reminderChanged } =
           await updateGuildSettings(currentUser(res), guild, access, input.data, req.file?.buffer, {
             discord,
             storage,
           });
         if (officerRoleChanged) await loadOfficers(guild, discord!.directory, req.log);
-        if (eventPostsChanged && jobs) await enqueueUpcomingEventPosts(jobs, guild.id);
+        if (jobs && (eventPosts === 'all' || eventPosts.length > 0)) {
+          await enqueueUpcomingEventPosts(
+            jobs,
+            guild.id,
+            eventPosts === 'all' ? {} : { types: eventPosts },
+          );
+        }
         // Events keep their deadline when the new one would already have passed.
         const moved = deadlineChanged ? await applyGuildDeadline(guild) : [];
         if ((deadlineChanged || reminderChanged) && jobs) {
@@ -250,9 +258,7 @@ async function toGuildResponse(
       iconUrl: server ? discordServerIconUrl(server) : null,
     },
     officerRole: { id: guild.officerRoleId, name: role?.name ?? null },
-    eventsChannel: guild.eventsChannelId
-      ? { id: guild.eventsChannelId, name: await eventsChannelName(guild, discord, log) }
-      : null,
+    ...(await guildChannels(guild, discord, log)),
     discordLocale: guild.discordLocale,
     tentativeDeadlineHours: guild.tentativeDeadlineHours,
     reminderHours: guild.reminderHours,
@@ -263,20 +269,47 @@ async function toGuildResponse(
   };
 }
 
-/** The events channel's name, or null when there's none or Discord can't be read. */
-export async function eventsChannelName(
+/** The guild's events channel and each event type's channel, with their names. */
+async function guildChannels(
   guild: Guild,
   discord: DiscordAccess | null,
   log: Logger,
-): Promise<string | null> {
-  if (!guild.eventsChannelId || !discord) return null;
-  try {
-    const channels = await discord.directory.channels(guild.discordServerId);
-    return channels.find((channel) => channel.id === guild.eventsChannelId)?.name ?? null;
-  } catch (err) {
-    log.warn({ err }, 'Could not read the Discord channels; showing the channel without its name');
-    return null;
+): Promise<Pick<GuildResponse, 'eventsChannel' | 'typeChannels'>> {
+  const types = typeChannelIds(guild);
+  const [eventsChannel, ...byType] = await describeChannels(
+    guild,
+    [guild.eventsChannelId, ...EVENT_TYPES.map((type) => types[type])],
+    discord,
+    log,
+  );
+  return {
+    eventsChannel: eventsChannel!,
+    typeChannels: Object.fromEntries(
+      EVENT_TYPES.map((type, index) => [type, byType[index]!]),
+    ) as GuildResponse['typeChannels'],
+  };
+}
+
+/**
+ * The guild's channels with their names, in order (null for a missing ID). A name is null
+ * when the channel is gone or Discord can't be read; the page still shows.
+ */
+export async function describeChannels(
+  guild: Guild,
+  channelIds: (string | null)[],
+  discord: DiscordAccess | null,
+  log: Logger,
+): Promise<({ id: string; name: string | null } | null)[]> {
+  let names = new Map<string, string>();
+  if (discord && channelIds.some(Boolean)) {
+    try {
+      const channels = await discord.directory.channels(guild.discordServerId);
+      names = new Map(channels.map((channel) => [channel.id, channel.name]));
+    } catch (err) {
+      log.warn({ err }, 'Could not read the Discord channels; showing them without their names');
+    }
   }
+  return channelIds.map((id) => (id ? { id, name: names.get(id) ?? null } : null));
 }
 
 async function serverOrNull(directory: DiscordDirectory, serverId: string, log: Logger) {

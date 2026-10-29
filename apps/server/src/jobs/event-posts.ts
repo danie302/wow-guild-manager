@@ -1,6 +1,7 @@
+import type { EventType } from '@wgm/shared';
 import { Op } from 'sequelize';
 
-import { Event, Guild } from '../db/models/index.js';
+import { Event, EventSeries, Guild } from '../db/models/index.js';
 import type { JobEnqueuer } from './queue.js';
 
 /** Asks the worker to bring these events' Discord posts up to date. */
@@ -35,17 +36,26 @@ export async function scheduleEventPostUpdate(
 }
 
 /**
- * After the guild's events channel or Discord language changes: every upcoming event that
- * isn't cancelled is posted again in the new channel, or in the new language.
+ * After the guild's events channel or its Discord language changes: every upcoming event that
+ * isn't cancelled is brought up to date, which moves it when its channel changed. After only
+ * some types' channels change (`types`): just the events of those types, leaving out those in
+ * a series with its own channel, which stay where they are.
  */
 export async function enqueueUpcomingEventPosts(
   jobs: JobEnqueuer,
   guildId: string,
+  { types }: { types?: EventType[] } = {},
   now = new Date(),
 ): Promise<void> {
   const events = await Event.findAll({
     attributes: ['id'],
-    where: { guildId, startsAt: { [Op.gt]: now }, cancelledAt: null },
+    where: {
+      guildId,
+      startsAt: { [Op.gt]: now },
+      cancelledAt: null,
+      ...(types && { type: types, '$series.channel_id$': null }),
+    },
+    include: [{ model: EventSeries, as: 'series', attributes: [] }],
   });
   await enqueueEventPosts(
     jobs,
@@ -54,7 +64,8 @@ export async function enqueueUpcomingEventPosts(
 }
 
 /**
- * Upcoming events of guilds with an events channel that were never posted: the new events of
+ * Upcoming events with a channel (their series', their type's, or the guild's events channel)
+ * that were never posted: the new events of
  * recurring series, and any whose job was lost. The worker runs it hourly. Posts that failed
  * aren't retried here: retrying a refusal that nobody fixed would only pile up refused calls,
  * which Discord answers by blocking the bot (enqueueFailedEventPosts retries them when
@@ -68,9 +79,17 @@ export async function enqueueMissingEventPosts(jobs: JobEnqueuer, now = new Date
       cancelledAt: null,
       discordMessageId: null,
       discordPostError: null,
+      [Op.or]: [
+        { '$series.channel_id$': { [Op.ne]: null } },
+        { '$guild.events_channel_id$': { [Op.ne]: null } },
+        { type: 'raid', '$guild.raid_channel_id$': { [Op.ne]: null } },
+        { type: 'dungeon', '$guild.dungeon_channel_id$': { [Op.ne]: null } },
+        { type: 'pvp', '$guild.pvp_channel_id$': { [Op.ne]: null } },
+      ],
     },
     include: [
-      { model: Guild, as: 'guild', attributes: [], where: { eventsChannelId: { [Op.ne]: null } } },
+      { model: Guild, as: 'guild', attributes: [] },
+      { model: EventSeries, as: 'series', attributes: [] },
     ],
   });
   await enqueueEventPosts(

@@ -224,6 +224,8 @@ export interface GuildResponse {
   officerRole: { id: string; name: string | null };
   /** Where the bot posts events; null until the Guild Master chooses one. */
   eventsChannel: { id: string; name: string | null } | null;
+  /** Each event type's own channel, used instead of the events channel; null when not set. */
+  typeChannels: Record<EventType, { id: string; name: string | null } | null>;
   /** The language of the guild's public Discord messages. */
   discordLocale: Locale;
   /** Hours before an event that Tentative participants must confirm. */
@@ -530,7 +532,7 @@ export interface DiscordEmbed {
  * event, built by the same code the bot uses, so the preview matches it.
  */
 export interface EventDiscordPostResponse {
-  /** Null until the Guild Master chooses an events channel. */
+  /** The channel it's posted in (its series', its type's, or the events channel); null if none. */
   channel: { id: string; name: string | null } | null;
   locale: Locale;
   embed: DiscordEmbed;
@@ -557,6 +559,8 @@ export interface SeriesResponse {
   nextEventId: string | null;
   /** Its events' own Tentative deadline in hours; null uses the guild's. */
   tentativeDeadlineHours: number | null;
+  /** Its own channel for its events' posts; null uses its type's or the guild's. */
+  channel: { id: string; name: string | null } | null;
   createdBy: string | null;
   /** Set once the series is stopped. */
   stopped: { at: string; by: string | null } | null;

@@ -269,16 +269,21 @@ describe('EventFormPage', () => {
     expect(screen.getByText('Thrall (Tank), Rexxar (Tank)')).toBeInTheDocument();
   });
 
-  it('creates a weekly series and opens it', async () => {
+  it('creates a weekly series in its own channel and opens it', async () => {
     const series = {
       ...saved,
       id: '019a0c3e-5b1e-7c2a-9f3d-000000000601',
       nextEventAt: saved.startsAt,
       nextEventId: null,
+      channel: { id: '500000000000000002', name: 'mc-tuesdays' },
       stopped: null,
     };
     const fetchMock = mockApi({
       '/api/me': () => Response.json(me),
+      [`/api/guilds/${ashenId}/channels`]: () =>
+        Response.json({
+          channels: [{ id: '500000000000000002', name: 'mc-tuesdays', category: null }],
+        }),
       [`POST /api/guilds/${ashenId}/series`]: () => Response.json(series, { status: 201 }),
       [`/api/guilds/${ashenId}/series/${series.id}`]: () => Response.json(series),
     });
@@ -288,11 +293,18 @@ describe('EventFormPage', () => {
     await user.type(await screen.findByLabelText('Name'), 'Molten Core');
     await user.type(screen.getByLabelText('Date'), `${nextYear}-11-10`);
     await user.type(screen.getByLabelText('Time'), '16:00');
+    expect(screen.queryByRole('combobox', { name: 'Discord channel' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('checkbox', { name: 'Repeat every week on this day' }));
+    const channel = screen.getByRole('combobox', { name: 'Discord channel' });
+    await waitFor(() => expect(channel).toBeEnabled());
+    expect(channel).toHaveValue('Same as its event type (#raid-signups)');
+    await user.click(channel);
+    await user.click(await screen.findByRole('option', { name: '#mc-tuesdays' }));
     await user.click(screen.getByRole('button', { name: 'Create weekly series' }));
 
     expect(await screen.findByText(/^Every \w+ at 4:00 PM$/)).toBeInTheDocument();
     const [url] = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!;
     expect(url).toBe(`/api/guilds/${ashenId}/series`);
+    expect(bodyOf(fetchMock, 'POST')).toMatchObject({ channelId: '500000000000000002' });
   });
 });

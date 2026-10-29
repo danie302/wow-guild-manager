@@ -165,7 +165,7 @@ A character can only sign up for an event with a combat role their class can fil
 | Set the attendance band thresholds | ✓ | |
 | Run and view gear checks | ✓ | ✓ |
 | Configure required enchant slots | ✓ | ✓ |
-| Choose the guild's events channel | ✓ | |
+| Choose the guild's events channels (default and per event type) | ✓ | |
 | Choose the guild's Discord language | ✓ | |
 | Set the guild's Tentative deadline and reminder time | ✓ | ✓ |
 | Set an event's own Tentative deadline | ✓ | ✓ |
@@ -213,6 +213,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - Each event in a series can be edited or cancelled on its own.
 - Editing the series (time, slots, deadline, etc.) changes every future event in it, including ones with sign-ups and ones edited on their own. Cancelled events stay cancelled. Participants of changed events get a direct message, and slot reductions follow the rule above.
 - Stopping a series removes its future events that have no sign-ups.
+- A series can have its own Discord channel, chosen by whoever creates or edits it (the Guild Master or an Officer). See "Event posts".
 
 ### Tentative deadline
 - Each guild sets a **Tentative deadline**: how many hours before an event Tentative participants must confirm. The default is 24 hours, and it can be from 1 to 168 hours.
@@ -241,9 +242,14 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - The post shows the name, description, date and time (in each reader's local time), and the slots per combat role.
 - The post updates in real time with who is signed up for each role and who is on the waitlist.
 - Editing or cancelling the event in the app updates the post.
-- Events are posted in the guild's events channel, chosen by the Guild Master. Only text channels where the bot can see, write, and post embeds can be chosen.
-- If the guild has no events channel yet, events are created without a post, and the event page says the channel is missing. Once the Guild Master chooses one, the bot posts every upcoming event.
-- Changing the events channel moves the posts of upcoming events: the bot posts them in the new channel and deletes the old posts.
+- Each event is posted in the first of these channels that is set:
+  1. Its recurring series' channel, chosen by the Guild Master or an Officer when creating or editing the series.
+  2. The channel for its event type (Raid, Dungeon, PvP), chosen by the Guild Master in the guild settings.
+  3. The guild's default events channel, chosen by the Guild Master.
+- One-time events have no channel of their own; they use their type's channel or the default one. Each event in a series uses the series' channel, even if it was edited on its own.
+- Only text channels where the bot can see, write, and post embeds can be chosen, at every level.
+- If an event has no channel at any level, it's created without a post, and the event page says the channel is missing. Once one is chosen, the bot posts every upcoming event that now has a channel.
+- Changing or clearing a channel at any level moves the posts of the upcoming events it affects: the bot posts them in their new channel and deletes the old posts.
 - If the bot can't post (e.g. it lost its permissions in the channel), the event page's Discord post tab shows the problem. The bot tries again as soon as the permissions change in Discord.
 
 ### Sign-ups
@@ -270,7 +276,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 ### Reminders and alerts
 - Tentative participants get a direct message at the guild's reminder time before the Tentative deadline, reminding them to confirm. Someone who signs up as Tentative after the reminder time gets the reminder right away.
 - If an event is still missing players for a combat role 48 hours and again 24 hours before it starts, the bot posts an alert (e.g. "2 Healers still needed for BWL on Tuesday") that mentions eligible members who can fill that role and haven't signed up.
-  - One alert per event and check, with a line for each role that's missing players, posted in the events channel as a reply to the event's post, in the guild's Discord language.
+  - One alert per event and check, with a line for each role that's missing players, posted in the event post's channel as a reply to the post, in the guild's Discord language.
   - It mentions active roster members (not flagged as having left Discord) whose rank can join the event, who have a character that can fill the role, and who have no sign-up for the event (Declined counts as signed up).
   - A check whose time has already passed when the event is created or moved is skipped (an event created 30 hours ahead only gets the 24-hour one).
 

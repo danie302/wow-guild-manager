@@ -62,7 +62,7 @@ export function createApp({
     api.use(guildsRouter(discord, storage, jobs ?? null));
     api.use(membersRouter(discord, jobs ?? null));
     api.use(eventsRouter(jobs ?? null, discord));
-    api.use(seriesRouter(jobs ?? null));
+    api.use(seriesRouter(jobs ?? null, discord));
     api.use(reportsRouter());
     if (jobs) api.use(registrationsRouter(jobs));
   }

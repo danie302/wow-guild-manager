@@ -3,9 +3,10 @@ import {
   EVENT_ERROR_CODES,
   eventSlotIssues,
   SERIES_WEEKS_AHEAD,
+  seriesChannelSchema,
   updateEventSchema,
-  type CreateEventInput,
-  type UpdateEventInput,
+  type CreateSeriesInput,
+  type UpdateSeriesInput,
 } from '@wgm/shared';
 import { Op, Transaction } from 'sequelize';
 
@@ -21,15 +22,18 @@ const WEEK = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Creates a weekly series and its events for the next two weeks. `startsAt` is its first
- * event; the rest follow every 7 days at the same UTC time.
+ * event; the rest follow every 7 days at the same UTC time. Its channel, if any, must already
+ * be checked (api/series.ts does, as it needs Discord).
  */
 export async function createSeries(
   guild: Guild,
-  input: CreateEventInput,
+  input: CreateSeriesInput,
   createdBy: User,
   now = new Date(),
 ): Promise<EventSeries> {
-  const details = parseInput(createEventSchema, input);
+  const { channelId: rawChannelId, ...event } = input;
+  const details = parseInput(createEventSchema, event);
+  const { channelId } = parseInput(seriesChannelSchema, { channelId: rawChannelId });
   if (details.preConfirmed?.length) {
     throw new DomainValidationError([
       { field: 'preConfirmed', code: EVENT_ERROR_CODES.preConfirmedNotAllowed },
@@ -41,6 +45,7 @@ export async function createSeries(
       guildId: guild.id,
       type: details.type,
       ...eventColumns(details),
+      channelId,
       createdByUserId: createdBy.id,
     });
     await extendSeries(series, now);
@@ -106,15 +111,17 @@ export async function extendAllSeries(logger: Logger, now = new Date()): Promise
 /**
  * Edits a running series and every future event in it, including ones edited on their own.
  * `startsAt` is its next event: the future events move to it and every 7 days after. The type
- * can't change.
+ * can't change. Its channel, if it changes, must already be checked (as in createSeries).
  */
 export async function updateSeries(
   guild: Guild,
   seriesId: string,
-  input: UpdateEventInput,
+  input: UpdateSeriesInput,
   now = new Date(),
 ): Promise<{ series: EventSeries; changes: SignUpChanges }> {
-  const details = parseInput(updateEventSchema, input);
+  const { channelId: rawChannelId, ...event } = input;
+  const details = parseInput(updateEventSchema, event);
+  const { channelId } = parseInput(seriesChannelSchema, { channelId: rawChannelId });
   return transaction(async () => {
     const series = await runningSeries(guild, seriesId);
     const issues = eventSlotIssues(series.type, details);
@@ -147,7 +154,7 @@ export async function updateSeries(
         ),
       );
     }
-    await series.update(columns);
+    await series.update({ ...columns, channelId });
     await extendSeries(series, now);
     return { series, changes: mergeSignUpChanges(...all) };
   });

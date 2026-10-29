@@ -29,7 +29,7 @@ Name new files `story-NNN-short-name.md`, using the next free number, and copy t
 
 ## Index
 
-Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018. Story 039 was added on 2026-10-22, after the events stories, and story 040 the same day. Story 041 was added on 2026-10-23, and story 042 on 2026-10-24.
+Story 035 was added after the first plan. It belongs to the Foundation phase and must be done before story 010. Story 036 was added later and can start once its dependencies are done. Story 038 was added on 2026-10-21, after story 018. Story 039 was added on 2026-10-22, after the events stories, and story 040 the same day. Story 041 was added on 2026-10-23, story 042 on 2026-10-24, and story 043 on 2026-10-28.
 
 ### Battle.net plan
 
@@ -91,6 +91,7 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [026](story-026-tentative-deadline.md) | Tentative deadline and reminders | Done | 009, 024 |
 | [027](story-027-missing-role-alerts.md) | Missing-role alerts | Done | 009, 024 |
 | [039](story-039-add-participants.md) | Adding participants from the web app | Done | 025, 026 |
+| [043](story-043-event-channels.md) | Event channels per type and per series | Done with debt | 021, 022 |
 
 ### Attendance
 

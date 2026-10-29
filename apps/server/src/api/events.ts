@@ -39,7 +39,8 @@ import { scheduleEventJobs } from '../jobs/event-jobs.js';
 import type { JobEnqueuer } from '../jobs/index.js';
 import type { DiscordAccess } from './discord.js';
 import { parseBody } from './errors.js';
-import { eventsChannelName } from './guilds.js';
+import { eventChannelId } from '../domain/event-channel.js';
+import { describeChannels } from './guilds.js';
 import { currentGuild, requireGuildPermission } from './guild-access.js';
 import { currentUser, requireUser } from './me.js';
 
@@ -260,12 +261,14 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       });
       if (!event) throw new DomainError({ code: 'NOT_FOUND' });
       res.json({
-        channel: guild.eventsChannelId
-          ? {
-              id: guild.eventsChannelId,
-              name: await eventsChannelName(guild, discord, req.log),
-            }
-          : null,
+        channel: (
+          await describeChannels(
+            guild,
+            [eventChannelId(guild, event.type, event.series?.channelId)],
+            discord,
+            req.log,
+          )
+        )[0]!,
         locale: guild.discordLocale,
         embed: eventPostEmbed(event, guild.discordLocale, {
           signUps: await eventSignUps(event.id),
@@ -319,7 +322,7 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
 const people = [
   { model: User, as: 'createdBy', attributes: ['name'] },
   { model: User, as: 'cancelledBy', attributes: ['name'] },
-  { model: EventSeries, as: 'series', attributes: ['id', 'name'] },
+  { model: EventSeries, as: 'series', attributes: ['id', 'name', 'channelId'] },
 ];
 
 async function toAttendanceResponse(event: Event): Promise<AttendanceResponse> {

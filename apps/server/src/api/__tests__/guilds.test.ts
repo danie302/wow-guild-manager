@@ -197,6 +197,7 @@ describe('POST /api/guilds', () => {
       },
       officerRole: { id: officers, name: 'Officers' },
       eventsChannel: null,
+      typeChannels: { raid: null, dungeon: null, pvp: null },
       discordLocale: 'en',
       tentativeDeadlineHours: 24,
       reminderHours: 12,

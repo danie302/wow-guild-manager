@@ -25,6 +25,7 @@ const officers = '400000000000000001';
 const managers = '400000000000000002';
 const raidsChannel = '500000000000000001';
 const readOnlyChannel = '500000000000000002';
+const pvpChannel = '500000000000000003';
 
 interface Body {
   id: string;
@@ -32,6 +33,7 @@ interface Body {
   imageUrl: string | null;
   officerRole: { id: string };
   eventsChannel: { id: string; name: string | null } | null;
+  typeChannels: Record<string, { id: string; name: string | null } | null>;
   discordLocale: string;
   guilds: { imageUrl: string | null }[];
   error: { code: string; issues: unknown };
@@ -53,6 +55,7 @@ async function setup() {
     .addMember(ashen, officer, [officers])
     .addChannels(ashen, [
       channel(raidsChannel, 'raid-signups'),
+      channel(pvpChannel, 'pvp'),
       channel(readOnlyChannel, 'rules', {
         overwrites: [{ id: ashen, type: 'role', allow: 0n, deny: SEND_MESSAGES }],
       }),
@@ -216,7 +219,10 @@ describe('the events channel and Discord language', () => {
     const response = await gmAgent.get(`/api/discord/servers/${ashen}/channels`);
 
     expect(response.body).toEqual({
-      channels: [{ id: raidsChannel, name: 'raid-signups', category: null }],
+      channels: [
+        { id: raidsChannel, name: 'raid-signups', category: null },
+        { id: pvpChannel, name: 'pvp', category: null },
+      ],
     });
   });
 
@@ -281,8 +287,66 @@ describe('the events channel and Discord language', () => {
     expect((await Guild.findByPk(id))?.eventsChannelId).toBeNull();
   });
 
+  it('saves a channel per event type, clears one, and asks for the posts of upcoming events', async () => {
+    const { gmAgent, save, jobs, id } = await setup();
+    const { upcoming } = await events(id);
+
+    const response = await save(gmAgent)
+      .field('raidChannelId', raidsChannel)
+      .field('pvpChannelId', pvpChannel);
+
+    expect(response.status).toBe(200);
+    expect(body(response).typeChannels).toEqual({
+      raid: { id: raidsChannel, name: 'raid-signups' },
+      dungeon: null,
+      pvp: { id: pvpChannel, name: 'pvp' },
+    });
+    expect(jobs.payloads('event-post')).toEqual([{ eventId: upcoming.id }]);
+
+    const cleared = await save(gmAgent).field('pvpChannelId', '');
+    expect(body(cleared).typeChannels).toMatchObject({ raid: { id: raidsChannel }, pvp: null });
+  });
+
+  it('asks only for the posts of the type whose channel changed', async () => {
+    const { gmAgent, save, jobs, id } = await setup();
+    await events(id);
+
+    const response = await save(gmAgent).field('pvpChannelId', pvpChannel);
+
+    expect(response.status).toBe(200);
+    // The guild's only upcoming event is a raid.
+    expect(jobs.jobs).toEqual([]);
+  });
+
+  it("rejects a type's channel where the bot can't write", async () => {
+    const { gmAgent, save, id } = await setup();
+
+    const response = await save(gmAgent).field('dungeonChannelId', readOnlyChannel);
+
+    expect(response.status).toBe(400);
+    expect(body(response).error.issues).toEqual([
+      { field: 'dungeonChannelId', code: 'EVENTS_CHANNEL_NOT_USABLE' },
+    ]);
+    expect((await Guild.findByPk(id))?.dungeonChannelId).toBeNull();
+  });
+
+  it('clears the type channels when the server changes', async () => {
+    const { gmAgent, save, directory, id } = await setup();
+    const ember = '300000000000000002';
+    directory
+      .addServer(server(ember, 'Emberwatch', { roles: [role(managers, 'Managers')] }))
+      .addMember(ember, gm, [managers]);
+    directory.servers.get(ember)!.ownerId = gm;
+    await save(gmAgent).field('raidChannelId', raidsChannel);
+
+    await save(gmAgent).field('discordServerId', ember).field('officerRoleId', managers);
+
+    expect((await Guild.findByPk(id))?.raidChannelId).toBeNull();
+  });
+
   it.each([
     ['the events channel', 'eventsChannelId', raidsChannel],
+    ["a type's channel", 'raidChannelId', raidsChannel],
     ['the Discord language', 'discordLocale', 'es'],
   ])("doesn't let an Officer change %s", async (_case, field, value) => {
     const { officerAgent, save } = await setup();

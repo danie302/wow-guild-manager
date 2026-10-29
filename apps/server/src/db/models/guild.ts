@@ -29,6 +29,10 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   declare imageKey: CreationOptional<string | null>;
   /** The Discord channel where the bot posts events; null until the Guild Master chooses one. */
   declare eventsChannelId: CreationOptional<string | null>;
+  /** Channels for one event type, used instead of the events channel when set. */
+  declare raidChannelId: CreationOptional<string | null>;
+  declare dungeonChannelId: CreationOptional<string | null>;
+  declare pvpChannelId: CreationOptional<string | null>;
   /** The language of the guild's public Discord messages (event posts and alerts). */
   declare discordLocale: CreationOptional<Locale>;
   /** Hours before an event that Tentative participants must confirm (1–168). */
@@ -54,6 +58,9 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
         officerRoleId: { type: DataTypes.STRING(20), allowNull: false },
         imageKey: { type: DataTypes.STRING(100), allowNull: true },
         eventsChannelId: { type: DataTypes.STRING(20), allowNull: true },
+        raidChannelId: { type: DataTypes.STRING(20), allowNull: true },
+        dungeonChannelId: { type: DataTypes.STRING(20), allowNull: true },
+        pvpChannelId: { type: DataTypes.STRING(20), allowNull: true },
         discordLocale: { type: DataTypes.STRING(2), allowNull: false, defaultValue: 'en' },
         tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 24 },
         reminderHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 12 },

@@ -8,4 +8,5 @@ export * from './schemas/event.js';
 export * from './schemas/guild.js';
 export * from './schemas/registration.js';
 export * from './schemas/roster.js';
+export * from './schemas/series.js';
 export * from './validation.js';

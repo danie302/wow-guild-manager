@@ -40,6 +40,9 @@ export function SeriesPage() {
           data.nextEventAt
             ? t('series.nextOn', { date: whenText(format, new Date(data.nextEventAt)) })
             : t('series.noNext'),
+          ...(data.channel
+            ? [t('series.postedIn', { channel: `#${data.channel.name ?? data.channel.id}` })]
+            : []),
           t('series.dstHint'),
         ]}
         description={data.description}

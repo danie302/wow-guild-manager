@@ -22,6 +22,7 @@ const series: SeriesResponse = {
   nextEventId: '019a0c3e-5b1e-7c2a-9f3d-000000000501',
   createdBy: 'Thrall',
   tentativeDeadlineHours: null,
+  channel: null,
   stopped: null,
 };
 

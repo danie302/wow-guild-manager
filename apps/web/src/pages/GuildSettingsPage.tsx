@@ -1,4 +1,5 @@
 import {
+  EVENT_TYPES,
   GUILD_IMAGE_MAX_BYTES,
   GUILD_IMAGE_TYPES,
   GUILD_NAME_MAX_LENGTH,
@@ -7,6 +8,8 @@ import {
   TENTATIVE_DEADLINE_HOURS,
   SUPPORTED_LOCALES,
   toValidationIssues,
+  type DiscordChannelOption,
+  type EventType,
   type GuildResponse,
   type Locale,
 } from '@wgm/shared';
@@ -50,6 +53,8 @@ interface Form {
   roleId: string | null;
   /** Null until one is chosen; a new server starts without one. */
   channelId: string | null;
+  /** Each event type's own channel; null uses the events channel. */
+  typeChannels: Record<EventType, string | null>;
   discordLocale: Locale;
   /** As typed, so a half-typed number doesn't jump. */
   deadlineHours: string;
@@ -65,12 +70,40 @@ function formFrom(guild: GuildResponse): Form {
     serverId: guild.discordServer.id,
     roleId: guild.officerRole.id,
     channelId: guild.eventsChannel?.id ?? null,
+    typeChannels: savedTypeChannels(guild),
     discordLocale: guild.discordLocale,
     deadlineHours: String(guild.tentativeDeadlineHours),
     reminderHours: String(guild.reminderHours),
     goodThreshold: String(guild.attendanceThresholds.good),
     riskThreshold: String(guild.attendanceThresholds.atRisk),
   };
+}
+
+function savedTypeChannels(guild: GuildResponse): Record<EventType, string | null> {
+  return {
+    raid: guild.typeChannels.raid?.id ?? null,
+    dungeon: guild.typeChannels.dungeon?.id ?? null,
+    pvp: guild.typeChannels.pvp?.id ?? null,
+  };
+}
+
+/**
+ * Channel choices: the server's channels for the Guild Master (who can change them), or only
+ * the saved one for others.
+ */
+function channelOptions(
+  channels: DiscordChannelOption[] | undefined,
+  saved: { id: string; name: string | null } | null,
+  canChange: boolean,
+) {
+  if (canChange) {
+    return (channels ?? []).map((channel) => ({
+      value: channel.id,
+      label: `#${channel.name}`,
+      ...(channel.category && { group: channel.category }),
+    }));
+  }
+  return saved ? [{ value: saved.id, label: `#${saved.name ?? saved.id}` }] : [];
 }
 
 /** A whole number of hours within the range, or null. */
@@ -139,6 +172,8 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   const serverChanged = form.serverId !== guild.discordServer.id;
   const roleChanged = form.roleId !== guild.officerRole.id;
   const channelChanged = form.channelId !== (guild.eventsChannel?.id ?? null);
+  const savedTypes = savedTypeChannels(guild);
+  const changedTypes = EVENT_TYPES.filter((type) => form.typeChannels[type] !== savedTypes[type]);
   const localeChanged = form.discordLocale !== guild.discordLocale;
   const deadlineHours = hoursIn(form.deadlineHours, TENTATIVE_DEADLINE_HOURS);
   const reminderHours = hoursIn(form.reminderHours, REMINDER_HOURS);
@@ -161,6 +196,11 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   }
   // A new server without a channel leaves the guild without one.
   if (channelChanged && form.channelId) changes.eventsChannelId = form.channelId;
+  if (changedTypes.length > 0) {
+    changes.typeChannelIds = Object.fromEntries(
+      changedTypes.map((type) => [type, form.typeChannels[type]]),
+    );
+  }
   if (localeChanged) changes.discordLocale = form.discordLocale;
   if (deadlineChanged && deadlineHours !== null) changes.tentativeDeadlineHours = deadlineHours;
   if (reminderChanged && reminderHours !== null) changes.reminderHours = reminderHours;
@@ -175,6 +215,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
     serverChanged ||
     roleChanged ||
     channelChanged ||
+    changedTypes.length > 0 ||
     localeChanged ||
     deadlineChanged ||
     reminderChanged ||
@@ -292,6 +333,9 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
                     serverId,
                     roleId: saved ? guild.officerRole.id : null,
                     channelId: saved ? (guild.eventsChannel?.id ?? null) : null,
+                    typeChannels: saved
+                      ? savedTypeChannels(guild)
+                      : { raid: null, dungeon: null, pvp: null },
                   });
                 }}
               >
@@ -337,22 +381,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
           <ComboBox
             label={t('guildSettings.eventsChannel')}
             value={form.channelId ?? ''}
-            options={
-              isGuildMaster
-                ? (channels.data?.channels ?? []).map((channel) => ({
-                    value: channel.id,
-                    label: `#${channel.name}`,
-                    ...(channel.category && { group: channel.category }),
-                  }))
-                : guild.eventsChannel
-                  ? [
-                      {
-                        value: guild.eventsChannel.id,
-                        label: `#${guild.eventsChannel.name ?? guild.eventsChannel.id}`,
-                      },
-                    ]
-                  : []
-            }
+            options={channelOptions(channels.data?.channels, guild.eventsChannel, isGuildMaster)}
             onChange={(channelId) => update({ channelId })}
             noOptionsText={t('guildSettings.noChannelMatch')}
             placeholder={t('guildSettings.noChannel')}
@@ -363,6 +392,34 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
             }
             disabled={!isGuildMaster || channels.isPending}
           />
+        )}
+
+        {!(isGuildMaster && channels.isError) && (
+          <>
+            <Page.Text>{t('guildSettings.typeChannelsHelp')}</Page.Text>
+            {EVENT_TYPES.map((type) => (
+              <ComboBox
+                key={type}
+                label={t('guildSettings.typeChannel', { type: t(`events.types.${type}`) })}
+                value={form.typeChannels[type] ?? ''}
+                options={[
+                  { value: '', label: t('guildSettings.useEventsChannel') },
+                  ...channelOptions(
+                    channels.data?.channels,
+                    guild.typeChannels[type],
+                    isGuildMaster,
+                  ),
+                ]}
+                onChange={(channelId) =>
+                  update({
+                    typeChannels: { ...form.typeChannels, [type]: channelId || null },
+                  })
+                }
+                noOptionsText={t('guildSettings.noChannelMatch')}
+                disabled={!isGuildMaster || channels.isPending}
+              />
+            ))}
+          </>
         )}
 
         <ChoiceGroup

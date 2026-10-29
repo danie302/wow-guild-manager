@@ -198,6 +198,25 @@ describe('the missing-role checks', () => {
     expect(discord.messages(channelId).size).toBe(1);
   });
 
+  it("post in the channel of the event's post, e.g. its type's channel", async () => {
+    const raidChannel = '500000000000000009';
+    await guild.update({ raidChannelId: raidChannel });
+    const event = await raid(23.5);
+    await event.update({ discordChannelId: raidChannel, discordMessageId: '600000000000000002' });
+    await member('priest');
+    const discord = new FakeChannelMessages();
+
+    await missingRoleHandlers({
+      logger: createTestLogger().logger,
+      channelMessages: discord,
+    })['missing-role-check']({ eventId: event.id, hoursBefore: 24 });
+
+    expect(discord.messages(channelId).size).toBe(0);
+    expect([...discord.messages(raidChannel).values()]).toMatchObject([
+      { replyTo: '600000000000000002' },
+    ]);
+  });
+
   it('wait when the event moved later', async () => {
     const event = await raid(40);
     const discord = new FakeChannelMessages();

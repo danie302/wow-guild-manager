@@ -59,6 +59,10 @@ export const updateGuildSchema = z
     officerRoleId: discordIdSchema,
     /** The channel where the bot posts events. A new server needs its own channel. */
     eventsChannelId: discordIdSchema,
+    /** A channel for one event type, used instead of the events channel; "" clears it. */
+    raidChannelId: discordIdSchema.or(z.literal('')),
+    dungeonChannelId: discordIdSchema.or(z.literal('')),
+    pvpChannelId: discordIdSchema.or(z.literal('')),
     /** The language of the guild's public Discord messages. */
     discordLocale: z.enum(SUPPORTED_LOCALES),
     /** Hours before an event that Tentative participants must confirm (multipart text). */

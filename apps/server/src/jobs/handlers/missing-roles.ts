@@ -1,4 +1,5 @@
-import { Event, Guild } from '../../db/models/index.js';
+import { Event, EventSeries, Guild } from '../../db/models/index.js';
+import { eventChannelId } from '../../domain/event-channel.js';
 import { missingRoleAlert, missingRoles } from '../../domain/missing-roles.js';
 import {
   ChannelMessageError,
@@ -31,9 +32,16 @@ export function missingRoleHandlers({ logger, channelMessages }: MissingRoleJobD
         return;
       }
       const now = Date.now();
-      const event = await Event.findByPk(eventId, { include: [{ model: Guild, as: 'guild' }] });
+      const event = await Event.findByPk(eventId, {
+        include: [
+          { model: Guild, as: 'guild' },
+          { model: EventSeries, as: 'series', attributes: ['channelId'] },
+        ],
+      });
       const guild = event?.guild;
-      if (!event || !guild?.eventsChannelId || event.cancelledAt) return;
+      if (!event || !guild || event.cancelledAt) return;
+      const channelId = eventChannelId(guild, event.type, event.series?.channelId);
+      if (!channelId) return;
       const start = event.startsAt.getTime();
       if (start <= now || now < start - hoursBefore * HOUR - TOLERANCE) return;
       if (hoursBefore === 48 && now >= start - 24 * HOUR) return;
@@ -41,9 +49,10 @@ export function missingRoleHandlers({ logger, channelMessages }: MissingRoleJobD
       const roles = await missingRoles(event, guild);
       if (roles.length === 0) return;
       const { content, mentions } = missingRoleAlert(event, guild.discordLocale, roles);
-      const onPost = event.discordChannelId === guild.eventsChannelId && event.discordMessageId;
+      // A reply to the post, in the post's channel.
+      const onPost = event.discordChannelId === channelId && event.discordMessageId;
       try {
-        await channelMessages.post(guild.eventsChannelId, {
+        await channelMessages.post(channelId, {
           content,
           mentionUserIds: mentions,
           ...(onPost && { replyTo: event.discordMessageId! }),
