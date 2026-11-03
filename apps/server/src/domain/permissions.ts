@@ -16,6 +16,8 @@ export const PERMISSIONS = {
   connectDiscordServer: ['guild_master'],
   /** Choose the Discord role that grants Officer. */
   chooseOfficerRole: ['guild_master'],
+  /** Choose the Guild Member role that missing-role alerts mention. */
+  chooseMemberRole: ['guild_master'],
   /** Hand the guild to another member. */
   transferLeadership: ['guild_master'],
   /** Delete the guild and all of its data. */

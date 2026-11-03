@@ -222,6 +222,8 @@ export interface GuildResponse {
   /** `name` is null when Discord can't be read right now; the page still shows. */
   discordServer: { id: string; name: string | null; iconUrl: string | null };
   officerRole: { id: string; name: string | null };
+  /** The role missing-role alerts mention; null when none is chosen (they mention nobody). */
+  memberRole: { id: string; name: string | null } | null;
   /** Where the bot posts events; null until the Guild Master chooses one. */
   eventsChannel: { id: string; name: string | null } | null;
   /** Each event type's own channel, used instead of the events channel; null when not set. */
@@ -353,11 +355,14 @@ export interface EventResponse {
    * the event's own deadline (`own`) or the guild's.
    */
   tentativeDeadline: { at: string; hours: number; own: boolean };
+  /** How many hours before the start the missing-role alert goes out. */
+  missingRoleAlertHours: number;
   /**
    * Its Discord post: `url` is null until the bot posts it, and `error` says why the last
-   * attempt failed, if it did.
+   * attempt failed, if it did. `postAt` is set while an event of a series waits for the one
+   * before it to finish: when it will be posted.
    */
-  discordPost: { url: string | null; error: DiscordPostError | null };
+  discordPost: { url: string | null; error: DiscordPostError | null; postAt: string | null };
 }
 
 /**
@@ -561,6 +566,8 @@ export interface SeriesResponse {
   nextEventId: string | null;
   /** Its events' own Tentative deadline in hours; null uses the guild's. */
   tentativeDeadlineHours: number | null;
+  /** Its events' missing-role alert time, in hours before each one starts. */
+  missingRoleAlertHours: number;
   /** Its own channel for its events' posts; null uses its type's or the guild's. */
   channel: { id: string; name: string | null } | null;
   createdBy: string | null;

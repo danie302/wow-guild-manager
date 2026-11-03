@@ -93,6 +93,7 @@
     "SLOTS_DONT_ADD_UP": "Los slots de los tres roles de combate deben sumar el tamaño.",
     "EVENT_STARTS_IN_PAST": "Elige una fecha y hora en el futuro.",
     "EVENTS_CHANNEL_NOT_USABLE": "El bot no puede ver, escribir o publicar embeds en este canal. Elige otro o corrige sus permisos en Discord.",
+    "MEMBER_ROLE_NOT_USABLE": "El bot no puede mencionar este rol. Hazlo mencionable en Discord o dale al bot el permiso para mencionar todos los roles.",
     "PRE_CONFIRMED_NOT_ALLOWED": "Solo se pueden preconfirmar participantes en una raid sin repetición.",
     "PRE_CONFIRMED_ROLE_FULL": "Hay más participantes preconfirmados que plazas en el rol.",
     "PRE_CONFIRMED_CANNOT_JOIN": "Este personaje no está en el roster, o su miembro no puede ir a raids.",
@@ -216,6 +217,10 @@
     "ownerNote": "Ser propietario del servidor de Discord no convierte a nadie en Guild Master aquí.",
     "officerRole": "Rol de Discord que otorga el rango de Officer",
     "chooseRole": "Elige el rol de Officer del nuevo servidor.",
+    "memberRole": "Rol de Guild Member",
+    "noMemberRole": "Ningún rol (no mencionar a nadie)",
+    "noMemberRoleMatch": "Ningún rol coincide. Solo aparecen los roles que el bot puede mencionar: hazlo mencionable en Discord o dale al bot el permiso para mencionar todos los roles.",
+    "memberRoleHelp": "Las alertas de roles faltantes mencionan este rol en Discord.",
     "gmOnly": "Solo el Guild Master puede cambiar esto.",
     "unsaved": "Cambios sin guardar",
     "saved": "Todos los cambios guardados",
@@ -456,7 +461,10 @@
     "tentativeDeadlineGuild": "Valor de la hermandad ({{hours}} h)",
     "tentativeDeadlineOwn": "Personalizado",
     "tentativeDeadlineHours": "Plazo propio",
-    "tentativeDeadlineUnit": "horas antes del inicio (1–168)"
+    "tentativeDeadlineUnit": "horas antes del inicio (1–168)",
+    "missingRoleAlert": "Alerta de roles faltantes",
+    "missingRoleAlertUnit": "horas antes del inicio (1–72)",
+    "missingRoleAlertHelp": "Si a esa hora un rol todavía tiene plazas libres, el bot menciona en Discord a quienes podrían cubrirlo."
   },
   "eventPage": {
     "back": "Eventos",
@@ -492,7 +500,9 @@
         "channel_not_found": "{{channel}} ya no existe. Elige otro canal de eventos en los ajustes de la hermandad."
       },
       "open": "Abrir en Discord",
-      "app": "APP"
+      "app": "APP",
+      "waiting": "Se publica en Discord el {{date}}",
+      "waitingHelp": "Solo se publica un evento de la serie a la vez: este se publica cuando termina el evento anterior (12 horas después de que empieza)."
     },
     "status": {
       "confirmed": "Confirmado",
@@ -512,6 +522,7 @@
     "replaceBody": "Elige a alguien de la lista de espera para ocupar la plaza. {{name}} pasa al final de la lista de espera, y ambos reciben un mensaje directo.",
     "participantFailed": "No se pudieron cambiar los participantes.",
     "tentativeCloses": "Provisional cierra el {{date}} · {{hours}} h antes del inicio",
+    "missingRoleAlert": "Alerta de roles faltantes {{hours}} h antes del inicio",
     "signUpInDiscord": "Las inscripciones se hacen en Discord",
     "signUpInDiscordHelp": "Usa los botones del mensaje del evento para inscribirte, cambiar tu estado o rechazar.",
     "openPost": "Abrir el mensaje de Discord"

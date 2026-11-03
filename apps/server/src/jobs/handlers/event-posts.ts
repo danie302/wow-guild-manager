@@ -2,6 +2,7 @@ import { Event, EventSeries, Guild, User } from '../../db/models/index.js';
 import { transaction } from '../../db/transaction.js';
 import { eventChannelId } from '../../domain/event-channel.js';
 import { eventPostEmbed, NO_EMOJIS, type PostEmojis } from '../../domain/event-post.js';
+import { postAt } from '../../domain/series-posts.js';
 import { eventSignUps } from '../../domain/sign-ups.js';
 import { eventPostButtons } from '../../bot/sign-up.js';
 import {
@@ -71,12 +72,15 @@ export async function syncEventPost(
     const channelId = event.cancelledAt
       ? event.discordChannelId
       : eventChannelId(guild, event.type, event.series?.channelId);
+    // An event of a series that isn't posted yet waits for the one before it to finish. One
+    // that's already posted stays posted (and still moves with its channel).
+    const waiting = !event.discordMessageId && (await postAt(event)) !== null;
 
     if (event.discordMessageId && event.discordChannelId !== channelId) {
       await removeQuietly(channelMessages, event.discordChannelId!, event.discordMessageId, logger);
       await event.update({ discordChannelId: null, discordMessageId: null });
     }
-    if (!channelId) {
+    if (!channelId || waiting) {
       await event.update({ discordPostError: null });
       return;
     }

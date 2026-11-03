@@ -247,7 +247,20 @@ function Setting({ title, description, children }: PageSettingProps) {
         </Typography>
         {description && <Box sx={{ fontSize: 13, color: token('mt') }}>{description}</Box>}
       </Box>
-      <Box sx={{ minWidth: 0, justifySelf: 'start', width: '100%' }}>{children}</Box>
+      <Box
+        sx={{
+          minWidth: 0,
+          justifySelf: 'start',
+          width: '100%',
+          // Room between the controls, so each label sits apart from the field above it.
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          '& > .MuiButtonBase-root': { alignSelf: 'flex-start' },
+        }}
+      >
+        {children}
+      </Box>
     </Box>
   );
 }

@@ -235,6 +235,7 @@ async function toSeriesResponse(
       (!series.stoppedAt && series.startsAt > new Date() ? series.startsAt.toISOString() : null),
     nextEventId: next?.id ?? null,
     tentativeDeadlineHours: series.tentativeDeadlineHours,
+    missingRoleAlertHours: series.missingRoleAlertHours,
     channel,
     createdBy: series.createdBy?.name ?? null,
     stopped: series.stoppedAt

@@ -258,6 +258,13 @@ async function toGuildResponse(
       iconUrl: server ? discordServerIconUrl(server) : null,
     },
     officerRole: { id: guild.officerRoleId, name: role?.name ?? null },
+    memberRole: guild.memberRoleId
+      ? {
+          id: guild.memberRoleId,
+          name:
+            server?.roles.find((candidate) => candidate.id === guild.memberRoleId)?.name ?? null,
+        }
+      : null,
     ...(await guildChannels(guild, discord, log)),
     discordLocale: guild.discordLocale,
     tentativeDeadlineHours: guild.tentativeDeadlineHours,

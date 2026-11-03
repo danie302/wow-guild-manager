@@ -93,6 +93,7 @@
     "SLOTS_DONT_ADD_UP": "The slots of the three combat roles must add up to the size.",
     "EVENT_STARTS_IN_PAST": "Pick a date and time in the future.",
     "EVENTS_CHANNEL_NOT_USABLE": "The bot can't see, write, or post embeds in this channel. Choose another one or fix its permissions in Discord.",
+    "MEMBER_ROLE_NOT_USABLE": "The bot can't mention this role. Make it mentionable in Discord, or give the bot the permission to mention all roles.",
     "PRE_CONFIRMED_NOT_ALLOWED": "Participants can only be pre-confirmed for a one-time raid.",
     "PRE_CONFIRMED_ROLE_FULL": "More pre-confirmed participants than the role has slots.",
     "PRE_CONFIRMED_CANNOT_JOIN": "This character isn't on the roster, or its member can't join raids.",
@@ -216,6 +217,10 @@
     "ownerNote": "Owning the Discord server doesn't make someone the Guild Master here.",
     "officerRole": "Discord role that grants Officer",
     "chooseRole": "Choose the Officer role for the new server.",
+    "memberRole": "Guild Member role",
+    "noMemberRole": "No role (mention nobody)",
+    "noMemberRoleMatch": "No role matches. Only roles the bot can mention are listed: make the role mentionable in Discord, or give the bot the permission to mention all roles.",
+    "memberRoleHelp": "Missing-role alerts mention this role in Discord.",
     "gmOnly": "Only the Guild Master can change these.",
     "unsaved": "Unsaved changes",
     "saved": "All changes saved",
@@ -456,7 +461,10 @@
     "tentativeDeadlineGuild": "Guild default ({{hours}} h)",
     "tentativeDeadlineOwn": "Custom",
     "tentativeDeadlineHours": "Own deadline",
-    "tentativeDeadlineUnit": "hours before the start (1–168)"
+    "tentativeDeadlineUnit": "hours before the start (1–168)",
+    "missingRoleAlert": "Missing-role alert",
+    "missingRoleAlertUnit": "hours before the start (1–72)",
+    "missingRoleAlertHelp": "If a role still has open slots then, the bot mentions who could fill it in Discord."
   },
   "eventPage": {
     "back": "Events",
@@ -492,7 +500,9 @@
         "channel_not_found": "{{channel}} no longer exists. Choose another events channel in the guild settings."
       },
       "open": "Open in Discord",
-      "app": "APP"
+      "app": "APP",
+      "waiting": "Posted in Discord on {{date}}",
+      "waitingHelp": "Only one event of a series is posted at a time: this one is posted once the event before it has finished (12 hours after it starts)."
     },
     "status": {
       "confirmed": "Confirmed",
@@ -512,6 +522,7 @@
     "replaceBody": "Pick someone from the waitlist to take the spot. {{name}} moves to the end of the waitlist, and both get a direct message.",
     "participantFailed": "Couldn't change the participants.",
     "tentativeCloses": "Tentative closes {{date}} · {{hours}} h before the start",
+    "missingRoleAlert": "Missing-role alert {{hours}} h before the start",
     "signUpInDiscord": "Sign-ups happen in Discord",
     "signUpInDiscordHelp": "Use the buttons on the event post to sign up, change your status, or decline.",
     "openPost": "Open the Discord post"

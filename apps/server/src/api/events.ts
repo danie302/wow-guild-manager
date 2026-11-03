@@ -32,6 +32,7 @@ import {
   removeParticipant,
   replaceTentative,
 } from '../domain/sign-ups.js';
+import { postTimes } from '../domain/series-posts.js';
 import { deadlineHours } from '../domain/tentative.js';
 import { eventPostButtonLabels, eventPostEmbed, NO_EMOJIS } from '../domain/event-post.js';
 import { enqueueEventPosts } from '../jobs/event-posts.js';
@@ -91,7 +92,12 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       ...('scope' in query && query.scope === 'past' && { limit: PAST_EVENTS_LIMIT }),
     });
     const filled = await filledSlots(events.map((event) => event.id));
-    res.json(events.map((event) => toEventResponse(event, guild, filled.get(event.id), access)));
+    const waiting = await waitingPosts(events);
+    res.json(
+      events.map((event) =>
+        toEventResponse(event, guild, filled.get(event.id), access, waiting.get(event.id)),
+      ),
+    );
   });
 
   router.post(base, requireUser, requireGuildPermission('manageEvents'), async (req, res) => {
@@ -130,7 +136,8 @@ export function eventsRouter(jobs: JobEnqueuer | null, discord: DiscordAccess | 
       });
       if (!event || !visibleTo(access, event)) throw new DomainError({ code: 'NOT_FOUND' });
       const filled = await filledSlots([event.id]);
-      res.json(toEventResponse(event, guild, filled.get(event.id), access));
+      const waiting = await waitingPosts([event]);
+      res.json(toEventResponse(event, guild, filled.get(event.id), access, waiting.get(event.id)));
     },
   );
 
@@ -392,7 +399,21 @@ export function eventId(id: unknown): string {
 
 async function eventResponse(id: string, guild: Guild): Promise<EventResponse> {
   const filled = await filledSlots([id]);
-  return toEventResponse((await Event.findByPk(id, { include: people }))!, guild, filled.get(id));
+  const event = (await Event.findByPk(id, { include: people }))!;
+  const waiting = await waitingPosts([event]);
+  return toEventResponse(event, guild, filled.get(id), 'officer', waiting.get(id));
+}
+
+/**
+ * When each upcoming event of a series that isn't posted yet will be posted, once the event
+ * before it finishes (domain/series-posts.ts).
+ */
+async function waitingPosts(events: Event[]): Promise<Map<string, Date>> {
+  const now = new Date();
+  return postTimes(
+    events.filter((event) => !event.discordMessageId && !event.cancelledAt && event.startsAt > now),
+    now,
+  );
 }
 
 type Filled = EventResponse['filled'];
@@ -425,6 +446,7 @@ function toEventResponse(
   guild: Guild,
   filled: Filled = { tank: 0, healer: 0, dps: 0 },
   access: GuildAccess = 'officer',
+  postAt?: Date,
 ): EventResponse {
   return {
     id: event.id,
@@ -445,7 +467,9 @@ function toEventResponse(
       hours: deadlineHours(event),
       own: event.tentativeDeadlineHours !== null,
     },
+    missingRoleAlertHours: event.missingRoleAlertHours,
     discordPost: {
+      postAt: postAt?.toISOString() ?? null,
       url: event.discordMessageId
         ? `https://discord.com/channels/${guild.discordServerId}/${event.discordChannelId}/${event.discordMessageId}`
         : null,

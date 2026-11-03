@@ -24,7 +24,8 @@ const event: EventResponse = {
   cancelled: null,
   series: null,
   tentativeDeadline: { at: `${nextYear}-11-09T19:00:00.000Z`, hours: 24, own: false },
-  discordPost: { url: 'https://discord.com/channels/3/5/6', error: null },
+  missingRoleAlertHours: 24,
+  discordPost: { url: 'https://discord.com/channels/3/5/6', error: null, postAt: null },
 };
 const rosterMember = (id: string, name: string, discordUserId: string): RosterMember => ({
   id,

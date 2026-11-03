@@ -83,6 +83,7 @@ export async function extendSeries(series: EventSeries, now = new Date()): Promi
         { startsAt: new Date(next), tentativeDeadlineHours: series.tentativeDeadlineHours },
         guild,
       ),
+      missingRoleAlertHours: series.missingRoleAlertHours,
       createdByUserId: series.createdByUserId,
     });
   }

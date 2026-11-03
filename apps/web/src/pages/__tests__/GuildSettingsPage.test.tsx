@@ -52,6 +52,8 @@ function mockSettingsApi(start: GuildResponse = testGuild) {
       return Response.json(guild);
     },
     '/api/discord/servers/300000000000000001/roles': () => Response.json(roles),
+    '/api/discord/servers/300000000000000001/member-roles': () =>
+      Response.json({ roles: [{ id: '400000000000000009', name: 'Guild Member', color: null }] }),
     '/api/discord/servers/300000000000000001/channels': () => Response.json(channels),
     [`/api/guilds/${ashenId}/members`]: () => Response.json([]),
   });
@@ -181,6 +183,24 @@ describe('GuildSettingsPage', () => {
     expect([...savesSent(fetchMock)[0]!.entries()]).toEqual([
       ['discordServerId', '300000000000000001'],
       ['officerRoleId', '400000000000000002'],
+    ]);
+  });
+
+  it('chooses the Guild Member role that missing-role alerts mention', async () => {
+    const fetchMock = mockSettingsApi();
+    const user = userEvent.setup();
+    renderRoute(settingsPath);
+
+    const role = await screen.findByRole('combobox', { name: 'Guild Member role' });
+    await waitFor(() => expect(role).toBeEnabled());
+    expect(role).toHaveValue('No role (mention nobody)');
+    await user.click(role);
+    await user.click(await screen.findByRole('option', { name: '@Guild Member' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(savesSent(fetchMock)).toHaveLength(1));
+    expect([...savesSent(fetchMock)[0]!.entries()]).toEqual([
+      ['memberRoleId', '400000000000000009'],
     ]);
   });
 

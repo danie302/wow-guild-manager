@@ -22,7 +22,8 @@ const started: EventResponse = {
   cancelled: null,
   series: null,
   tentativeDeadline: { at: '2026-01-09T19:00:00.000Z', hours: 24, own: false },
-  discordPost: { url: null, error: null },
+  missingRoleAlertHours: 24,
+  discordPost: { url: null, error: null, postAt: null },
 };
 
 const record = (memberId: string, name: string, status: 'present' | 'bench') => ({

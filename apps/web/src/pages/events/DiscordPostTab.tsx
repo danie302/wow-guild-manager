@@ -25,10 +25,18 @@ export function DiscordPostTab({ guildId, event }: { guildId: string; event: Eve
 
   const { channel, locale, embed, buttons } = post.data;
   const guildName = guild.data?.name ?? t('app.name');
-  const { error, url } = event.discordPost;
+  const { error, url, postAt } = event.discordPost;
 
   return (
     <Page.Stack>
+      {channel && postAt && (
+        <Notice
+          tone="ok"
+          title={t('eventPage.post.waiting', { date: format.dateTime(new Date(postAt)) })}
+        >
+          {t('eventPage.post.waitingHelp')}
+        </Notice>
+      )}
       {!channel && (
         <Notice tone="warn" title={t('eventPage.post.noChannel')}>
           {t('eventPage.post.noChannelHelp')}

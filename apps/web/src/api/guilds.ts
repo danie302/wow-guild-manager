@@ -46,6 +46,16 @@ export function useDiscordRoles(serverId: string | null) {
   });
 }
 
+/** The roles of a server the bot can mention, for the Guild Member role. */
+export function useDiscordMemberRoles(serverId: string | null) {
+  return useQuery({
+    queryKey: ['discord', 'servers', serverId, 'member-roles'],
+    queryFn: () => apiRequest<DiscordRolesResponse>(`/discord/servers/${serverId}/member-roles`),
+    enabled: serverId !== null,
+    refetchOnWindowFocus: 'always',
+  });
+}
+
 /** The text channels of a server where the bot can post events. */
 export function useDiscordChannels(serverId: string | null) {
   return useQuery({
@@ -89,6 +99,8 @@ export interface GuildSettingsChanges {
   /** Each changed event type's channel; null clears it. */
   typeChannelIds?: Partial<Record<EventType, string | null>>;
   discordLocale?: Locale;
+  /** The Guild Member role; null clears it. */
+  memberRoleId?: string | null;
   tentativeDeadlineHours?: number;
   reminderHours?: number;
   attendanceGoodThreshold?: number;
@@ -114,6 +126,8 @@ export function useSaveGuildSettings(guildId: string) {
         form.set(`${type}ChannelId`, channelId ?? '');
       }
       if (changes.discordLocale) form.set('discordLocale', changes.discordLocale);
+      // "" clears the Guild Member role.
+      if (changes.memberRoleId !== undefined) form.set('memberRoleId', changes.memberRoleId ?? '');
       if (changes.tentativeDeadlineHours !== undefined) {
         form.set('tentativeDeadlineHours', String(changes.tentativeDeadlineHours));
       }

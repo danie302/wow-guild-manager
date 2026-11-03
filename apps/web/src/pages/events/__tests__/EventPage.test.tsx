@@ -27,8 +27,9 @@ const saved: EventResponse = {
   createdBy: 'Thrall',
   cancelled: null,
   series: null,
-  discordPost: { url: null, error: null },
+  discordPost: { url: null, error: null, postAt: null },
   tentativeDeadline: { at: '2026-01-01T00:00:00.000Z', hours: 24, own: false },
+  missingRoleAlertHours: 24,
 };
 
 const me = { ...testUser, timeZone: 'America/Argentina/Buenos_Aires' };
@@ -112,7 +113,7 @@ describe('EventPage', () => {
       [`${api}/${eventId}`]: () =>
         Response.json({
           ...saved,
-          discordPost: { url: 'https://discord.com/channels/3/5/6', error: null },
+          discordPost: { url: 'https://discord.com/channels/3/5/6', error: null, postAt: null },
         }),
       [`${api}/${eventId}/discord-post`]: () => Response.json(preview),
     });
@@ -177,6 +178,31 @@ describe('EventPage', () => {
       'href',
       `/guilds/${ashenId}/settings`,
     );
+  });
+
+  it('says when an event of a series waiting for the one before it will be posted', async () => {
+    mockApi({
+      [`${api}/${eventId}`]: () =>
+        Response.json({
+          ...saved,
+          discordPost: { url: null, error: null, postAt: '2026-01-04T07:00:00.000Z' },
+        }),
+      [`${api}/${eventId}/discord-post`]: () =>
+        Response.json({
+          locale: 'en',
+          embed: { title: 'Molten Core', color: 0, fields: [] },
+          buttons: [],
+          channel: { id: '5', name: 'raid-signups' },
+        }),
+    });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/${eventId}`);
+
+    expect(await screen.findByText('Missing-role alert 24 h before the start')).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Discord post' }));
+
+    expect(await screen.findByText(/^Posted in Discord on /)).toBeInTheDocument();
+    expect(screen.getByText(/once the event before it has finished/)).toBeInTheDocument();
   });
 
   describe('participants', () => {

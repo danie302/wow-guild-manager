@@ -36,6 +36,8 @@ export class EventSeries extends Model<
   declare dpsSlots: number;
   /** The events' own Tentative deadline in hours; null uses the guild's. */
   declare tentativeDeadlineHours: CreationOptional<number | null>;
+  /** Its events' missing-role alert time, in hours before each one starts. */
+  declare missingRoleAlertHours: CreationOptional<number>;
   /** The Discord channel its events are posted in; null uses its type's or the guild's. */
   declare channelId: CreationOptional<string | null>;
   declare createdByUserId: ForeignKey<User['id']> | null;
@@ -62,6 +64,7 @@ export class EventSeries extends Model<
         healerSlots: { type: DataTypes.SMALLINT, allowNull: false },
         dpsSlots: { type: DataTypes.SMALLINT, allowNull: false },
         tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: true },
+        missingRoleAlertHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 24 },
         channelId: { type: DataTypes.STRING(20), allowNull: true },
         createdByUserId: { type: DataTypes.UUID, allowNull: true },
         stoppedAt: { type: DataTypes.DATE, allowNull: true },

@@ -1,6 +1,6 @@
 import { Event, EventSeries, Guild } from '../../db/models/index.js';
 import { eventChannelId } from '../../domain/event-channel.js';
-import { missingRoleAlert, missingRoles } from '../../domain/missing-roles.js';
+import { missingRoleAlert, missingRoleCheckAt, missingRoles } from '../../domain/missing-roles.js';
 import {
   ChannelMessageError,
   type ChannelMessages,
@@ -14,7 +14,6 @@ export interface MissingRoleJobDependencies {
   channelMessages: ChannelMessages | null;
 }
 
-const HOUR = 60 * 60 * 1000;
 /** How early a check may run: queues aren't exact. */
 const TOLERANCE = 60 * 1000;
 
@@ -22,11 +21,12 @@ export function missingRoleHandlers({ logger, channelMessages }: MissingRoleJobD
   return {
     /**
      * Posts the alert if the event is still missing players. Does nothing for a cancelled or
-     * started event, a check whose time moved later (the event moved), or the 48-hour check
-     * when the 24-hour one is already due (the worker was down), so a late job never alerts
-     * twice.
+     * started event, or a check whose time moved later (the event or its alert time changed).
      */
-    'missing-role-check': async ({ eventId, hoursBefore }: JobPayloads['missing-role-check']) => {
+    'missing-role-check': async (payload: JobPayloads['missing-role-check']) => {
+      const { eventId } = payload;
+      // A check queued before there was one per event (the 48- and 24-hour ones) does nothing.
+      if ('hoursBefore' in payload) return;
       if (!channelMessages) {
         logger.warn({ eventId }, 'No bot token, so no missing-role alert');
         return;
@@ -42,19 +42,23 @@ export function missingRoleHandlers({ logger, channelMessages }: MissingRoleJobD
       if (!event || !guild || event.cancelledAt) return;
       const channelId = eventChannelId(guild, event.type, event.series?.channelId);
       if (!channelId) return;
-      const start = event.startsAt.getTime();
-      if (start <= now || now < start - hoursBefore * HOUR - TOLERANCE) return;
-      if (hoursBefore === 48 && now >= start - 24 * HOUR) return;
+      if (event.startsAt.getTime() <= now) return;
+      if (now < missingRoleCheckAt(event).getTime() - TOLERANCE) return;
 
-      const roles = await missingRoles(event, guild);
+      const roles = await missingRoles(event);
       if (roles.length === 0) return;
-      const { content, mentions } = missingRoleAlert(event, guild.discordLocale, roles);
+      const { content, mentionRoleIds } = missingRoleAlert(
+        event,
+        guild.discordLocale,
+        roles,
+        guild.memberRoleId,
+      );
       // A reply to the post, in the post's channel.
       const onPost = event.discordChannelId === channelId && event.discordMessageId;
       try {
         await channelMessages.post(channelId, {
           content,
-          mentionUserIds: mentions,
+          mentionRoleIds,
           ...(onPost && { replyTo: event.discordMessageId! }),
         });
       } catch (err) {

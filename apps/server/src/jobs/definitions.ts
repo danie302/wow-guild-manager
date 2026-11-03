@@ -26,10 +26,15 @@ export interface JobPayloads {
   /** Replaces Tentative participants at the deadline, as `tentative-deadline-<eventId>`. */
   'tentative-deadline': { eventId: string };
   /**
-   * Posts an alert in the events channel if the event is still missing players, 48 or 24 hours
-   * before it starts, as `missing-roles-<hours>-<eventId>`.
+   * Posts an alert in the event post's channel if the event is still missing players, at its
+   * missing-role alert time, as `missing-roles-<eventId>`.
    */
-  'missing-role-check': { eventId: string; hoursBefore: 48 | 24 };
+  'missing-role-check': { eventId: string };
+  /**
+   * When an event of a series finishes (12 hours after it starts, even if it was cancelled),
+   * posts the series' next event, as `series-event-finished-<eventId>` (domain/series-posts.ts).
+   */
+  'series-event-finished': { seriesId: string };
   /** Tells a member by direct message that their waitlisted character got a slot. */
   'waitlist-promoted': { signUpId: string };
   /** Tells a member their character lost its slot because the role's slots went down. */

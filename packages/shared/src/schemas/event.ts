@@ -55,6 +55,15 @@ export const TENTATIVE_DEADLINE_HOURS = { min: 1, max: 168, default: 24 } as con
 /** When the reminder goes out, in hours before the deadline. */
 export const REMINDER_HOURS = { min: 1, max: 72, default: 12 } as const;
 
+/** When the missing-role alert goes out, in hours before the event (an event's or a series'). */
+export const MISSING_ROLE_ALERT_HOURS = { min: 1, max: 72, default: 24 } as const;
+
+export const missingRoleAlertHoursSchema = z
+  .number()
+  .int()
+  .min(MISSING_ROLE_ALERT_HOURS.min)
+  .max(MISSING_ROLE_ALERT_HOURS.max);
+
 export const tentativeDeadlineHoursSchema = z
   .number()
   .int()
@@ -71,6 +80,8 @@ const eventDetails = {
   slots: z.object({ tank: slotCount, healer: slotCount, dps: slotCount }).strict(),
   /** Its own Tentative deadline; null (or left out) uses the guild's. */
   tentativeDeadlineHours: tentativeDeadlineHoursSchema.nullable().default(null),
+  /** How many hours before the start the missing-role check runs. */
+  missingRoleAlertHours: missingRoleAlertHoursSchema.default(MISSING_ROLE_ALERT_HOURS.default),
 };
 
 type Details = { size: number; slots: { tank: number; healer: number; dps: number } };

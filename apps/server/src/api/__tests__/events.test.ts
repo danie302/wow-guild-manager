@@ -74,7 +74,8 @@ describe('events', () => {
         hours: 24,
         own: false,
       },
-      discordPost: { url: null, error: null },
+      missingRoleAlertHours: 24,
+      discordPost: { url: null, error: null, postAt: null },
     });
     expect((await agent.get(`${base}/${event(response).id}`)).body).toEqual(response.body);
   });
@@ -241,6 +242,7 @@ describe('Discord posts of events', () => {
     expect(event(await agent.get(`${base}/${id}`)).discordPost).toEqual({
       url: `https://discord.com/channels/${guild.discordServerId}/500000000000000001/600000000000000001`,
       error: 'missing_permissions',
+      postAt: null,
     });
   });
 

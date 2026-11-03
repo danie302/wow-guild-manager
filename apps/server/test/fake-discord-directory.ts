@@ -29,7 +29,16 @@ export function channel(
 
 /** A role for `server.roles`, with no permissions unless given. */
 export function role(id: string, name: string, extra: Partial<DiscordRole> = {}): DiscordRole {
-  return { id, name, color: 0, position: 1, permissions: 0n, managed: false, ...extra };
+  return {
+    id,
+    name,
+    color: 0,
+    position: 1,
+    permissions: 0n,
+    managed: false,
+    mentionable: false,
+    ...extra,
+  };
 }
 
 /** A server whose `@everyone` role (ID = server ID) has no permissions. */

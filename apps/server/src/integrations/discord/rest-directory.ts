@@ -144,6 +144,7 @@ function toServer(guild: APIGuild): DiscordServer {
       position: role.position,
       permissions: BigInt(role.permissions),
       managed: role.managed,
+      mentionable: role.mentionable,
     })),
   };
 }

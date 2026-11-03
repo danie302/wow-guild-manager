@@ -27,6 +27,7 @@ export const testGuild: GuildResponse = {
   access: 'guild_master',
   discordServer: { id: '300000000000000001', name: 'Ashen Vanguard Discord', iconUrl: null },
   officerRole: { id: '400000000000000001', name: 'Officers' },
+  memberRole: null,
   eventsChannel: { id: '500000000000000001', name: 'raid-signups' },
   typeChannels: { raid: null, dungeon: null, pvp: null },
   discordLocale: 'en',

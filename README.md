@@ -13,7 +13,7 @@ The app is available in English and Spanish.
 - **Requests to join** from Discord with `/register`, approved by an Officer. Members **choose their main** with `/main` and **remove their characters** with `/character remove`; Officers add, edit, and remove characters in the web app.
 - **Events** (raids, dungeons, and PvP) with slots per combat role, weekly recurring events, and a post in Discord that updates in real time.
 - **Sign-ups from Discord** with a waitlist per role, and a configurable deadline for Tentative sign-ups with reminders. Officers can also add, remove, or replace participants from the web app.
-- **Missing-role alerts** in Discord before each event.
+- **Missing-role alerts** in Discord before each event, at a time chosen per event or series, mentioning the guild's Guild Member role.
 - **Attendance tracking** with six statuses, attendance rates per period and event type, and configurable Good / Watch / At risk bands. Members see their own with `/attendance` in Discord.
 - **Gear checks** before raids using the Battle.net API: empty slots, missing enchants, and direct messages to players who need to fix something.
 - **Read-only view** for members: upcoming events, the roster, and their own gear check and attendance.
@@ -46,8 +46,8 @@ The bot and the web app's login share one Discord application, and you need a Di
 2. On the **Bot** page:
    - Click **Reset Token**, copy the token, and put it in `.env` as `DISCORD_BOT_TOKEN`. Treat it like a password.
    - Under **Privileged Gateway Intents**, turn on **Server Members Intent** and save. The bot needs it to see role changes and members leaving the server. Without it, the bot can't connect.
-3. Create a test server in Discord: click **+** in the server list, then **Create My Own**. In **Server Settings → Roles**, create a role for Officers (e.g. "Officer"): the guild setup asks which role grants Officer and doesn't offer `@everyone` or the bot's own role.
-4. Invite the bot: on the **OAuth2** page, open **URL Generator**, tick the **bot** and **applications.commands** scopes, and under **Bot Permissions** tick **View Channels**, **Send Messages**, **Embed Links**, and **Read Message History**. Open the generated URL and pick your test server.
+3. Create a test server in Discord: click **+** in the server list, then **Create My Own**. In **Server Settings → Roles**, create a role for Officers (e.g. "Officer"): the guild setup asks which role grants Officer and doesn't offer `@everyone` or the bot's own role. Create a role for your members too (e.g. "Guild Member"): missing-role alerts mention it once you choose it in the guild settings.
+4. Invite the bot: on the **OAuth2** page, open **URL Generator**, tick the **bot** and **applications.commands** scopes, and under **Bot Permissions** tick **View Channels**, **Send Messages**, **Embed Links**, **Read Message History**, and **Mention @everyone, @here, and All Roles**. Open the generated URL and pick your test server. The last permission lets the bot mention the Guild Member role. Without it, the guild settings only offer roles marked **Allow anyone to @mention this role** (in **Server Settings → Roles → the role → Display**).
 5. Set up the web login: on the **OAuth2** page:
    - Copy the **Client ID** into `.env` as `DISCORD_CLIENT_ID`.
    - Click **Reset Secret** and put it in `.env` as `DISCORD_CLIENT_SECRET`. Treat it like a password.

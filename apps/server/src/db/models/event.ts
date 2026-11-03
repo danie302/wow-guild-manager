@@ -39,6 +39,8 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
   declare tentativeDeadlineHours: CreationOptional<number | null>;
   /** When Tentative participants must have confirmed (see domain/tentative.ts). */
   declare tentativeDeadlineAt: Date;
+  /** How many hours before the start the missing-role check runs. */
+  declare missingRoleAlertHours: CreationOptional<number>;
   /** When attendance was first saved, and by whom; null until then. */
   declare attendanceRecordedAt: CreationOptional<Date | null>;
   declare attendanceRecordedByUserId: CreationOptional<ForeignKey<User['id']> | null>;
@@ -76,6 +78,7 @@ export class Event extends Model<InferAttributes<Event>, InferCreationAttributes
         seriesId: { type: DataTypes.UUID, allowNull: true },
         tentativeDeadlineHours: { type: DataTypes.SMALLINT, allowNull: true },
         tentativeDeadlineAt: { type: DataTypes.DATE, allowNull: false },
+        missingRoleAlertHours: { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 24 },
         attendanceRecordedAt: { type: DataTypes.DATE, allowNull: true },
         attendanceRecordedByUserId: { type: DataTypes.UUID, allowNull: true },
         discordChannelId: { type: DataTypes.STRING(20), allowNull: true },

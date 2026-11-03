@@ -102,6 +102,48 @@ describe('series', () => {
     );
   });
 
+  it('passes its missing-role alert time to its events, and rejects one out of range', async () => {
+    const { agent, base } = await setup();
+    const series = (
+      await agent
+        .post(`${base}/series`)
+        .send({ type: 'raid', ...details, startsAt: inDays(1), missingRoleAlertHours: 48 })
+    ).body as SeriesResponse;
+    const alertHours = async () =>
+      ((await agent.get(`${base}/events?scope=upcoming`)).body as EventResponse[]).map(
+        (event) => event.missingRoleAlertHours,
+      );
+
+    expect(series.missingRoleAlertHours).toBe(48);
+    expect(await alertHours()).toEqual([48, 48]);
+
+    await agent
+      .put(`${base}/series/${series.id}`)
+      .send({ ...details, startsAt: inDays(1), missingRoleAlertHours: 12 });
+    expect(await alertHours()).toEqual([12, 12]);
+
+    const tooFar = await agent
+      .put(`${base}/series/${series.id}`)
+      .send({ ...details, startsAt: inDays(1), missingRoleAlertHours: 73 });
+    expect(tooFar.status).toBe(400);
+    expect(tooFar.body).toMatchObject({
+      error: { code: 'VALIDATION_ERROR', issues: [{ field: 'missingRoleAlertHours' }] },
+    });
+  });
+
+  it('says when each event waiting for the one before it will be posted', async () => {
+    const { agent, base } = await setup();
+    const startsAt = inDays(1);
+    await agent.post(`${base}/series`).send({ type: 'raid', ...details, startsAt });
+
+    const events = (await agent.get(`${base}/events?scope=upcoming`)).body as EventResponse[];
+
+    expect(events.map((event) => event.discordPost.postAt)).toEqual([
+      null,
+      new Date(Date.parse(startsAt) + 12 * 60 * 60 * 1000).toISOString(),
+    ]);
+  });
+
   it('edits and stops a series', async () => {
     const { agent, base } = await setup();
     const series = (

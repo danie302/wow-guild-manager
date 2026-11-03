@@ -23,15 +23,27 @@ export interface ChannelMessage {
   replyTo?: string;
   /** The only users its mentions notify; without it, nobody is notified. */
   mentionUserIds?: string[];
+  /** The only roles its mentions notify; without it, no role is notified. */
+  mentionRoleIds?: string[];
 }
 
 /** The message as Discord's API takes it. */
-function messageBody({ replyTo, mentionUserIds = [], ...message }: ChannelMessage) {
+function messageBody({
+  replyTo,
+  mentionUserIds = [],
+  mentionRoleIds = [],
+  ...message
+}: ChannelMessage) {
   return {
     ...message,
     ...(replyTo && { message_reference: { message_id: replyTo, fail_if_not_exists: false } }),
-    // Never @everyone or roles; only the listed users, and not the author of a replied message.
-    allowed_mentions: { parse: [], users: mentionUserIds, replied_user: false },
+    // Never @everyone; only the listed users and roles, and not the author of a replied message.
+    allowed_mentions: {
+      parse: [],
+      users: mentionUserIds,
+      roles: mentionRoleIds,
+      replied_user: false,
+    },
   };
 }
 

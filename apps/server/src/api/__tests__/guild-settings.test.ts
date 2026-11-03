@@ -355,6 +355,68 @@ describe('the events channel and Discord language', () => {
   });
 });
 
+describe('the Guild Member role', () => {
+  const guildMembers = '400000000000000003';
+  const MENTION_EVERYONE = 1n << 17n;
+
+  /** The guild, with a mentionable Guild Member role in its server and the bot in it. */
+  async function withMemberRole() {
+    const setupResult = await setup();
+    const ashenServer = setupResult.directory.servers.get(ashen)!;
+    ashenServer.roles.push(role(guildMembers, 'Guild Member', { mentionable: true }));
+    return setupResult;
+  }
+
+  it('lists only the roles the bot can mention, or all of them with that permission', async () => {
+    const { gmAgent, directory } = await withMemberRole();
+    const names = async () =>
+      (
+        (await gmAgent.get(`/api/discord/servers/${ashen}/member-roles`)).body as {
+          roles: { name: string }[];
+        }
+      ).roles.map((r) => r.name);
+
+    expect(await names()).toEqual(['Guild Member']);
+
+    const botRole = directory.servers.get(ashen)!.roles.find((r) => r.managed)!;
+    botRole.permissions |= MENTION_EVERYONE;
+    expect((await names()).sort()).toEqual(['Guild Member', 'Managers', 'Officers']);
+  });
+
+  it('saves the role, clears it, and rejects one the bot cannot mention', async () => {
+    const { gmAgent, save, id } = await withMemberRole();
+
+    const saved = await save(gmAgent).field('memberRoleId', guildMembers);
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ memberRole: { id: guildMembers, name: 'Guild Member' } });
+
+    const refused = await save(gmAgent).field('memberRoleId', officers);
+    expect(refused.status).toBe(400);
+    expect(body(refused).error.issues).toEqual([
+      { field: 'memberRoleId', code: 'MEMBER_ROLE_NOT_USABLE' },
+    ]);
+    expect((await Guild.findByPk(id))?.memberRoleId).toBe(guildMembers);
+
+    const cleared = await save(gmAgent).field('memberRoleId', '');
+    expect(cleared.body).toMatchObject({ memberRole: null });
+  });
+
+  it("is cleared when the server changes, and Officers can't change it", async () => {
+    const { gmAgent, officerAgent, save, directory, id } = await withMemberRole();
+    expect((await save(officerAgent).field('memberRoleId', guildMembers)).status).toBe(403);
+    await save(gmAgent).field('memberRoleId', guildMembers);
+    const ember = '300000000000000002';
+    directory
+      .addServer(server(ember, 'Emberwatch', { roles: [role(managers, 'Managers')] }))
+      .addMember(ember, gm, [managers]);
+    directory.servers.get(ember)!.ownerId = gm;
+
+    await save(gmAgent).field('discordServerId', ember).field('officerRoleId', managers);
+
+    expect((await Guild.findByPk(id))?.memberRoleId).toBeNull();
+  });
+});
+
 describe('the Tentative deadline and reminder', () => {
   it('lets Officers set them, moves upcoming events, and reschedules their jobs', async () => {
     const { officerAgent, save, jobs, id } = await setup();

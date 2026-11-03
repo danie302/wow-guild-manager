@@ -19,6 +19,8 @@ export interface ChoiceGroupProps<Value extends string> {
   onChange: (value: Value) => void;
   /** Shows the choice without letting it change, e.g. for someone who can't edit it. */
   disabled?: boolean;
+  /** Help text under the options. */
+  hint?: string;
   children: ReactNode;
 }
 
@@ -37,6 +39,7 @@ function ChoiceGroupRoot<Value extends string>({
   value,
   onChange,
   disabled,
+  hint,
   children,
 }: ChoiceGroupProps<Value>) {
   const labelId = useId();
@@ -61,6 +64,7 @@ function ChoiceGroupRoot<Value extends string>({
         >
           {children}
         </ToggleButtonGroup>
+        {hint && <Box sx={{ fontSize: 13, color: token('mt') }}>{hint}</Box>}
       </Box>
     </SmallContext.Provider>
   );

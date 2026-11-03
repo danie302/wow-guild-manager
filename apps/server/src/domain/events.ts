@@ -142,5 +142,6 @@ export function eventColumns(details: z.output<typeof updateEventSchema>) {
     healerSlots: details.slots.healer,
     dpsSlots: details.slots.dps,
     tentativeDeadlineHours: details.tentativeDeadlineHours,
+    missingRoleAlertHours: details.missingRoleAlertHours,
   };
 }

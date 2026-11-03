@@ -20,6 +20,7 @@ import { useBlocker } from 'react-router';
 import { ApiRequestError } from '../api/client';
 import {
   useDiscordChannels,
+  useDiscordMemberRoles,
   useDiscordRoles,
   useDiscordServers,
   useGuild,
@@ -51,6 +52,8 @@ interface Form {
   image: { kind: 'keep' } | { kind: 'new'; file: File; previewUrl: string } | { kind: 'remove' };
   serverId: string;
   roleId: string | null;
+  /** The role missing-role alerts mention; null mentions nobody. */
+  memberRoleId: string | null;
   /** Null until one is chosen; a new server starts without one. */
   channelId: string | null;
   /** Each event type's own channel; null uses the events channel. */
@@ -69,6 +72,7 @@ function formFrom(guild: GuildResponse): Form {
     image: { kind: 'keep' },
     serverId: guild.discordServer.id,
     roleId: guild.officerRole.id,
+    memberRoleId: guild.memberRole?.id ?? null,
     channelId: guild.eventsChannel?.id ?? null,
     typeChannels: savedTypeChannels(guild),
     discordLocale: guild.discordLocale,
@@ -163,6 +167,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
 
   const servers = useDiscordServers(isGuildMaster && changingServer);
   const roles = useDiscordRoles(isGuildMaster ? form.serverId : null);
+  const memberRoles = useDiscordMemberRoles(isGuildMaster ? form.serverId : null);
   const channels = useDiscordChannels(isGuildMaster ? form.serverId : null);
 
   const nameResult = guildNameSchema.safeParse(form.name);
@@ -175,6 +180,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
   const savedTypes = savedTypeChannels(guild);
   const changedTypes = EVENT_TYPES.filter((type) => form.typeChannels[type] !== savedTypes[type]);
   const localeChanged = form.discordLocale !== guild.discordLocale;
+  const memberRoleChanged = form.memberRoleId !== (guild.memberRole?.id ?? null);
   const deadlineHours = hoursIn(form.deadlineHours, TENTATIVE_DEADLINE_HOURS);
   const reminderHours = hoursIn(form.reminderHours, REMINDER_HOURS);
   const deadlineChanged = form.deadlineHours !== String(guild.tentativeDeadlineHours);
@@ -202,6 +208,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
     );
   }
   if (localeChanged) changes.discordLocale = form.discordLocale;
+  if (memberRoleChanged) changes.memberRoleId = form.memberRoleId;
   if (deadlineChanged && deadlineHours !== null) changes.tentativeDeadlineHours = deadlineHours;
   if (reminderChanged && reminderHours !== null) changes.reminderHours = reminderHours;
   if (bandsChanged && bandsValid) {
@@ -217,6 +224,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
     channelChanged ||
     changedTypes.length > 0 ||
     localeChanged ||
+    memberRoleChanged ||
     deadlineChanged ||
     reminderChanged ||
     bandsChanged;
@@ -332,6 +340,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
                   update({
                     serverId,
                     roleId: saved ? guild.officerRole.id : null,
+                    memberRoleId: saved ? (guild.memberRole?.id ?? null) : null,
                     channelId: saved ? (guild.eventsChannel?.id ?? null) : null,
                     typeChannels: saved
                       ? savedTypeChannels(guild)
@@ -372,6 +381,35 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
             noOptionsText={t('setup.noRoleMatch')}
             hint={form.roleId === null ? t('guildSettings.chooseRole') : t('setup.officerHelp')}
             disabled={!isGuildMaster || roles.isPending}
+          />
+        )}
+
+        {isGuildMaster && memberRoles.isError ? (
+          <DiscordError error={memberRoles.error} />
+        ) : (
+          <ComboBox
+            label={t('guildSettings.memberRole')}
+            value={form.memberRoleId ?? ''}
+            options={[
+              { value: '', label: t('guildSettings.noMemberRole') },
+              ...(isGuildMaster
+                ? (memberRoles.data?.roles ?? []).map((role) => ({
+                    value: role.id,
+                    label: `@${role.name}`,
+                  }))
+                : guild.memberRole
+                  ? [
+                      {
+                        value: guild.memberRole.id,
+                        label: `@${guild.memberRole.name ?? guild.memberRole.id}`,
+                      },
+                    ]
+                  : []),
+            ]}
+            onChange={(memberRoleId) => update({ memberRoleId: memberRoleId || null })}
+            noOptionsText={t('guildSettings.noMemberRoleMatch')}
+            hint={t('guildSettings.memberRoleHelp')}
+            disabled={!isGuildMaster || memberRoles.isPending}
           />
         )}
 
@@ -427,6 +465,7 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
           value={form.discordLocale}
           onChange={(discordLocale: Locale) => update({ discordLocale })}
           disabled={!isGuildMaster}
+          hint={t('guildSettings.discordLanguageHelp')}
         >
           {SUPPORTED_LOCALES.map((locale) => (
             <ChoiceGroup.Option key={locale} value={locale}>
@@ -434,7 +473,6 @@ function GuildSettingsForm({ guild, justSaved, setJustSaved }: GuildSettingsForm
             </ChoiceGroup.Option>
           ))}
         </ChoiceGroup>
-        <Page.Text>{t('guildSettings.discordLanguageHelp')}</Page.Text>
       </Page.Setting>
 
       <Page.Setting title={t('guildSettings.signUps')} description={t('guildSettings.signUpsHelp')}>

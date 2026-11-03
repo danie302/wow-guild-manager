@@ -22,8 +22,9 @@ const saved: EventResponse = {
   createdBy: 'Thrall',
   cancelled: null,
   series: null,
-  discordPost: { url: null, error: null },
+  discordPost: { url: null, error: null, postAt: null },
   tentativeDeadline: { at: '2026-01-01T00:00:00.000Z', hours: 24, own: false },
+  missingRoleAlertHours: 24,
 };
 
 const me = { ...testUser, timeZone: 'America/Argentina/Buenos_Aires' };
@@ -58,8 +59,10 @@ describe('EventFormPage', () => {
       size: 40,
       slots: { tank: 4, healer: 10, dps: 26 },
       tentativeDeadlineHours: null,
+      missingRoleAlertHours: 24,
     });
-  });
+    // Typing every field one key at a time, in a form this long, takes a while.
+  }, 10_000);
 
   it('keeps the running total, and only saves once everything is right', async () => {
     mockApi({ '/api/me': () => Response.json(me) });
@@ -136,6 +139,7 @@ describe('EventFormPage', () => {
       size: 40,
       slots: { tank: 4, healer: 10, dps: 26 },
       tentativeDeadlineHours: null,
+      missingRoleAlertHours: 24,
     });
   });
 
@@ -227,6 +231,28 @@ describe('EventFormPage', () => {
 
     await screen.findByRole('heading', { name: 'Molten Core' });
     expect(bodyOf(fetchMock, 'PUT')).toMatchObject({ tentativeDeadlineHours: 48 });
+  });
+
+  it('changes when the missing-role alert goes out, within 1–72 hours', async () => {
+    const fetchMock = mockApi({
+      '/api/me': () => Response.json(me),
+      [`${api}/${eventId}`]: () => Response.json(saved),
+      [`PUT ${api}/${eventId}`]: () => Response.json(saved),
+    });
+    const user = userEvent.setup();
+    renderRoute(`/guilds/${ashenId}/events/${eventId}/edit`);
+
+    const hours = await screen.findByLabelText('Missing-role alert');
+    expect(hours).toHaveValue(24);
+    await user.clear(hours);
+    await user.type(hours, '73');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await user.clear(hours);
+    await user.type(hours, '48');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await screen.findByRole('heading', { name: 'Molten Core' });
+    expect(bodyOf(fetchMock, 'PUT')).toMatchObject({ missingRoleAlertHours: 48 });
   });
 
   it('warns who moves to the waitlist when a role gets fewer slots', async () => {

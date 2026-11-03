@@ -6,7 +6,7 @@ import type { ServerExit } from '../../integrations/discord/server-exit.js';
 import type { ChannelMessages } from '../../integrations/discord/channel-messages.js';
 import type { DirectMessenger } from '../../integrations/discord/direct-messages.js';
 import type { Logger } from '../../logger.js';
-import { enqueueMissingEventPosts } from '../event-posts.js';
+import { enqueueMissingEventPosts, enqueueSeriesEventPosts } from '../event-posts.js';
 import { scheduleEventJobs } from '../event-jobs.js';
 import type { JobEnqueuer } from '../queue.js';
 import type { JobHandlers } from '../worker.js';
@@ -55,6 +55,9 @@ export function createJobHandlers(dependencies: JobDependencies): JobHandlers {
       const created = await extendAllSeries(dependencies.logger);
       await scheduleEventJobs(dependencies.jobs, created);
       await enqueueMissingEventPosts(dependencies.jobs);
+    },
+    'series-event-finished': async ({ seriesId }) => {
+      await enqueueSeriesEventPosts(dependencies.jobs, seriesId);
     },
   };
 }

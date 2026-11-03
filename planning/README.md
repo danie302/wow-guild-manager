@@ -92,6 +92,9 @@ Blizzard hasn't published a Battle.net API for World of Warcraft: Forever (relea
 | [027](story-027-missing-role-alerts.md) | Missing-role alerts | Done | 009, 024 |
 | [039](story-039-add-participants.md) | Adding participants from the web app | Done | 025, 026 |
 | [043](story-043-event-channels.md) | Event channels per type and per series | Done with debt | 021, 022 |
+| [044](story-044-single-missing-role-alert.md) | One missing-role alert with a configurable time | Done with debt | 021, 027 |
+| [045](story-045-post-next-series-event-only.md) | Post only the next event of a series | Done with debt | 021, 022, 043 |
+| [046](story-046-member-role-mention.md) | Mention a Guild Member role in missing-role alerts | Done with debt | 027, 044 |
 
 ### Attendance
 

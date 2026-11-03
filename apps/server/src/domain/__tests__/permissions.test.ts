@@ -9,6 +9,7 @@ const table: Record<GuildAction, { guildMaster: boolean; officer: boolean; membe
   editGuildProfile: { guildMaster: true, officer: false },
   connectDiscordServer: { guildMaster: true, officer: false },
   chooseOfficerRole: { guildMaster: true, officer: false },
+  chooseMemberRole: { guildMaster: true, officer: false },
   transferLeadership: { guildMaster: true, officer: false },
   disbandGuild: { guildMaster: true, officer: false },
   chooseEventsChannel: { guildMaster: true, officer: false },

@@ -149,6 +149,7 @@ A character can only sign up for an event with a combat role their class can fil
 | Edit the guild name and image | ✓ | |
 | Connect the guild's Discord server | ✓ | |
 | Choose the Discord role that grants Officer | ✓ | |
+| Choose the Guild Member role mentioned in missing-role alerts | ✓ | |
 | Transfer leadership | ✓ | |
 | Disband the guild | ✓ | |
 | Change a member's rank between Raider and Member | ✓ | ✓ |
@@ -211,9 +212,10 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 - Recurrence is weekly only: the same weekday and time every week, at the same UTC time (so its local time moves by an hour when daylight saving time changes).
 - The next 2 weeks of events in a series always exist. Older ones are created as time passes.
 - Each event in a series can be edited or cancelled on its own.
-- Editing the series (time, slots, deadline, etc.) changes every future event in it, including ones with sign-ups and ones edited on their own. Cancelled events stay cancelled. Participants of changed events get a direct message, and slot reductions follow the rule above.
+- Editing the series (time, slots, deadline, missing-role alert time, etc.) changes every future event in it, including ones with sign-ups and ones edited on their own. Cancelled events stay cancelled. Participants of changed events get a direct message, and slot reductions follow the rule above.
 - Stopping a series removes its future events that have no sign-ups.
 - A series can have its own Discord channel, chosen by whoever creates or edits it (the Guild Master or an Officer). See "Event posts".
+- Only one event of a series is posted in Discord at a time: an event is posted once every earlier event in its series has finished. See "Event posts".
 
 ### Tentative deadline
 - Each guild sets a **Tentative deadline**: how many hours before an event Tentative participants must confirm. The default is 24 hours, and it can be from 1 to 168 hours.
@@ -239,6 +241,7 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 
 ### Event posts
 - When an event is created in the app, the bot posts it to a Discord channel.
+- An event in a recurring series is posted only once every earlier event in the series has finished. An event counts as finished 12 hours after it starts, even if it was cancelled. Until then the event exists in the app, where the Guild Master and Officers can edit it, cancel it, or add participants, but it has no post, so members can't sign up for it yet. Its event page says when it will be posted.
 - The post shows the name, description, date and time (in each reader's local time), and the slots per combat role.
 - The post updates in real time with who is signed up for each role and who is on the waitlist.
 - Editing or cancelling the event in the app updates the post.
@@ -275,10 +278,11 @@ Officers are promoted and demoted by giving or removing the Officer role in Disc
 
 ### Reminders and alerts
 - Tentative participants get a direct message at the guild's reminder time before the Tentative deadline, reminding them to confirm. Someone who signs up as Tentative after the reminder time gets the reminder right away.
-- If an event is still missing players for a combat role 48 hours and again 24 hours before it starts, the bot posts an alert (e.g. "2 Healers still needed for BWL on Tuesday") that mentions eligible members who can fill that role and haven't signed up.
-  - One alert per event and check, with a line for each role that's missing players, posted in the event post's channel as a reply to the post, in the guild's Discord language.
-  - It mentions active roster members (not flagged as having left Discord) whose rank can join the event, who have a character that can fill the role, and who have no sign-up for the event (Declined counts as signed up).
-  - A check whose time has already passed when the event is created or moved is skipped (an event created 30 hours ahead only gets the 24-hour one).
+- If an event is still missing players for a combat role at its missing-role alert time, the bot posts an alert (e.g. "2 Healers still needed for BWL on Tuesday") that mentions the guild's Guild Member role.
+  - The alert time is how many hours before the event the check runs: 24 hours by default, from 1 to 72 hours. It's chosen when creating or editing an event or a recurring series (by the Guild Master or an Officer); a series passes it to its events.
+  - One alert per event, with a line for each role that's missing players, posted in the event post's channel as a reply to the post, in the guild's Discord language.
+  - The alert mentions the Guild Member role once, at the end, instead of each member. The Guild Master chooses that role in the guild settings, from the server's roles that the bot can mention (roles set as mentionable in Discord, or any role if the bot has the permission to mention all roles). Without a Guild Member role, the alert is posted without mentioning anyone.
+  - A check whose time has already passed when the event is created, moved, or its alert time changes is skipped (an event created 20 hours ahead with a 24-hour alert time gets no alert).
 
 ## Attendance
 

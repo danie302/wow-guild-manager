@@ -8,6 +8,7 @@ import express, { type RequestHandler } from 'express';
 
 import {
   discordEventChannelOptions,
+  discordMemberRoleOptions,
   discordOfficerRoleOptions,
   discordServerOptions,
 } from '../domain/guilds.js';
@@ -58,6 +59,23 @@ export function discordRouter(discord: DiscordAccess | null) {
       currentUser(res),
       serverId.data,
       discord!.directory,
+    );
+    res.json({
+      roles: roles.map((role) => ({ id: role.id, name: role.name, color: discordRoleColor(role) })),
+    } satisfies DiscordRolesResponse);
+  });
+
+  router.get('/discord/servers/:serverId/member-roles', async (req, res) => {
+    const serverId = discordIdSchema.safeParse(req.params.serverId);
+    if (!serverId.success) {
+      sendError(res, 404, { code: 'NOT_FOUND' });
+      return;
+    }
+    const roles = await discordMemberRoleOptions(
+      currentUser(res),
+      serverId.data,
+      discord!.directory,
+      discord!.botUserId,
     );
     res.json({
       roles: roles.map((role) => ({ id: role.id, name: role.name, color: discordRoleColor(role) })),

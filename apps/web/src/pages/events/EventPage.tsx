@@ -82,6 +82,7 @@ export function EventPage() {
                   date: whenText(format, new Date(data.tentativeDeadline.at)),
                   hours: data.tentativeDeadline.hours,
                 }),
+                t('eventPage.missingRoleAlert', { hours: data.missingRoleAlertHours }),
               ]
         }
         description={data.description}
@@ -118,6 +119,10 @@ export function EventPage() {
       {readOnly && !data.cancelled && (
         <Notice tone="ok" title={t('eventPage.signUpInDiscord')}>
           {t('eventPage.signUpInDiscordHelp')}{' '}
+          {data.discordPost.postAt &&
+            t('eventPage.post.waiting', {
+              date: format.dateTime(new Date(data.discordPost.postAt)),
+            })}
           {data.discordPost.url && (
             <Button variant="text" href={data.discordPost.url} newTab endIcon="external">
               {t('eventPage.openPost')}

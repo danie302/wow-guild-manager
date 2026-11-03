@@ -47,6 +47,8 @@ export interface DiscordRole {
   permissions: bigint;
   /** Managed by an integration (a bot's own role, server boosts), so it can't be given by hand. */
   managed: boolean;
+  /** Anyone can mention it, without the permission to mention all roles. */
+  mentionable: boolean;
 }
 
 export interface DiscordMemberProfile {
@@ -92,6 +94,8 @@ const MANAGE_GUILD = 1n << 5n;
 const VIEW_CHANNEL = 1n << 10n;
 const SEND_MESSAGES = 1n << 11n;
 const EMBED_LINKS = 1n << 14n;
+/** Lets a member mention `@everyone`, `@here`, and every role, mentionable or not. */
+const MENTION_EVERYONE = 1n << 17n;
 /** What the bot needs in the events channel: see it, write in it, and post embeds. */
 const EVENT_POST_PERMISSIONS = VIEW_CHANNEL | SEND_MESSAGES | EMBED_LINKS;
 
@@ -176,6 +180,19 @@ export function officerRoleOptions(server: DiscordServer): DiscordRole[] {
   return server.roles
     .filter((role) => role.id !== server.id && !role.managed)
     .sort((a, b) => b.position - a.position);
+}
+
+/**
+ * Roles the bot can mention, for the Guild Member role: mentionable roles, or every role when
+ * the bot may mention all roles (or is an administrator). Not `@everyone` or roles managed by
+ * integrations. Highest first. Channel overwrites aren't checked.
+ */
+export function mentionableRoleOptions(
+  server: DiscordServer,
+  bot: Pick<DiscordMember, 'roleIds'>,
+): DiscordRole[] {
+  const mentionsAll = (serverPermissions(server, bot) & (ADMINISTRATOR | MENTION_EVERYONE)) !== 0n;
+  return officerRoleOptions(server).filter((role) => mentionsAll || role.mentionable);
 }
 
 export function discordServerIconUrl(server: DiscordServerSummary): string | null {

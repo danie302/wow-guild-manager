@@ -18,6 +18,8 @@ export const GUILD_ERROR_CODES = {
   officerRoleNotFound: 'OFFICER_ROLE_NOT_FOUND',
   /** The bot can't see, write, or post embeds in the channel, or it isn't a text channel. */
   eventsChannelNotUsable: 'EVENTS_CHANNEL_NOT_USABLE',
+  /** The Guild Member role isn't in the server, or the bot can't mention it. */
+  memberRoleNotUsable: 'MEMBER_ROLE_NOT_USABLE',
 } as const;
 
 export const guildNameSchema = z
@@ -57,6 +59,8 @@ export const updateGuildSchema = z
     name: guildNameSchema,
     discordServerId: discordIdSchema,
     officerRoleId: discordIdSchema,
+    /** The role missing-role alerts mention; "" clears it. A new server clears it if not sent. */
+    memberRoleId: discordIdSchema.or(z.literal('')),
     /** The channel where the bot posts events. A new server needs its own channel. */
     eventsChannelId: discordIdSchema,
     /** A channel for one event type, used instead of the events channel; "" clears it. */

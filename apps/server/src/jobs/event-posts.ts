@@ -2,6 +2,7 @@ import type { EventType } from '@wgm/shared';
 import { Op } from 'sequelize';
 
 import { Event, EventSeries, Guild } from '../db/models/index.js';
+import { postableNow } from '../domain/series-posts.js';
 import type { JobEnqueuer } from './queue.js';
 
 /** Asks the worker to bring these events' Discord posts up to date. */
@@ -65,8 +66,9 @@ export async function enqueueUpcomingEventPosts(
 
 /**
  * Upcoming events with a channel (their series', their type's, or the guild's events channel)
- * that were never posted: the new events of
- * recurring series, and any whose job was lost. The worker runs it hourly. Posts that failed
+ * that were never posted and can be now: the next event of each series once the one before it
+ * finished (domain/series-posts.ts), and any whose job was lost. The worker runs it hourly,
+ * as a backup to the `series-event-finished` jobs. Posts that failed
  * aren't retried here: retrying a refusal that nobody fixed would only pile up refused calls,
  * which Discord answers by blocking the bot (enqueueFailedEventPosts retries them when
  * something changes). A partial index keeps it to the few events without a post.
@@ -86,11 +88,31 @@ export async function enqueueMissingEventPosts(jobs: JobEnqueuer, now = new Date
         { type: 'dungeon', '$guild.dungeon_channel_id$': { [Op.ne]: null } },
         { type: 'pvp', '$guild.pvp_channel_id$': { [Op.ne]: null } },
       ],
+      [Op.and]: [postableNow(now)],
     },
     include: [
       { model: Guild, as: 'guild', attributes: [] },
       { model: EventSeries, as: 'series', attributes: [] },
     ],
+  });
+  await enqueueEventPosts(
+    jobs,
+    events.map((event) => event.id),
+  );
+}
+
+/**
+ * When an event of the series finishes: its upcoming events that aren't posted yet are brought
+ * up to date, which posts the next one (the others still wait).
+ */
+export async function enqueueSeriesEventPosts(
+  jobs: JobEnqueuer,
+  seriesId: string,
+  now = new Date(),
+): Promise<void> {
+  const events = await Event.findAll({
+    attributes: ['id'],
+    where: { seriesId, startsAt: { [Op.gt]: now }, cancelledAt: null, discordMessageId: null },
   });
   await enqueueEventPosts(
     jobs,

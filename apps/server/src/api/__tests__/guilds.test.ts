@@ -196,6 +196,7 @@ describe('POST /api/guilds', () => {
         iconUrl: `https://cdn.discordapp.com/icons/${ashen}/abc.png?size=64`,
       },
       officerRole: { id: officers, name: 'Officers' },
+      memberRole: null,
       eventsChannel: null,
       typeChannels: { raid: null, dungeon: null, pvp: null },
       discordLocale: 'en',

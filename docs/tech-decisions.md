@@ -343,6 +343,8 @@ The gear checks (and, later, registering characters from Discord) read character
 - The API needs the bot's user ID to check its permissions; it's the application's `DISCORD_CLIENT_ID`.
 - Sign-ups (story 023) coalesce the post's edits: each one schedules `event-post` for the end of the current few-second window, with a job ID per event and window (`event-post-<eventId>-<window>`). Every sign-up in that window lands on the same job, which reads the final state when it runs, so a burst of sign-ups makes one edit per window instead of one each (Discord limits edits per channel). The window is in the ID, rather than one fixed ID per event, because BullMQ ignores a job whose ID is already running: a sign-up that arrives while the edit runs is in the next window, so it gets its own job and isn't lost. Other changes (editing the event, the guild's settings) still enqueue it right away.
 - The events channel picker lists the server's text channels through `DiscordDirectory` (cached like the roles), showing only the ones where the bot can see, write, and post embeds.
+- Story 045: a series keeps two weeks of events, but only one is posted at a time. An event of a series is posted once every earlier event of its series has finished, 12 hours after it started, cancelled ones included (`src/domain/series-posts.ts`; there's no end time, so the 12 hours are a fixed rule). The rule is checked in three places that share that module: the `event-post` handler doesn't create a post for an event that has to wait (one that already has a post keeps it and still moves with its channel), the hourly search for unposted events leaves them out with the same condition in SQL, and the API tells the event page when a waiting event will be posted (`discordPost.postAt`).
+- To post the next event on time, each event of a series has a `series-event-finished-<eventId>` job at its finish time, scheduled by `scheduleEventJobs`, which enqueues `event-post` for the series' upcoming unposted events (the handler posts the one that can be). Unlike the other per-event jobs, it stays when the event is cancelled, since a cancelled event still holds the next one back until it would have finished. The payload is the series ID, so it also works when the event was removed by stopping the series. The hourly search stays as a backup.
 
 ### Sign-ups from Discord
 
@@ -369,11 +371,13 @@ The gear checks (and, later, registering characters from Discord) read character
 
 ### Missing-role alerts
 
-**Status:** Accepted (story 027)
+**Status:** Accepted (story 027, changed in stories 044 and 046)
 
-- Each event has `missing-roles-48-<eventId>` and `missing-roles-24-<eventId>` jobs, scheduled with the Tentative ones by `scheduleEventJobs` (`src/jobs/event-jobs.ts`). A check whose time has passed when the event is created or moved isn't scheduled.
-- The check re-reads the event and does nothing if it was cancelled, moved later, or (for the 48-hour check) the 24-hour one is already due, so a late job never alerts twice. Who to mention is worked out when it runs (`src/domain/missing-roles.ts`), from the database only.
-- The alert is one message per event and check, posted by the worker as a reply to the event's post. `allowed_mentions` lists exactly the mentioned users (never `@everyone` or roles), and the mentions are cut short to fit Discord's limits (2000 characters, 100 users).
+- Each event has one `missing-roles-<eventId>` job, scheduled with the Tentative ones by `scheduleEventJobs` (`src/jobs/event-jobs.ts`) at its alert time: `missing_role_alert_hours` before the start (1 to 72, 24 by default), stored on the event and on its series, which passes it to its events. There's no guild setting. A check whose time has passed when the event is created, moved, or its alert time changes isn't scheduled. The maximum of 72 hours keeps the alert after the event's post exists, since the next event of a weekly series is posted about 6.5 days ahead (story 045).
+- Story 027 had two checks per event, 48 and 24 hours before. When the worker starts, it removes any of those old jobs (`removeOldMissingRoleChecks`), and the handler ignores a payload that still has `hoursBefore`.
+- The check re-reads the event and does nothing if it was cancelled or its check time moved later. Which roles are missing is worked out when it runs (`src/domain/missing-roles.ts`), from the database only.
+- The alert is one message per event, posted by the worker as a reply to the event's post. Since story 046 it mentions the guild's Guild Member role (`guilds.member_role_id`) once, at the end, instead of each member who could fill a role, and `allowed_mentions` lists exactly that role (never `@everyone` or users). Without a Guild Member role it mentions nobody.
+- The Guild Member role picker (`GET /api/discord/servers/:serverId/member-roles`) and the settings save only accept roles the bot can mention: mentionable roles, or every role when the bot's server permissions include Mention Everyone or Administrator (`mentionableRoleOptions`). `@everyone` and roles managed by integrations aren't offered. Channel overwrites, which could take the permission away in one channel, aren't checked. Changing the guild's Discord server clears the role.
 
 ### Attendance
 

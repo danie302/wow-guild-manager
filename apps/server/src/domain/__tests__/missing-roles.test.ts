@@ -7,7 +7,7 @@ import { FakeJobQueue } from '../../../test/fake-job-queue.js';
 import { createTestGuild } from '../../../test/test-guild.js';
 import { Character, Member, SignUp, User, type Event, type Guild } from '../../db/models/index.js';
 import { createSequelize } from '../../db/sequelize.js';
-import { scheduleEventJobs } from '../../jobs/event-jobs.js';
+import { removeOldMissingRoleChecks, scheduleEventJobs } from '../../jobs/event-jobs.js';
 import { missingRoleHandlers } from '../../jobs/handlers/missing-roles.js';
 import { createTestLogger } from '../../test-logger.js';
 import { cancelEvent, createEvent } from '../events.js';
@@ -15,6 +15,7 @@ import { missingRoleAlert, missingRoles } from '../missing-roles.js';
 
 const serverId = '300000000000000001';
 const channelId = '500000000000000001';
+const memberRoleId = '400000000000000001';
 const hour = 60 * 60 * 1000;
 
 let sequelize: Sequelize;
@@ -67,7 +68,7 @@ async function member(
   return { discordUserId, member: created, character };
 }
 
-function raid(hoursAway = 47) {
+function raid(hoursAway = 47, missingRoleAlertHours?: number) {
   return createEvent(
     guild,
     {
@@ -77,6 +78,7 @@ function raid(hoursAway = 47) {
       startsAt: new Date(Date.now() + hoursAway * hour).toISOString(),
       size: 10,
       slots: { tank: 1, healer: 2, dps: 7 },
+      ...(missingRoleAlertHours && { missingRoleAlertHours }),
     },
     gm,
   );
@@ -100,101 +102,126 @@ async function signUp(
 }
 
 describe('missingRoles', () => {
-  it('lists open roles with who could fill them and has not answered', async () => {
+  it('lists the roles with open slots and how many are missing', async () => {
     const event = await raid();
     const tank = await member('warrior');
-    const priest = await member('priest');
-    const druid = await member('druid');
     const declined = await member('priest');
-    await member('priest', { rank: 'member' });
-    await member('priest', { leftDiscord: true });
     await signUp(tank, event, 'tank');
     await signUp(declined, event, null, 'declined');
 
-    const roles = await missingRoles(event, guild);
-
-    expect(roles).toEqual([
-      { role: 'healer', missing: 2, candidates: [priest.discordUserId, druid.discordUserId] },
-      // Priests can play DPS too.
-      { role: 'dps', missing: 7, candidates: [priest.discordUserId, druid.discordUserId] },
+    expect(await missingRoles(event)).toEqual([
+      { role: 'healer', missing: 2 },
+      { role: 'dps', missing: 7 },
     ]);
   });
 });
 
 describe('missingRoleAlert', () => {
-  it('has a line per role, in the guild language, with mentions', async () => {
+  it('has a line per role, in the guild language, and mentions the Guild Member role', async () => {
     const event = await raid();
+    const roles = [
+      { role: 'healer', missing: 2 },
+      { role: 'tank', missing: 1 },
+    ] as const;
 
-    const en = missingRoleAlert(event, 'en', [
-      { role: 'healer', missing: 2, candidates: ['1', '2'] },
-      { role: 'tank', missing: 1, candidates: [] },
-    ]);
-    const es = missingRoleAlert(event, 'es', [{ role: 'tank', missing: 1, candidates: ['1'] }]);
+    const en = missingRoleAlert(event, 'en', [...roles], memberRoleId);
+    const es = missingRoleAlert(event, 'es', [{ role: 'tank', missing: 1 }], memberRoleId);
 
     const unix = Math.floor(event.startsAt.getTime() / 1000);
     expect(en).toEqual({
-      content: `⚠️ **Blackwing Lair** – <t:${unix}:F>\n2 Healers still needed: <@1> <@2>\n1 Tank still needed.`,
-      mentions: ['1', '2'],
+      content: `⚠️ **Blackwing Lair** – <t:${unix}:F>\n2 Healers still needed\n1 Tank still needed\n<@&${memberRoleId}>`,
+      mentionRoleIds: [memberRoleId],
     });
-    expect(es.content).toContain('Falta 1 Tank: <@1>');
+    expect(es.content).toContain(`Falta 1 Tank\n<@&${memberRoleId}>`);
   });
 
-  it("cuts the mentions short to fit Discord's limits", async () => {
+  it('mentions nobody without a Guild Member role', async () => {
     const event = await raid();
-    const many = Array.from({ length: 300 }, (_, index) =>
-      String(200000000000000000n + BigInt(index)),
-    );
 
-    const { content, mentions } = missingRoleAlert(event, 'en', [
-      { role: 'dps', missing: 7, candidates: many },
-    ]);
+    const alert = missingRoleAlert(event, 'en', [{ role: 'dps', missing: 7 }], null);
 
-    expect(content.length).toBeLessThanOrEqual(2000);
-    expect(mentions.length).toBeLessThanOrEqual(100);
-    expect(content).toMatch(/…and \d+ more$/);
+    expect(alert.mentionRoleIds).toEqual([]);
+    expect(alert.content).not.toContain('<@');
   });
 });
 
 describe('the missing-role checks', () => {
-  it('are scheduled 48 and 24 hours before, skipping those already past', async () => {
-    const far = await raid(100);
-    const near = await raid(30);
+  it('are one per event at its alert time (24 hours by default), skipping those already past', async () => {
+    const usual = await raid(100);
+    const own = await raid(100, 60);
+    const near = await raid(20);
     const jobs = new FakeJobQueue();
 
-    await scheduleEventJobs(jobs, [far.id, near.id]);
+    await scheduleEventJobs(jobs, [usual.id, own.id, near.id]);
 
-    expect(jobs.job(`missing-roles-48-${far.id}`)?.runAt).toEqual(
-      new Date(far.startsAt.getTime() - 48 * hour),
+    expect(jobs.job(`missing-roles-${usual.id}`)?.runAt).toEqual(
+      new Date(usual.startsAt.getTime() - 24 * hour),
     );
-    expect(jobs.job(`missing-roles-24-${far.id}`)).toBeDefined();
-    expect(jobs.job(`missing-roles-48-${near.id}`)).toBeUndefined();
-    expect(jobs.job(`missing-roles-24-${near.id}`)).toBeDefined();
+    expect(jobs.job(`missing-roles-${usual.id}`)?.data).toEqual({ eventId: usual.id });
+    expect(jobs.job(`missing-roles-${own.id}`)?.runAt).toEqual(
+      new Date(own.startsAt.getTime() - 60 * hour),
+    );
+    expect(jobs.job(`missing-roles-${near.id}`)).toBeUndefined();
+  });
+
+  it('move when the alert time changes, and go away when it has passed', async () => {
+    const event = await raid(100);
+    const jobs = new FakeJobQueue();
+    await scheduleEventJobs(jobs, [event.id]);
+
+    await event.update({ missingRoleAlertHours: 72 });
+    await scheduleEventJobs(jobs, [event.id]);
+    expect(jobs.job(`missing-roles-${event.id}`)?.runAt).toEqual(
+      new Date(event.startsAt.getTime() - 72 * hour),
+    );
+
+    await event.update({ startsAt: new Date(Date.now() + 10 * hour) });
+    await scheduleEventJobs(jobs, [event.id]);
+    expect(jobs.job(`missing-roles-${event.id}`)).toBeUndefined();
+  });
+
+  it('from before there was one per event are removed', async () => {
+    const event = await raid(100);
+    const jobs = new FakeJobQueue();
+    for (const hours of [48, 24]) {
+      await jobs.schedule(
+        'missing-role-check',
+        { eventId: event.id },
+        { jobId: `missing-roles-${hours}-${event.id}`, runAt: new Date(Date.now() + hour) },
+      );
+    }
+
+    await removeOldMissingRoleChecks(jobs, [event.id]);
+
+    expect(jobs.job(`missing-roles-48-${event.id}`)).toBeUndefined();
+    expect(jobs.job(`missing-roles-24-${event.id}`)).toBeUndefined();
   });
 
   it('post one alert as a reply to the event post, and nothing when the event is full or gone', async () => {
     const event = await raid(23.5);
     await event.update({ discordChannelId: channelId, discordMessageId: '600000000000000001' });
-    const priest = await member('priest');
+    await guild.update({ memberRoleId });
     const discord = new FakeChannelMessages();
     const check = missingRoleHandlers({
       logger: createTestLogger().logger,
       channelMessages: discord,
     })['missing-role-check'];
 
-    await check({ eventId: event.id, hoursBefore: 24 });
-    // The 48-hour check is late, and the 24-hour one is due: it says nothing.
-    await check({ eventId: event.id, hoursBefore: 48 });
+    await check({ eventId: event.id });
+    // A check queued before there was one per event says nothing.
+    await check({ eventId: event.id, hoursBefore: 48 } as { eventId: string });
 
     const [alert] = [...discord.messages(channelId).values()];
     expect(discord.messages(channelId).size).toBe(1);
     expect(alert).toMatchObject({
       replyTo: '600000000000000001',
-      mentionUserIds: [priest.discordUserId],
+      mentionRoleIds: [memberRoleId],
     });
-    expect(alert!.content).toContain(`2 Healers still needed: <@${priest.discordUserId}>`);
+    expect(alert!.content).toContain(`2 Healers still needed\n`);
+    expect(alert!.content).toMatch(new RegExp(`<@&${memberRoleId}>$`));
 
     await cancelEvent(guild, event.id, gm);
-    await check({ eventId: event.id, hoursBefore: 24 });
+    await check({ eventId: event.id });
     expect(discord.messages(channelId).size).toBe(1);
   });
 
@@ -209,7 +236,7 @@ describe('the missing-role checks', () => {
     await missingRoleHandlers({
       logger: createTestLogger().logger,
       channelMessages: discord,
-    })['missing-role-check']({ eventId: event.id, hoursBefore: 24 });
+    })['missing-role-check']({ eventId: event.id });
 
     expect(discord.messages(channelId).size).toBe(0);
     expect([...discord.messages(raidChannel).values()]).toMatchObject([
@@ -217,14 +244,17 @@ describe('the missing-role checks', () => {
     ]);
   });
 
-  it('wait when the event moved later', async () => {
-    const event = await raid(40);
+  it('wait when the event moved later or its alert time is closer to the start', async () => {
+    const moved = await raid(40);
+    const closer = await raid(23.5, 12);
     const discord = new FakeChannelMessages();
-
-    await missingRoleHandlers({
+    const check = missingRoleHandlers({
       logger: createTestLogger().logger,
       channelMessages: discord,
-    })['missing-role-check']({ eventId: event.id, hoursBefore: 24 });
+    })['missing-role-check'];
+
+    await check({ eventId: moved.id });
+    await check({ eventId: closer.id });
 
     expect(discord.channels.size).toBe(0);
   });

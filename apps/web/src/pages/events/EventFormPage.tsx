@@ -7,6 +7,7 @@ import {
   EVENT_DESCRIPTION_MAX_LENGTH,
   EVENT_NAME_MAX_LENGTH,
   EVENT_TYPES,
+  MISSING_ROLE_ALERT_HOURS,
   eventSlotIssues,
   PVP_MAX_SIZE,
   PVP_MIN_SIZE,
@@ -69,6 +70,8 @@ interface Draft {
   slots: Slots;
   /** Its own Tentative deadline in hours, as typed; null uses the guild's. */
   ownDeadline: string | null;
+  /** Hours before the start the missing-role alert goes out, as typed. */
+  alertHours: string;
 }
 
 /** Slots a new event starts with, by type and size. */
@@ -155,6 +158,7 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
               : editing?.kind === 'series' && editing.value.tentativeDeadlineHours !== null
                 ? String(editing.value.tentativeDeadlineHours)
                 : null,
+          alertHours: String(event.missingRoleAlertHours),
         }
       : {
           type: 'raid',
@@ -165,6 +169,7 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
           size: defaultSize.raid,
           slots: defaultSlots('raid', defaultSize.raid),
           ownDeadline: null,
+          alertHours: String(MISSING_ROLE_ALERT_HOURS.default),
         },
   );
   const change = (changes: Partial<Draft>) => setDraft((current) => ({ ...current, ...changes }));
@@ -182,6 +187,7 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
     size: draft.size,
     slots: draft.slots,
     tentativeDeadlineHours: draft.ownDeadline === null ? null : Number(draft.ownDeadline),
+    missingRoleAlertHours: Number(draft.alertHours),
     ...(canPreConfirm &&
       preConfirmed.length > 0 && {
         preConfirmed: preConfirmed.map(({ characterId, role }) => ({ characterId, role })),
@@ -255,8 +261,15 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
       else createEvent.mutate(input, toEvent);
       return;
     }
-    const { name, description, startsAt: start, size, slots, tentativeDeadlineHours } = input;
-    const details = { name, description, startsAt: start, size, slots, tentativeDeadlineHours };
+    const details = {
+      name: input.name,
+      description: input.description,
+      startsAt: input.startsAt,
+      size: input.size,
+      slots: input.slots,
+      tentativeDeadlineHours: input.tentativeDeadlineHours,
+      missingRoleAlertHours: input.missingRoleAlertHours,
+    };
     if (editingSeries) updateSeries.mutate({ ...details, channelId: seriesChannel }, toSeries);
     else updateEvent.mutate(details, toEvent);
   };
@@ -385,6 +398,16 @@ function EventForm({ guildId, editing }: { guildId: string; editing?: Editing })
           error={errorFor('tentativeDeadlineHours')}
         />
       )}
+      <TextField
+        label={t('eventForm.missingRoleAlert')}
+        type="number"
+        width={90}
+        unit={t('eventForm.missingRoleAlertUnit')}
+        value={draft.alertHours}
+        onChange={(alertHours) => change({ alertHours })}
+        error={errorFor('missingRoleAlertHours')}
+        hint={t('eventForm.missingRoleAlertHelp')}
+      />
     </>
   );
 

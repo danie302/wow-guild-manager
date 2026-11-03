@@ -11,6 +11,7 @@ import {
   canManageServer,
   discordServerIconUrl,
   eventChannelOptions,
+  mentionableRoleOptions,
   officerRoleOptions,
   type DiscordChannel,
   type DiscordDirectory,
@@ -136,6 +137,30 @@ export async function postableChannels(
     discord.member(server.id, botUserId),
   ]);
   return bot ? eventChannelOptions(server, channels, bot) : [];
+}
+
+/** The server's roles the bot can mention, for the Guild Member role. */
+export async function mentionableRoles(
+  server: DiscordServer,
+  discord: DiscordDirectory,
+  botUserId: string,
+): Promise<DiscordRole[]> {
+  const bot = await discord.member(server.id, botUserId);
+  return bot ? mentionableRoleOptions(server, bot) : [];
+}
+
+/** The roles of a server `user` manages that the bot can mention. */
+export async function discordMemberRoleOptions(
+  user: User,
+  serverId: string,
+  discord: DiscordDirectory,
+  botUserId: string,
+): Promise<DiscordRole[]> {
+  const server = await manageableServer(user, serverId, discord);
+  if (!server) {
+    throw new DomainError({ code: 'FORBIDDEN' });
+  }
+  return mentionableRoles(server, discord, botUserId);
 }
 
 /** The server, if the bot is in it and `user` can manage it. */

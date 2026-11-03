@@ -7,7 +7,11 @@ import { createRestDirectMessenger } from '../integrations/discord/direct-messag
 import { createRestServerExit } from '../integrations/discord/server-exit.js';
 import { createJobHandlers } from '../jobs/handlers/index.js';
 import { createJobWorker, JobQueue, redisConnection } from '../jobs/index.js';
-import { allUpcomingEventIds, scheduleEventJobs } from '../jobs/event-jobs.js';
+import {
+  allUpcomingEventIds,
+  removeOldMissingRoleChecks,
+  scheduleEventJobs,
+} from '../jobs/event-jobs.js';
 import { createLogger } from '../logger.js';
 
 const config = loadConfigOrExit(workerConfigSchema);
@@ -51,9 +55,11 @@ await worker.waitUntilReady();
 await jobs.repeat('extend-series', {}, { schedulerId: 'extend-series', pattern: '0 * * * *' });
 // Also once now, so a series doesn't wait up to an hour after a restart.
 await jobs.enqueue('extend-series', {});
-// Every upcoming event's Tentative jobs, in case some were lost or the events predate them.
-// Fixed job IDs make this safe to repeat.
-await scheduleEventJobs(jobs, await allUpcomingEventIds());
+// Every upcoming event's jobs, in case some were lost or the events predate them. Fixed job IDs
+// make this safe to repeat. The old 48- and 24-hour missing-role checks go first.
+const upcoming = await allUpcomingEventIds();
+await removeOldMissingRoleChecks(jobs, upcoming);
+await scheduleEventJobs(jobs, upcoming);
 logger.info('Worker ready');
 
 process.on('SIGTERM', () => {

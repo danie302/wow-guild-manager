@@ -8,9 +8,12 @@ import { Event, User, type Guild } from '../../../db/models/index.js';
 import { createSequelize } from '../../../db/sequelize.js';
 import { cancelEvent, createEvent } from '../../../domain/events.js';
 import { createSeries } from '../../../domain/series.js';
+import { postAt } from '../../../domain/series-posts.js';
+import { scheduleEventJobs } from '../../event-jobs.js';
 import { createTestLogger } from '../../../test-logger.js';
 import {
   enqueueMissingEventPosts,
+  enqueueSeriesEventPosts,
   enqueueUpcomingEventPosts,
   POST_EDIT_WINDOW_MS,
   scheduleEventPostUpdate,
@@ -20,7 +23,8 @@ import { eventPostHandlers } from '../event-posts.js';
 const raidsChannel = '500000000000000001';
 const otherChannel = '500000000000000002';
 const seriesChannel = '500000000000000003';
-const day = 24 * 60 * 60 * 1000;
+const hour = 60 * 60 * 1000;
+const day = 24 * hour;
 
 let sequelize: Sequelize;
 let gm: User;
@@ -361,14 +365,94 @@ describe('enqueueing posts', () => {
   it("finds unposted events with only their series' channel", async () => {
     await guild.update({ eventsChannelId: null });
     await raid();
-    const { series } = await weeklyRaid(seriesChannel);
-    const weekly = await Event.findAll({ where: { seriesId: series.id } });
+    const { event } = await weeklyRaid(seriesChannel);
     const jobs = new FakeJobQueue();
 
     await enqueueMissingEventPosts(jobs);
 
+    expect(jobs.payloads('event-post')).toEqual([{ eventId: event.id }]);
+  });
+
+  it('leaves out the events of a series until the one before finishes, cancelled or not', async () => {
+    const { series, event: first } = await weeklyRaid(null);
+    const [, second] = await Event.findAll({
+      where: { seriesId: series.id },
+      order: [['startsAt', 'ASC']],
+    });
+    await cancelEvent(guild, first.id, gm);
+    const jobs = new FakeJobQueue();
+
+    await enqueueMissingEventPosts(jobs);
+    expect(jobs.payloads('event-post')).toEqual([]);
+
+    // 12 hours after the first one would have started, the second one can be posted.
+    await enqueueMissingEventPosts(jobs, new Date(first.startsAt.getTime() + 12 * hour + 1));
+    expect(jobs.payloads('event-post')).toEqual([{ eventId: second!.id }]);
+  });
+});
+
+describe('the events of a series', () => {
+  it('are posted one at a time: the next one waits for the one before it to finish', async () => {
+    const { series, event: first } = await weeklyRaid(null);
+    const [, second] = await Event.findAll({
+      where: { seriesId: series.id },
+      order: [['startsAt', 'ASC']],
+    });
+
+    await sync(first);
+    await sync(second!);
+
+    expect(discord.messages(raidsChannel).size).toBe(1);
+    expect((await second!.reload()).discordMessageId).toBeNull();
+    expect(await postAt(second!)).toEqual(new Date(first.startsAt.getTime() + 12 * hour));
+    expect(await postAt(second!, new Date(first.startsAt.getTime() + 12 * hour + 1))).toBeNull();
+  });
+
+  it('keep a post they already have', async () => {
+    const { series } = await weeklyRaid(null);
+    const [, second] = await Event.findAll({
+      where: { seriesId: series.id },
+      order: [['startsAt', 'ASC']],
+    });
+    await second!.update({
+      discordChannelId: raidsChannel,
+      discordMessageId: '600000000000000009',
+    });
+    discord.messages(raidsChannel).set('600000000000000009', { content: 'old' });
+
+    await sync(second!);
+
+    expect((await second!.reload()).discordMessageId).toBe('600000000000000009');
+  });
+
+  it('get a job that posts the next one when each finishes, which a cancelled one keeps', async () => {
+    const { series, event: first } = await weeklyRaid(null);
+    const jobs = new FakeJobQueue();
+    await scheduleEventJobs(jobs, [first.id]);
+    await cancelEvent(guild, first.id, gm);
+    await scheduleEventJobs(jobs, [first.id]);
+
+    expect(jobs.job(`series-event-finished-${first.id}`)).toMatchObject({
+      data: { seriesId: series.id },
+      runAt: new Date(first.startsAt.getTime() + 12 * hour),
+    });
+  });
+
+  it('when one finishes, the unposted ones are brought up to date', async () => {
+    const { series, event: first } = await weeklyRaid(null);
+    const others = await Event.findAll({ where: { seriesId: series.id } });
+    await first.update({ discordChannelId: raidsChannel, discordMessageId: '600000000000000001' });
+    const jobs = new FakeJobQueue();
+
+    await enqueueSeriesEventPosts(jobs, series.id);
+
     const ids = jobs.payloads('event-post').map(({ eventId }) => eventId);
-    expect(ids.sort()).toEqual(weekly.map((event) => event.id).sort());
+    expect(ids.sort()).toEqual(
+      others
+        .filter((event) => event.id !== first.id)
+        .map((event) => event.id)
+        .sort(),
+    );
   });
 });
 

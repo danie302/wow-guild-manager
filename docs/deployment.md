@@ -71,7 +71,7 @@ The script is Docker's official installer for Ubuntu ([docs](https://docs.docker
 Use a **separate Discord application** for production. Two bots running with the same token (your local stack and the server) both answer every button click, and the second answer fails. Create it as in "Set up Discord" in `README.md`, with two differences:
 
 - Under **OAuth2 → Redirects**, add `https://<APP_DOMAIN>/api/auth/discord/callback` (e.g. `https://guild.ddazaj.com/api/auth/discord/callback`).
-- Invite this bot to the Discord server your guild will use.
+- Invite this bot to the Discord server your guild will use, with the same permissions, including **Mention @everyone, @here, and All Roles** (so missing-role alerts can mention the Guild Member role). The **Add the bot to a Discord server** link in the guild setup asks for all of them too.
 
 Class and role icons for event posts belong to the application, so upload them for the production one from your machine: with the local stack running, `docker compose exec -e DISCORD_BOT_TOKEN=<production bot token> api pnpm --filter @wgm/server discord:emojis`.
 
@@ -159,6 +159,12 @@ docker image prune -f
 With Cloudflare Tunnel, add the second file: `docker compose -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build`. Without it, `web` comes back up serving HTTPS on ports 80 and 443 instead of plain HTTP for the tunnel, and the site stops loading.
 
 The api applies new migrations when it starts. A change to `.env` also needs `up -d` (`restart` keeps the old environment).
+
+### Bot permissions added since the bot was invited
+
+Discord keeps the permissions a bot was invited with, so an update that needs a new one doesn't get it by itself. Give it to the bot's role in the server: **Server Settings → Roles → the bot's role** (named like the application) **→ Permissions**. Or open the invite link again (the **Add the bot to a Discord server** link, shown in the guild settings after **Change server**, or the URL Generator as in `README.md`) and pick the same server; Discord adds the missing permissions.
+
+- **Mention @everyone, @here, and All Roles** (since story 046): lets missing-role alerts mention the Guild Member role. Without it, the guild settings only offer roles marked **Allow anyone to @mention this role**.
 
 ## Backups
 

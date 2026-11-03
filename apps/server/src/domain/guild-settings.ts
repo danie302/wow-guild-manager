@@ -14,7 +14,12 @@ import type { FileStorage } from '../storage/file-storage.js';
 import { toGuildImage } from '../storage/guild-image.js';
 import { DomainError, DomainValidationError } from './errors.js';
 import { typeChannelIds } from './event-channel.js';
-import { checkGuildDiscordChange, postableChannels, withUniqueErrors } from './guilds.js';
+import {
+  checkGuildDiscordChange,
+  mentionableRoles,
+  postableChannels,
+  withUniqueErrors,
+} from './guilds.js';
 import { can, type GuildAction } from './permissions.js';
 
 export interface GuildSettingsDependencies {
@@ -83,6 +88,14 @@ export async function updateGuildSettings(
   );
   const changesLocale =
     input.discordLocale !== undefined && input.discordLocale !== guild.discordLocale;
+  // The Guild Member role: "" clears it, and a new server clears it unless a new one is sent.
+  const memberRoleId =
+    input.memberRoleId !== undefined
+      ? input.memberRoleId || null
+      : changesServer
+        ? null
+        : guild.memberRoleId;
+  const changesMemberRole = memberRoleId !== guild.memberRoleId;
 
   if (changesProfile) require('editGuildProfile');
   if (changesDiscord) {
@@ -111,6 +124,13 @@ export async function updateGuildSettings(
     await checkPostableChannel(discordServerId, channelId, discord, TYPE_CHANNEL_FIELDS[type]);
   }
   if (changesLocale) require('chooseDiscordLanguage');
+  if (changesMemberRole) {
+    require('chooseMemberRole');
+    if (memberRoleId !== null) {
+      if (!discord) throw new DomainError({ code: 'DISCORD_NOT_CONFIGURED' });
+      await checkMentionableRole(discordServerId, memberRoleId, discord);
+    }
+  }
   const changesDeadline =
     input.tentativeDeadlineHours !== undefined &&
     input.tentativeDeadlineHours !== guild.tentativeDeadlineHours;
@@ -145,6 +165,7 @@ export async function updateGuildSettings(
           changedTypes.map((type) => [TYPE_CHANNEL_COLUMNS[type], typeChannels[type]]),
         ),
         ...(changesLocale && { discordLocale: input.discordLocale }),
+        ...(changesMemberRole && { memberRoleId }),
         ...(changesDeadline && { tentativeDeadlineHours: input.tentativeDeadlineHours }),
         ...(changesReminder && { reminderHours: input.reminderHours }),
         ...(changesBands && { attendanceGoodThreshold: good, attendanceRiskThreshold: atRisk }),
@@ -189,6 +210,24 @@ export async function checkPostableChannel(
   const options = server ? await postableChannels(server, directory, botUserId) : [];
   if (!options.some(({ channel }) => channel.id === channelId)) {
     throw new DomainValidationError([{ field, code: GUILD_ERROR_CODES.eventsChannelNotUsable }]);
+  }
+}
+
+/**
+ * The bot must be able to mention the Guild Member role (see mentionableRoles); otherwise
+ * it's a validation error on `memberRoleId`.
+ */
+async function checkMentionableRole(
+  serverId: string,
+  roleId: string,
+  { directory, botUserId }: NonNullable<GuildSettingsDependencies['discord']>,
+): Promise<void> {
+  const server = await directory.server(serverId);
+  const options = server ? await mentionableRoles(server, directory, botUserId) : [];
+  if (!options.some((role) => role.id === roleId)) {
+    throw new DomainValidationError([
+      { field: 'memberRoleId', code: GUILD_ERROR_CODES.memberRoleNotUsable },
+    ]);
   }
 }
 

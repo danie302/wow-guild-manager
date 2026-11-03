@@ -21,8 +21,9 @@ const mc: EventResponse = {
   createdBy: 'Anduin',
   cancelled: null,
   series: null,
-  discordPost: { url: null, error: null },
+  discordPost: { url: null, error: null, postAt: null },
   tentativeDeadline: { at: '2026-01-01T00:00:00.000Z', hours: 24, own: false },
+  missingRoleAlertHours: 24,
 };
 const wsg: EventResponse = {
   ...mc,

@@ -23,6 +23,8 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
   declare discordServerId: string;
   /** The Discord role whose members are Officers. */
   declare officerRoleId: string;
+  /** The Discord role that missing-role alerts mention; null mentions nobody. */
+  declare memberRoleId: CreationOptional<string | null>;
   /** A user leads at most one guild at a time (a unique index). */
   declare guildMasterUserId: ForeignKey<User['id']>;
   /** The image's key in file storage, or null when the guild has none. */
@@ -56,6 +58,7 @@ export class Guild extends Model<InferAttributes<Guild>, InferCreationAttributes
         faction: { type: DataTypes.STRING(8), allowNull: false },
         discordServerId: { type: DataTypes.STRING(20), allowNull: false, unique: true },
         officerRoleId: { type: DataTypes.STRING(20), allowNull: false },
+        memberRoleId: { type: DataTypes.STRING(20), allowNull: true },
         imageKey: { type: DataTypes.STRING(100), allowNull: true },
         eventsChannelId: { type: DataTypes.STRING(20), allowNull: true },
         raidChannelId: { type: DataTypes.STRING(20), allowNull: true },

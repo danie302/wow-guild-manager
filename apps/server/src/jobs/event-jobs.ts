@@ -1,20 +1,21 @@
 import { Op } from 'sequelize';
 
 import { Event, Guild } from '../db/models/index.js';
+import { missingRoleCheckAt } from '../domain/missing-roles.js';
+import { finishedAt } from '../domain/series-posts.js';
 import { reminderAt } from '../domain/tentative.js';
 import type { JobPayloads } from './definitions.js';
 import { JobRunningError, type JobEnqueuer } from './queue.js';
 
-/** Hours before an event that the missing-role checks run. */
-export const MISSING_ROLE_CHECKS = [48, 24] as const;
-
 /**
  * Schedules each event's time-based jobs under fixed IDs, so calling it again after a change
  * moves them instead of adding more: the Tentative reminder and deadline
- * (`tentative-reminder-<eventId>`, `tentative-deadline-<eventId>`) and the missing-role checks
- * (`missing-roles-48-<eventId>`, `missing-roles-24-<eventId>`), skipping checks whose time has
- * passed. Cancelled and started events lose theirs. The jobs re-check the event when they run,
- * so an old one that slips through does nothing.
+ * (`tentative-reminder-<eventId>`, `tentative-deadline-<eventId>`), the missing-role check
+ * (`missing-roles-<eventId>`, skipped when its time has passed), and for an event of a series,
+ * posting the next one when it finishes (`series-event-finished-<eventId>`). Cancelled and
+ * started events lose the first three; the last one stays, since a cancelled event still holds
+ * back the next one until it would have finished. The jobs re-check the data when they run, so
+ * an old one that slips through does nothing.
  */
 export async function scheduleEventJobs(
   jobs: JobEnqueuer,
@@ -29,29 +30,26 @@ export async function scheduleEventJobs(
   for (const event of events) {
     const reminder = `tentative-reminder-${event.id}`;
     const deadline = `tentative-deadline-${event.id}`;
-    const checks = MISSING_ROLE_CHECKS.map((hoursBefore) => ({
-      hoursBefore,
-      jobId: `missing-roles-${hoursBefore}-${event.id}`,
-      runAt: new Date(event.startsAt.getTime() - hoursBefore * 60 * 60 * 1000),
-    }));
+    const check = `missing-roles-${event.id}`;
+    const finished = `series-event-finished-${event.id}`;
+    if (event.seriesId && finishedAt(event) > now) {
+      await scheduleOrAdd(
+        jobs,
+        'series-event-finished',
+        { seriesId: event.seriesId },
+        finished,
+        finishedAt(event),
+      );
+    }
     if (event.cancelledAt || event.startsAt <= now) {
       await unscheduleQuietly(jobs, reminder);
       await unscheduleQuietly(jobs, deadline);
-      for (const check of checks) await unscheduleQuietly(jobs, check.jobId);
+      await unscheduleQuietly(jobs, check);
       continue;
     }
-    for (const { hoursBefore, jobId, runAt } of checks) {
-      if (runAt <= now) await unscheduleQuietly(jobs, jobId);
-      else {
-        await scheduleOrAdd(
-          jobs,
-          'missing-role-check',
-          { eventId: event.id, hoursBefore },
-          jobId,
-          runAt,
-        );
-      }
-    }
+    const checkAt = missingRoleCheckAt(event);
+    if (checkAt <= now) await unscheduleQuietly(jobs, check);
+    else await scheduleOrAdd(jobs, 'missing-role-check', { eventId: event.id }, check, checkAt);
     const data = { eventId: event.id };
     await scheduleOrAdd(
       jobs,
@@ -61,6 +59,20 @@ export async function scheduleEventJobs(
       reminderAt(event, event.guild!),
     );
     await scheduleOrAdd(jobs, 'tentative-deadline', data, deadline, event.tentativeDeadlineAt);
+  }
+}
+
+/**
+ * Removes the two missing-role checks per event (`missing-roles-48-<eventId>` and
+ * `missing-roles-24-<eventId>`) that came before the single one, when the worker starts.
+ */
+export async function removeOldMissingRoleChecks(
+  jobs: JobEnqueuer,
+  eventIds: string[],
+): Promise<void> {
+  for (const eventId of eventIds) {
+    for (const hours of [48, 24])
+      await unscheduleQuietly(jobs, `missing-roles-${hours}-${eventId}`);
   }
 }
 
@@ -87,7 +99,8 @@ export async function upcomingEventIds(guildId: string, now = new Date()): Promi
  * so the new one goes under an ID with its time, so it isn't lost.
  */
 async function scheduleOrAdd<
-  Name extends 'tentative-reminder' | 'tentative-deadline' | 'missing-role-check',
+  Name extends
+    'tentative-reminder' | 'tentative-deadline' | 'missing-role-check' | 'series-event-finished',
 >(
   jobs: JobEnqueuer,
   name: Name,
